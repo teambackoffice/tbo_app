@@ -41,7 +41,7 @@ class Homepage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Hello Shameer !",
+                              "Hello Ahmad !",
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -368,78 +368,80 @@ class Homepage extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+      height: 238,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            height: 140,
+            width: 140,
+            child: PieChart(
+              PieChartData(
+                centerSpaceRadius: 50,
+                sectionsSpace: 4,
+                sections: [
+                  PieChartSectionData(
+                    color: const Color(0xFFFF9500), // Orange
+                    value: 16, // Total tasks
+                    radius: 30,
+                    showTitle: false,
                   ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        height: 140,
-                        width: 140,
-                        child: PieChart(
-                          PieChartData(
-                            centerSpaceRadius: 50,
-                            sectionsSpace: 4,
-                            sections: [
-                              PieChartSectionData(
-                                color: const Color(0xFFFF9500),
-                                value: 62.5,
-                                radius: 30,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: const Color(0xFFF5DEB3),
-                                value: 25,
-                                radius: 30,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: const Color(0xFF4CAF50),
-                                value: 12.5,
-                                radius: 30,
-                                showTitle: false,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 32),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Indicator(
-                              color: Color(0xFFFF9500),
-                              text: "Total Task",
-                              value: "16",
-                            ),
-                            SizedBox(height: 16),
-                            Indicator(
-                              color: Color(0xFFF5DEB3),
-                              text: "In Progress",
-                              value: "4",
-                            ),
-                            SizedBox(height: 16),
-                            Indicator(
-                              color: Color(0xFF4CAF50),
-                              text: "Completed",
-                              value: "2",
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  PieChartSectionData(
+                    color: const Color(0xFFF5DEB3), // Beige
+                    value: 4, // In progress
+                    radius: 30,
+                    showTitle: false,
                   ),
+                  PieChartSectionData(
+                    color: const Color(0xFF4CAF50), // Green
+                    value: 2, // Completed
+                    radius: 30,
+                    showTitle: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 80),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Indicator(
+                  color: Color(0xFFFF9500),
+                  text: "Total Task",
+                  value: "16",
                 ),
+                SizedBox(height: 16),
+                Indicator(
+                  color: Color(0xFFF5DEB3),
+                  text: "In Progress",
+                  value: "4",
+                ),
+                SizedBox(height: 16),
+                Indicator(
+                  color: Color(0xFF4CAF50),
+                  text: "Completed",
+                  value: "2",
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
 
                 const SizedBox(height: 100), // Space for bottom nav
               ],
@@ -466,38 +468,42 @@ class Indicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
+        // Top: Text
         Text(
-          value,
+          text,
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
           ),
+        ),
+        const SizedBox(height: 4),
+        // Bottom: Color dot + Number
+        Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
-
-
