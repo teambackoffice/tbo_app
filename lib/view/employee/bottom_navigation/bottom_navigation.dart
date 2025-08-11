@@ -54,7 +54,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
             label: "Projects",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline_sharp),
             label: "Profile",
           ),
         ],
