@@ -1,13 +1,74 @@
 import 'package:flutter/material.dart';
 
 class ProjectsPage extends StatelessWidget {
-  const ProjectsPage({super.key});
+  final List<Map<String, String>> projects = [
+    {"name": "Onshore Website", "type": "Website"},
+    {"name": "Flyaday", "type": "Website"},
+    {"name": "Champion Car Wash", "type": "App"},
+    {"name": "Online Prime", "type": "Website"},
+    {"name": "Hydrotech", "type": "Website"},
+  ];
+
+  ProjectsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Projects'),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF8F5), // Light cream background
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 50),
+              const Text(
+                "Projects",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: projects.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            project["name"]!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            project["type"]!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
