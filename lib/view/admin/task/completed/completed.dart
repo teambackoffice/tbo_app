@@ -12,24 +12,28 @@ class AdminCompleteTaskList extends StatelessWidget {
         "priority": "High",
         "time": "18 Hours",
         "dueDate": "15-07-25",
+        "assignedTo": "Shameer",
       },
       {
         "title": "Onshore Website",
         "priority": "Medium",
         "time": "18 Hours",
         "dueDate": "15-07-25",
+        "assignedTo": "Jasir",
       },
       {
         "title": "Flyday Website",
         "priority": "High",
         "time": "18 Hours",
         "dueDate": "15-07-25",
+        "assignedTo": "Ajmal",
       },
       {
         "title": "Chundakadan Website",
         "priority": "Medium",
         "time": "20 Hours",
         "dueDate": "15-07-25",
+        "assignedTo": "Thanha",
       },
     ];
 
@@ -56,23 +60,42 @@ class AdminCompleteTaskList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Priority label
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C7690),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  task["priority"]!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C7690),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      task["priority"]!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF00AD85), // ✅ Inside fill color
+                      border: Border.all(color: Colors.green[800]!, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.done,
+                      size: 18,
+                      color:
+                          Colors.white, // Icon color contrasts with background
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
 
@@ -97,7 +120,7 @@ class AdminCompleteTaskList extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Labels
+              // Time & Due Date labels
               Row(
                 children: [
                   const Icon(
@@ -108,9 +131,9 @@ class AdminCompleteTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Time",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   const Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
@@ -119,13 +142,18 @@ class AdminCompleteTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Due Date",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
+                  ),
+                  SizedBox(width: 60),
+                  const Text(
+                    "Assigned To",
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
 
-              // Values
+              // Time & Due Date values
               Row(
                 children: [
                   Text(
@@ -133,29 +161,25 @@ class AdminCompleteTaskList extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   Text(
                     task["dueDate"]!,
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 1),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_outward,
-                      size: 18,
-                      color: Colors.black,
+                  SizedBox(width: 60),
+                  Text(
+                    task["assignedTo"]!,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
