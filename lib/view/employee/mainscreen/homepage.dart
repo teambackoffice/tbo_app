@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/employee/mainscreen/notification/notification.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -70,25 +71,33 @@ class Homepage extends StatelessWidget {
                       ),
                       child: Stack(
                         children: [
-                          const Center(
-                            child: Icon(
-                              Icons.notifications_outlined,
+                          Center(
+                            child: IconButton(
+                              onPressed: () {
+                                // Handle button press
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => NotificationsScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.notifications_outlined),
                               color: Colors.white,
-                              size: 24,
                             ),
                           ),
-                          Positioned(
-                            right: 14,
-                            top: 14,
-                            child: Container(
-                              height: 10,
-                              width: 10,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFFF9500),
-                              ),
-                            ),
-                          ),
+                          // Positioned(
+                          //   right: 14,
+                          //   top: 14,
+                          //   child: Container(
+                          //     height: 10,
+                          //     width: 10,
+                          //     decoration: const BoxDecoration(
+                          //       shape: BoxShape.circle,
+                          //       color: Color(0xFFFF9500),
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
