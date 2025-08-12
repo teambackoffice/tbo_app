@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/admin/task/completed/completed_details.dart';
 
 class AdminCompleteTaskList extends StatelessWidget {
   const AdminCompleteTaskList({super.key});
@@ -147,26 +146,16 @@ class AdminCompleteTaskList extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdminCompletedDetails(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey[300]!, width: 1),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_outward,
-                        size: 18,
-                        color: Colors.black,
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_outward,
+                      size: 18,
+                      color: Colors.black,
                     ),
                   ),
                 ],

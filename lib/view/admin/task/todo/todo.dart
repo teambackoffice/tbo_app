@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/admin/task/todo/todo_details.dart';
 
 class AdminToDoTaskList extends StatelessWidget {
   const AdminToDoTaskList({super.key});
@@ -56,23 +55,42 @@ class AdminToDoTaskList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Priority label
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C7690),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  task["priority"]!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C7690),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      task["priority"]!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey, // ✅ Inside fill color
+                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.done,
+                      size: 18,
+                      color:
+                          Colors.white, // Icon color contrasts with background
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
 
@@ -121,6 +139,11 @@ class AdminToDoTaskList extends StatelessWidget {
                     "Due Date",
                     style: TextStyle(color: Colors.black54, fontSize: 12),
                   ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    "Assigned To",
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
@@ -143,29 +166,6 @@ class AdminToDoTaskList extends StatelessWidget {
                       color: Colors.black87,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdminToDoDetails(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey[300]!, width: 1),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_outward,
-                        size: 18,
-                        color: Colors.black,
-                      ),
                     ),
                   ),
                 ],
