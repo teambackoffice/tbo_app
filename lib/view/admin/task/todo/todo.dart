@@ -126,9 +126,9 @@ class AdminToDoTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Time",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   const Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
@@ -137,12 +137,12 @@ class AdminToDoTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Due Date",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 60),
                   const Text(
                     "Assigned To",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
                 ],
               ),
@@ -156,16 +156,25 @@ class AdminToDoTaskList extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   Text(
                     task["dueDate"]!,
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 60),
+                  Text(
+                    'Jasir',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
