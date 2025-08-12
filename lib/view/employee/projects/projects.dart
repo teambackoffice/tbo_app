@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/employee/projects/project_details.dart';
 
 class ProjectsPage extends StatelessWidget {
   final List<Map<String, String>> projects = [
@@ -34,33 +35,43 @@ class ProjectsPage extends StatelessWidget {
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final project = projects[index];
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            project["name"]!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProjectDetails(),
                           ),
-                          Text(
-                            project["type"]!,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              project["name"]!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              project["type"]!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
