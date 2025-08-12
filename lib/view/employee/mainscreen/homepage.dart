@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -141,7 +141,7 @@ class Homepage extends StatelessWidget {
                         padding: const EdgeInsets.all(15),
                         height: 218,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5A7B8C),
+                          color: const Color(0xFF475569),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
@@ -149,7 +149,9 @@ class Homepage extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFE5E5),
                                 borderRadius: BorderRadius.circular(20),
@@ -176,8 +178,11 @@ class Homepage extends StatelessWidget {
                             const SizedBox(height: 6),
                             Row(
                               children: [
-                                const Icon(Icons.access_time_rounded,
-                                    color: Colors.white70, size: 16),
+                                const Icon(
+                                  Icons.access_time_rounded,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Time",
@@ -201,8 +206,11 @@ class Homepage extends StatelessWidget {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Icon(Icons.calendar_today_rounded,
-                                    color: Colors.white70, size: 16),
+                                const Icon(
+                                  Icons.calendar_today_rounded,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Due Date",
@@ -258,7 +266,9 @@ class Homepage extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(20),
@@ -285,8 +295,11 @@ class Homepage extends StatelessWidget {
                             const SizedBox(height: 6),
                             Row(
                               children: [
-                                const Icon(Icons.access_time_rounded,
-                                    color: Colors.white70, size: 16),
+                                const Icon(
+                                  Icons.access_time_rounded,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Time",
@@ -310,8 +323,11 @@ class Homepage extends StatelessWidget {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Icon(Icons.calendar_today_rounded,
-                                    color: Colors.white70, size: 16),
+                                const Icon(
+                                  Icons.calendar_today_rounded,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Due Date",
@@ -368,80 +384,80 @@ class Homepage extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 Container(
-      height: 238,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            height: 140,
-            width: 140,
-            child: PieChart(
-              PieChartData(
-                centerSpaceRadius: 50,
-                sectionsSpace: 4,
-                sections: [
-                  PieChartSectionData(
-                    color: const Color(0xFFFF9500), // Orange
-                    value: 16, // Total tasks
-                    radius: 30,
-                    showTitle: false,
+                  height: 238,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  PieChartSectionData(
-                    color: const Color(0xFFF5DEB3), // Beige
-                    value: 4, // In progress
-                    radius: 30,
-                    showTitle: false,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        height: 140,
+                        width: 140,
+                        child: PieChart(
+                          PieChartData(
+                            centerSpaceRadius: 50,
+                            sectionsSpace: 4,
+                            sections: [
+                              PieChartSectionData(
+                                color: const Color(0xFFFF9500), // Orange
+                                value: 16, // Total tasks
+                                radius: 30,
+                                showTitle: false,
+                              ),
+                              PieChartSectionData(
+                                color: const Color(0xFFF5DEB3), // Beige
+                                value: 4, // In progress
+                                radius: 30,
+                                showTitle: false,
+                              ),
+                              PieChartSectionData(
+                                color: const Color(0xFF4CAF50), // Green
+                                value: 2, // Completed
+                                radius: 30,
+                                showTitle: false,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 80),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Indicator(
+                              color: Color(0xFFFF9500),
+                              text: "Total Task",
+                              value: "16",
+                            ),
+                            SizedBox(height: 16),
+                            Indicator(
+                              color: Color(0xFFF5DEB3),
+                              text: "In Progress",
+                              value: "4",
+                            ),
+                            SizedBox(height: 16),
+                            Indicator(
+                              color: Color(0xFF4CAF50),
+                              text: "Completed",
+                              value: "2",
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  PieChartSectionData(
-                    color: const Color(0xFF4CAF50), // Green
-                    value: 2, // Completed
-                    radius: 30,
-                    showTitle: false,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 80),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Indicator(
-                  color: Color(0xFFFF9500),
-                  text: "Total Task",
-                  value: "16",
                 ),
-                SizedBox(height: 16),
-                Indicator(
-                  color: Color(0xFFF5DEB3),
-                  text: "In Progress",
-                  value: "4",
-                ),
-                SizedBox(height: 16),
-                Indicator(
-                  color: Color(0xFF4CAF50),
-                  text: "Completed",
-                  value: "2",
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
 
                 const SizedBox(height: 100), // Space for bottom nav
               ],
@@ -487,10 +503,7 @@ class Indicator extends StatelessWidget {
             Container(
               width: 12,
               height: 12,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 8),
             Text(
