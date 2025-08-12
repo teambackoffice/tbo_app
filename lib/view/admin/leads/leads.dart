@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/admin/leads/lead_detail.dart';
 
 class AdminLeads extends StatelessWidget {
   const AdminLeads({super.key});
@@ -36,56 +37,72 @@ class AdminLeads extends StatelessWidget {
     );
   }
 
-  Widget _buildLeadCard(String companyName, String location, String status) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 2,
-            offset: const Offset(0, 1),
+  Widget _buildLeadCard(
+    String companyName,
+    String location,
+    String status,
+    context,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                LeadDetailsScreen(), // Replace with your widget
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [_buildStatusBadge(status)],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              companyName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 16,
-                  color: Colors.grey[500],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
-              ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              spreadRadius: 0,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_buildStatusBadge(status)],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                companyName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.grey[500],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    location,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -113,18 +130,35 @@ class AdminLeads extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _buildLeadCard('Calicut Textiles', 'Calicut', 'Closed'),
+                  _buildLeadCard(
+                    'Calicut Textiles',
+                    'Calicut',
+                    'Closed',
+                    context,
+                  ),
                   _buildLeadCard(
                     'Carry Fresh Hypermarket',
                     'Kottakkal',
                     'Contacted',
+                    context,
                   ),
-                  _buildLeadCard('Elham Digital', 'Calicut', 'Proposal Sent'),
-                  _buildLeadCard('Calicut Textiles', 'Calicut', 'Closed'),
+                  _buildLeadCard(
+                    'Elham Digital',
+                    'Calicut',
+                    'Proposal Sent',
+                    context,
+                  ),
+                  _buildLeadCard(
+                    'Calicut Textiles',
+                    'Calicut',
+                    'Closed',
+                    context,
+                  ),
                   _buildLeadCard(
                     'Calicut Textiles',
                     'Calicut',
                     'Proposal Sent',
+                    context,
                   ),
                   const SizedBox(height: 20),
                 ],
