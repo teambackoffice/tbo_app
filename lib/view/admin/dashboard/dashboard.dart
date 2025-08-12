@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
+import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -117,7 +119,15 @@ class AdminDashboard extends StatelessWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AdminBottomNavigation(initialIndex: 1),
+                        ),
+                      );
+                    },
                     child: const Text(
                       'See all',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
@@ -192,7 +202,14 @@ class AdminDashboard extends StatelessWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TeamMembersPage(),
+                        ),
+                      );
+                    },
                     child: const Text(
                       'View all',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
