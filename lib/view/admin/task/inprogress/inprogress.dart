@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/admin/task/inprogress/inprogress_details.dart';
 
 class AdminInProgressTaskList extends StatelessWidget {
   const AdminInProgressTaskList({super.key});
@@ -21,7 +20,7 @@ class AdminInProgressTaskList extends StatelessWidget {
       },
       {
         "title": "Flyday Website",
-        "priority": "High",
+        "priority": "Low",
         "time": "18 Hours",
         "dueDate": "15-07-25",
       },
@@ -56,23 +55,42 @@ class AdminInProgressTaskList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Priority label
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C7690), // dark blue for priority
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  task["priority"]!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C7690),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      task["priority"]!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.orange[400]!, // ✅ Inside fill color
+                      border: Border.all(color: Colors.orange[800]!, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.done,
+                      size: 18,
+                      color:
+                          Colors.white, // Icon color contrasts with background
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
 
@@ -108,9 +126,9 @@ class AdminInProgressTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Time",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   const Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
@@ -119,7 +137,12 @@ class AdminInProgressTaskList extends StatelessWidget {
                   const SizedBox(width: 6),
                   const Text(
                     "Due Date",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(color: Colors.black, fontSize: 12),
+                  ),
+                  SizedBox(width: 60),
+                  const Text(
+                    "Assigned To",
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
                 ],
               ),
@@ -133,39 +156,25 @@ class AdminInProgressTaskList extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 60),
+                  SizedBox(width: 60),
                   Text(
                     task["dueDate"]!,
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdminInprogressDetails(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey[300]!, width: 1),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_outward,
-                        size: 18,
-                        color: Colors.black,
-                      ),
+                  SizedBox(width: 60),
+                  Text(
+                    'Jasir',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

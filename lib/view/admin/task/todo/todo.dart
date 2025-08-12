@@ -80,8 +80,8 @@ class AdminToDoTaskList extends StatelessWidget {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey, // ✅ Inside fill color
-                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                      color: Colors.grey[300], // ✅ Inside fill color
+                      border: Border.all(color: Colors.grey, width: 1),
                     ),
                     child: const Icon(
                       Icons.done,
