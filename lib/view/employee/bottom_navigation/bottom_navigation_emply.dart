@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/employee/mainscreen/homepage.dart';
+import 'package:tbo_app/view/employee/dashboard/homepage.dart';
 import 'package:tbo_app/view/employee/profile/profile.dart';
 import 'package:tbo_app/view/employee/projects/projects.dart';
 import 'package:tbo_app/view/employee/task_page/task_page.dart';
 
-class BottomNavigation extends StatefulWidget {
+class EmployeeBottomNavigation extends StatefulWidget {
   final int initialIndex;
-  const BottomNavigation({super.key, this.initialIndex = 0});
+  const EmployeeBottomNavigation({super.key, this.initialIndex = 0});
 
   @override
-  State<BottomNavigation> createState() => _BottomNavigationState();
+  State<EmployeeBottomNavigation> createState() =>
+      _EmployeeBottomNavigationState();
 }
 
-class _BottomNavigationState extends State<BottomNavigation> {
+class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -74,8 +75,10 @@ class _BottomNavigationState extends State<BottomNavigation> {
             label: "Projects",
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person_outline_sharp,
+            icon: Image.asset(
+              'assets/user.png',
+              width: 18,
+              height: 24,
               color: _selectedIndex == 3 ? Colors.orange : Colors.grey,
             ),
             label: "Profile",

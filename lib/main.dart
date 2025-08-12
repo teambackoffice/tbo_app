@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation.dart';
-import 'package:tbo_app/view/employee/mainscreen/homepage.dart';
+import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,11 +15,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-       
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const BottomNavigation(),
+      home: const AdminBottomNavigation(),
     );
   }
 }
-

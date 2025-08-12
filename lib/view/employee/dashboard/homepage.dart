@@ -1,9 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation.dart';
-import 'package:tbo_app/view/employee/mainscreen/high_task_details.dart';
-import 'package:tbo_app/view/employee/mainscreen/medium_task_details.dart';
-import 'package:tbo_app/view/employee/mainscreen/notification/notification.dart';
+import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
+import 'package:tbo_app/view/employee/dashboard/high_task_details.dart';
+import 'package:tbo_app/view/employee/dashboard/medium_task_details.dart';
+import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
 class Homepage extends StatelessWidget {
   final Function(int)? onTabChange;
@@ -137,7 +137,7 @@ class Homepage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const BottomNavigation(initialIndex: 1),
+                                const EmployeeBottomNavigation(initialIndex: 1),
                           ),
                         );
                       },
