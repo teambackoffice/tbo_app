@@ -5,7 +5,8 @@ import 'package:tbo_app/view/employee/projects/projects.dart';
 import 'package:tbo_app/view/employee/task_page/task_page.dart';
 
 class BottomNavigation extends StatefulWidget {
-  const BottomNavigation({super.key});
+  final int initialIndex;
+  const BottomNavigation({super.key, this.initialIndex = 0});
 
   @override
   State<BottomNavigation> createState() => _BottomNavigationState();
@@ -20,6 +21,12 @@ class _BottomNavigationState extends State<BottomNavigation> {
     ProjectsPage(),
     const ProfilePage(),
   ];
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   void _onItemTapped(int index) {
     setState(() {

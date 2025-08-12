@@ -1,9 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation.dart';
+import 'package:tbo_app/view/employee/mainscreen/high_task_details.dart';
+import 'package:tbo_app/view/employee/mainscreen/medium_task_details.dart';
 import 'package:tbo_app/view/employee/mainscreen/notification/notification.dart';
 
 class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+  final Function(int)? onTabChange;
+  const Homepage({super.key, this.onTabChange});
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +132,15 @@ class Homepage extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const BottomNavigation(initialIndex: 1),
+                          ),
+                        );
+                      },
                       child: const Text(
                         "See all",
                         style: TextStyle(
@@ -243,16 +255,28 @@ class Homepage extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFFFFF),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_outward,
-                                    color: Colors.black,
-                                    size: 16,
+                                InkWell(
+                                  onTap: () {
+                                    // Handle button press
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HighTaskDetails(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFFFFFFF),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_outward,
+                                      color: Colors.black,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -360,16 +384,28 @@ class Homepage extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFFFFF),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_outward,
-                                    color: Colors.black,
-                                    size: 16,
+                                InkWell(
+                                  onTap: () {
+                                    // Handle button press
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MediumTaskDetails(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFFFFFFF),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_outward,
+                                      color: Colors.black,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
                               ],
