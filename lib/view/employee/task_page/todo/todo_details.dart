@@ -66,10 +66,7 @@ class TodoDetails extends StatelessWidget {
                         SizedBox(width: 6),
                         Text(
                           "Time",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
