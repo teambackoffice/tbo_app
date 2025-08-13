@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
+import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CRMBottomNavigation(),
+      home: const EmployeeBottomNavigation(),
     );
   }
 }
