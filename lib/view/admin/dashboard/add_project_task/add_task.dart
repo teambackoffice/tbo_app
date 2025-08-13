@@ -24,10 +24,23 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF9F7F3),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+        leading: Container(
+          margin: const EdgeInsets.all(8), // space from app bar edges
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+
+            color: Colors.white, // optional background
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.black,
+              size: 18,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
+
         centerTitle: true,
         title: const Text(
           "Add New Task",
@@ -43,6 +56,8 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildLabel("Select Project"),
+            const SizedBox(height: 8),
             _buildDropdownField(
               label: "Select Project",
               value: selectedProject,
@@ -50,8 +65,12 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
               onChanged: (value) => setState(() => selectedProject = value),
             ),
             const SizedBox(height: 15),
+            _buildLabel("Task"),
+            const SizedBox(height: 8),
             _buildTextField("Task Name", controller: taskNameController),
             const SizedBox(height: 15),
+            _buildLabel("Priority"),
+            const SizedBox(height: 8),
             _buildDropdownField(
               label: "Priority",
               value: selectedPriority,
@@ -59,6 +78,8 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
               onChanged: (value) => setState(() => selectedPriority = value),
             ),
             const SizedBox(height: 15),
+            _buildLabel("Select Employee"),
+            const SizedBox(height: 8),
             _buildDropdownField(
               label: "Select Employee",
               value: selectedEmployee,
@@ -66,6 +87,8 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
               onChanged: (value) => setState(() => selectedEmployee = value),
             ),
             const SizedBox(height: 15),
+            _buildLabel("Start Date"),
+            const SizedBox(height: 8),
             _buildDatePickerField("Expected Start Date", startDate, () async {
               final picked = await showDatePicker(
                 context: context,
@@ -78,6 +101,8 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
               }
             }),
             const SizedBox(height: 15),
+            _buildLabel("Allocated Time"),
+            const SizedBox(height: 8),
             _buildTimePickerField("Time in Hour", allocatedTime, () async {
               final picked = await showTimePicker(
                 context: context,
@@ -94,7 +119,9 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  _createTask();
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1C7690),
                   shape: RoundedRectangleBorder(
@@ -104,12 +131,27 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
                 ),
                 child: const Text(
                   "Create Task",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
       ),
     );
   }
@@ -235,5 +277,34 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
         ),
       ),
     );
+  }
+
+  void _createTask() {
+    // Handle task creation logic here
+    print('Selected Project: $selectedProject');
+    print('Task Name: ${taskNameController.text}');
+    print('Priority: $selectedPriority');
+    print('Selected Employee: $selectedEmployee');
+    print('Start Date: $startDate');
+    print('Allocated Time: $allocatedTime');
+    print('Notes: ${notesController.text}');
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Task created successfully!'),
+        backgroundColor: Color(0xFF1C7690),
+      ),
+    );
+
+    // Navigate back or to another screen
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    taskNameController.dispose();
+    notesController.dispose();
+    super.dispose();
   }
 }
