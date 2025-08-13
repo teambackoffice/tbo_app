@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
+import 'package:tbo_app/view/crm/dashboard/leads_contacted/leads_contact.dart';
+import 'package:tbo_app/view/crm/dashboard/new_leads/new_leads.dart';
+import 'package:tbo_app/view/crm/dashboard/prposal_sent/proposal_sent.dart';
 
 class CRMDashboardPage extends StatelessWidget {
   const CRMDashboardPage({super.key});
@@ -61,21 +65,53 @@ class CRMDashboardPage extends StatelessWidget {
                     title: "New\nLeads",
                     value: "12",
                     color: const Color(0xFF1ABC9C),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NewLeadsPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     title: "Leads\nContacted",
                     value: "24",
                     color: const Color(0xFF3B5998),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LeadsContactedPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     title: "Proposals\nSent",
                     value: "4",
                     color: const Color(0xFFF39C12),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProposalSentPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildStatCard(
                     title: "Deals\nClosed",
                     value: "3",
                     color: const Color(0xFF27AE60),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DealsClosed(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -85,8 +121,8 @@ class CRMDashboardPage extends StatelessWidget {
               // Create New Lead Button
               Center(
                 child: SizedBox(
-                  width: 320,
-                  height: 55,
+                  width: 330,
+                  height: 60,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1C7690),
@@ -119,44 +155,50 @@ class CRMDashboardPage extends StatelessWidget {
     required String title,
     required String value,
     required Color color,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 179,
+        width: 150,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 50,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 50,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
