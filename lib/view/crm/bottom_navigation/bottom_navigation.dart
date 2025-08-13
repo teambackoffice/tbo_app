@@ -16,7 +16,7 @@ class _CRMBottomNavigationState extends State<CRMBottomNavigation> {
 
   final List<Widget> _pages = [
     const CRMDashboardPage(),
-    const CRMAllLeads(),
+    const CRMAllLeadsPage(),
     const CRMProfilePage(),
   ];
 
