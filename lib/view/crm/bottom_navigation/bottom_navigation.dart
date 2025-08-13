@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/admin/dashboard/dashboard.dart';
-import 'package:tbo_app/view/admin/leads/leads.dart';
-import 'package:tbo_app/view/admin/profile/profile.dart';
-import 'package:tbo_app/view/admin/project/project.dart';
-import 'package:tbo_app/view/admin/task/task.dart';
+import 'package:tbo_app/view/crm/all_leads/crm_all_leads.dart';
+import 'package:tbo_app/view/crm/dashboard/crm_dashboard.dart';
+import 'package:tbo_app/view/crm/profile/crm_profile.dart';
 
-class AdminBottomNavigation extends StatefulWidget {
+class CRMBottomNavigation extends StatefulWidget {
   final int initialIndex;
-  const AdminBottomNavigation({super.key, this.initialIndex = 0});
+  const CRMBottomNavigation({super.key, this.initialIndex = 0});
 
   @override
-  State<AdminBottomNavigation> createState() => _AdminBottomNavigationState();
+  State<CRMBottomNavigation> createState() => _CRMBottomNavigationState();
 }
 
-class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
+class _CRMBottomNavigationState extends State<CRMBottomNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const AdminDashboard(),
-    const AdminTaskPage(),
-    AdminProjects(),
-    const AdminLeads(),
-    const AdminProfile(),
+    const CrmDashboard(),
+    const CRMAllLeads(),
+    const CRMProfilePage(),
   ];
 
   @override
@@ -42,7 +38,7 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: 20,
+          horizontal: 40,
         ), // Adjust this value to control spacing
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -56,16 +52,14 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
         ),
         child: SafeArea(
           child: SizedBox(
-            height: 70,
+            height: 65,
             child: Row(
               mainAxisAlignment: MainAxisAlignment
-                  .spaceEvenly, // Change to spaceAround for closer spacing
+                  .spaceEvenly, // Change to spaceAround for even closer spacing
               children: [
-                _buildNavItem(0, 'assets/home.png', 'Dashboard', 24, 24),
-                _buildNavItem(1, 'assets/task.png', 'My Task', 24, 24),
-                _buildNavItem(2, 'assets/projects.png', 'Projects', 24, 24),
-                _buildNavItem(3, 'assets/leads.png', 'Leads', 24, 24),
-                _buildNavItem(4, 'assets/user.png', 'Profile', 18, 24),
+                _buildNavItem(0, 'assets/home.png', 'Dashboard'),
+                _buildNavItem(1, 'assets/task.png', 'All Leads'),
+                _buildNavItem(2, 'assets/user.png', 'Profile'),
               ],
             ),
           ),
@@ -74,35 +68,28 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
     );
   }
 
-  Widget _buildNavItem(
-    int index,
-    String iconPath,
-    String label,
-    double width,
-    double height,
-  ) {
+  Widget _buildNavItem(int index, String iconPath, String label) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 8,
-          horizontal: 6,
-        ), // Reduced horizontal padding for closer items
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
               iconPath,
-              width: width,
-              height: height,
+              width: index == 2
+                  ? 18
+                  : 24, // Keep the original sizing for profile icon
+              height: 24,
               color: isSelected ? Colors.orange : Colors.grey,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11, // Slightly smaller font for 5 items
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 color: isSelected ? Colors.orange : Colors.grey,
               ),
@@ -115,25 +102,23 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
 }
 
 // Alternative approach - using the original BottomNavigationBar with reduced padding
-class AdminBottomNavigationAlternative extends StatefulWidget {
+class CRMBottomNavigationAlternative extends StatefulWidget {
   final int initialIndex;
-  const AdminBottomNavigationAlternative({super.key, this.initialIndex = 0});
+  const CRMBottomNavigationAlternative({super.key, this.initialIndex = 0});
 
   @override
-  State<AdminBottomNavigationAlternative> createState() =>
-      _AdminBottomNavigationAlternativeState();
+  State<CRMBottomNavigationAlternative> createState() =>
+      _CRMBottomNavigationAlternativeState();
 }
 
-class _AdminBottomNavigationAlternativeState
-    extends State<AdminBottomNavigationAlternative> {
+class _CRMBottomNavigationAlternativeState
+    extends State<CRMBottomNavigationAlternative> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const AdminDashboard(),
-    const AdminTaskPage(),
-    AdminProjects(),
-    const AdminLeads(),
-    const AdminProfile(),
+    const CrmDashboard(),
+    const CRMAllLeads(),
+    const CRMProfilePage(),
   ];
 
   @override
@@ -169,23 +154,19 @@ class _AdminBottomNavigationAlternativeState
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
             elevation: 0,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
             unselectedLabelStyle: const TextStyle(
               fontWeight: FontWeight.normal,
-              fontSize: 11,
             ),
             selectedItemColor: Colors.orange,
             unselectedItemColor: Colors.grey,
-            // Reduce font size and spacing for better fit with 5 items
+            // Reduce the horizontal margin between items
             landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
             items: [
               BottomNavigationBarItem(
                 icon: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
+                    horizontal: 8,
                   ), // Reduced padding
                   child: Image.asset(
                     'assets/home.png',
@@ -199,7 +180,7 @@ class _AdminBottomNavigationAlternativeState
               BottomNavigationBarItem(
                 icon: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
+                    horizontal: 8,
                   ), // Reduced padding
                   child: Image.asset(
                     'assets/task.png',
@@ -208,46 +189,18 @@ class _AdminBottomNavigationAlternativeState
                     color: _selectedIndex == 1 ? Colors.orange : Colors.grey,
                   ),
                 ),
-                label: "My Task",
+                label: "All Leads",
               ),
               BottomNavigationBarItem(
                 icon: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                  ), // Reduced padding
-                  child: Image.asset(
-                    'assets/projects.png',
-                    width: 24,
-                    height: 24,
-                    color: _selectedIndex == 2 ? Colors.orange : Colors.grey,
-                  ),
-                ),
-                label: "Projects",
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                  ), // Reduced padding
-                  child: Image.asset(
-                    'assets/leads.png',
-                    width: 24,
-                    height: 24,
-                    color: _selectedIndex == 3 ? Colors.orange : Colors.grey,
-                  ),
-                ),
-                label: "Leads",
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
+                    horizontal: 8,
                   ), // Reduced padding
                   child: Image.asset(
                     'assets/user.png',
                     width: 18,
                     height: 24,
-                    color: _selectedIndex == 4 ? Colors.orange : Colors.grey,
+                    color: _selectedIndex == 2 ? Colors.orange : Colors.grey,
                   ),
                 ),
                 label: "Profile",
