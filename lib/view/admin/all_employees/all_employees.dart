@@ -135,6 +135,7 @@ class TeamMembersPage extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 4,
+
             offset: const Offset(0, 2),
           ),
         ],
