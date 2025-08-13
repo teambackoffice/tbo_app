@@ -43,7 +43,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F7F3),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF9F7F3),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
