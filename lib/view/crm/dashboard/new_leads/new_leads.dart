@@ -13,7 +13,7 @@ class NewLeadsPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8F5), // background color
+      backgroundColor: const Color(0xFFF9F7F3), // background color
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

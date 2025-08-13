@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/crm/dashboard/_create_new_lead/create_new_lead.dart';
 import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
 import 'package:tbo_app/view/crm/dashboard/leads_contacted/leads_contact.dart';
 import 'package:tbo_app/view/crm/dashboard/new_leads/new_leads.dart';
@@ -10,7 +11,7 @@ class CRMDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF9F7F3),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -133,7 +134,14 @@ class CRMDashboardPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 2,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CreateLeadForm(),
+                        ),
+                      );
+                    },
                     child: const Text(
                       "Create New Lead",
                       style: TextStyle(

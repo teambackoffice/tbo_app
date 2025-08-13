@@ -13,7 +13,7 @@ class DealsClosed extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8F5),
+      backgroundColor: const Color(0xFFF9F7F3),
       body: SafeArea(
         child: Column(
           children: [
