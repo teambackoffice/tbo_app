@@ -26,21 +26,34 @@ class LeadDetailsScreen extends StatefulWidget {
 
 class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   final TextEditingController _noteController = TextEditingController();
+  final String currentUserRole =
+      'admin'; // This would come from your auth system
+  final String currentUserName =
+      'Sarah (Admin)'; // This would come from your auth system
+
   final List<Note> _notes = [
     // Sample data - replace with API calls
     Note(
       id: '1',
-      message: 'Client seems interested in our premium package',
+      message:
+          'Client seems interested in our premium package. Please follow up with pricing details.',
       authorName: 'Sarah (Admin)',
       authorRole: 'admin',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
     ),
     Note(
       id: '2',
-      message: 'Scheduled follow-up call for tomorrow',
+      message: 'Received and understood. Will call them tomorrow morning.',
       authorName: 'Mike (CRM)',
       authorRole: 'crm',
       timestamp: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+    Note(
+      id: '3',
+      message: 'Update: Client wants to schedule a demo for next week.',
+      authorName: 'Mike (CRM)',
+      authorRole: 'crm',
+      timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
     ),
   ];
 
@@ -170,8 +183,14 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                         children: [
                           Row(
                             children: [
+                              Icon(
+                                Icons.message_outlined,
+                                size: 18,
+                                color: Colors.blue[600],
+                              ),
+                              const SizedBox(width: 6),
                               const Text(
-                                "Team Notes",
+                                "Team Communication",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -205,11 +224,19 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                                 _showNotes = !_showNotes;
                               });
                             },
-                            child: Icon(
-                              _showNotes
-                                  ? Icons.expand_less
-                                  : Icons.expand_more,
-                              color: Colors.grey[600],
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                _showNotes
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                color: Colors.blue[600],
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
@@ -219,44 +246,102 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                       if (_showNotes) ...[
                         const SizedBox(height: 12),
 
-                        // Add Note Input
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _noteController,
-                                maxLines: 3,
-                                minLines: 1,
-                                decoration: const InputDecoration(
-                                  hintText: 'Add a note...',
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
+                        // Admin can send notes to CRM
+                        if (currentUserRole == 'admin') ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.blue[200]!),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.admin_panel_settings,
+                                      size: 16,
+                                      color: Colors.blue[600],
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Send instruction to CRM team',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue[800],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  TextButton(
-                                    onPressed: _addNote,
-                                    child: const Text('Add Note'),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _noteController,
+                                  maxLines: 3,
+                                  minLines: 1,
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'Type your message to CRM team...',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: _addNote,
+                                      icon: const Icon(Icons.send, size: 16),
+                                      label: const Text('Send Message'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // CRM users see read-only view with info message
+                        if (currentUserRole == 'crm') ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[300]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Messages from admin will appear here',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Notes List (All notes visible to admin, only admin notes to CRM)
+                        ...(_getVisibleNotes()).map(
+                          (note) => _buildNoteCard(note),
                         ),
-
-                        const SizedBox(height: 12),
-
-                        // Notes List
-                        ..._notes.map((note) => _buildNoteCard(note)),
                       ],
 
                       const SizedBox(height: 20),
@@ -272,18 +357,19 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   }
 
   Widget _buildNoteCard(Note note) {
+    final isFromAdmin = note.authorRole == 'admin';
+    final isCurrentUser = note.authorName.contains(
+      currentUserName.split(' ')[0],
+    );
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: note.authorRole == 'admin'
-            ? Color(0xFF3B5998).withOpacity(0.1)
-            : Color(0xFFF39C12).withOpacity(0.1),
+        color: isFromAdmin ? Colors.blue[50] : Colors.green[50],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: note.authorRole == 'admin'
-              ? Color(0xFF3B5998)
-              : Color(0xFFF39C12),
+          color: isFromAdmin ? Colors.blue[200]! : Colors.green[200]!,
         ),
       ),
       child: Column(
@@ -293,16 +379,13 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
             children: [
               CircleAvatar(
                 radius: 12,
-                backgroundColor: note.authorRole == 'admin'
+                backgroundColor: isFromAdmin
                     ? Colors.blue[600]
                     : Colors.green[600],
-                child: Text(
-                  note.authorName[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Icon(
+                  isFromAdmin ? Icons.admin_panel_settings : Icons.person,
+                  size: 12,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: 8),
@@ -315,6 +398,22 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                   ),
                 ),
               ),
+              if (isCurrentUser)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'You',
+                    style: TextStyle(fontSize: 9, color: Colors.black54),
+                  ),
+                ),
+              const SizedBox(width: 8),
               Text(
                 _formatTimestamp(note.timestamp),
                 style: TextStyle(fontSize: 10, color: Colors.grey[600]),
@@ -323,19 +422,50 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           ),
           const SizedBox(height: 6),
           Text(note.message, style: const TextStyle(fontSize: 13)),
+          if (isFromAdmin && currentUserRole == 'crm')
+            Container(
+              margin: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange[100],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Action Required',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.orange[800],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
+  // Filter notes based on user role
+  List<Note> _getVisibleNotes() {
+    if (currentUserRole == 'admin') {
+      // Admin can see all notes
+      return _notes;
+    } else {
+      // CRM can only see notes from admin
+      return _notes.where((note) => note.authorRole == 'admin').toList();
+    }
+  }
+
   void _addNote() {
     if (_noteController.text.trim().isEmpty) return;
+
+    // Only admin can send notes
+    if (currentUserRole != 'admin') return;
 
     final newNote = Note(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       message: _noteController.text.trim(),
-      authorName: 'You (Admin)', // Replace with actual user info
-      authorRole: 'admin', // Replace with actual user role
+      authorName: currentUserName,
+      authorRole: currentUserRole,
       timestamp: DateTime.now(),
     );
 
@@ -344,9 +474,14 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
       _noteController.clear();
     });
 
-    // TODO: Send note to API
-    // await ApiService.addNote(leadId, newNote);
+    // TODO: Send note to API - this will notify CRM users
+    // await ApiService.sendNoteFromAdminToCRM(leadId, newNote);
+
+    // TODO: Send push notification to CRM users
+    // await NotificationService.notifyCRMTeam(leadId, newNote.message);
   }
+
+  // Filter notes based on user role
 
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
