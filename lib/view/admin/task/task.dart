@@ -104,7 +104,7 @@ class _AdminTaskPageState extends State<AdminTaskPage>
           children: [
             Icon(icon, size: 14),
             const SizedBox(width: 6),
-            Text(text, style: const TextStyle(fontSize: 12)),
+            Text(text, style: const TextStyle(fontSize: 13)),
           ],
         ),
       ),

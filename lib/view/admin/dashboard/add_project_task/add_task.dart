@@ -147,7 +147,7 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
     );
   }
 
-  // New multi-select employee field
+  // Multi-select employee field with different display options
   Widget _buildMultiSelectEmployeeField() {
     return GestureDetector(
       onTap: _showEmployeeSelectionDialog,
@@ -165,51 +165,7 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
                       "Select Employees",
                       style: TextStyle(color: Colors.grey),
                     )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: selectedEmployees.map((employee) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1C7690).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF1C7690),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                employee,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF1C7690),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedEmployees.remove(employee);
-                                  });
-                                },
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: Color(0xFF1C7690),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  : _buildSelectedEmployeesDisplay(),
             ),
             const Icon(Icons.arrow_drop_down, color: Colors.grey),
           ],
@@ -218,7 +174,58 @@ class _AddNewTaskPageState extends State<AddNewTaskPage> {
     );
   }
 
-  // Show unique animated dialog for employee selection
+  // Choose one of these display methods:
+  Widget _buildSelectedEmployeesDisplay() {
+    // Option 2: Compact Text List
+    return _buildCompactTextDisplay();
+  }
+
+  // Option 2: Compact Text Display
+  Widget _buildCompactTextDisplay() {
+    if (selectedEmployees.length == 1) {
+      return Row(
+        children: [
+          Icon(Icons.person, size: 18, color: const Color(0xFF1C7690)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              selectedEmployees.first,
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+            ),
+          ),
+        ],
+      );
+    } else if (selectedEmployees.length <= 2) {
+      return Row(
+        children: [
+          Icon(Icons.group, size: 18, color: const Color(0xFF1C7690)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              selectedEmployees.join(", "),
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Row(
+        children: [
+          Icon(Icons.groups, size: 18, color: const Color(0xFF1C7690)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              "${selectedEmployees.take(2).join(", ")} and ${selectedEmployees.length - 2} more",
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
   void _showEmployeeSelectionDialog() {
     showDialog(
       context: context,
