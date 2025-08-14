@@ -157,7 +157,18 @@ class AdminDashboard extends StatelessWidget {
                 subtitle: 'TBOPROID1',
                 time: '18 Hours',
                 dueDate: '15-07-25',
-                assignedTo: 'Shameer Tm',
+                assignedEmployees: [
+                  {
+                    "name": "Shameer",
+                    "image":
+                        "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
+                  },
+                  {
+                    "name": "Priya",
+                    "image":
+                        "https://media.istockphoto.com/id/1489414046/photo/portrait-of-an-attractive-empowered-multiethnic-woman-looking-at-camera-and-charmingly.jpg?s=612x612&w=0&k=20&c=p9-7xtXTjNUUDYJVJmZ2pka98lr2xiFCM1jFLqpgF6Q=",
+                  },
+                ],
                 color: const Color(0xFF475569),
                 priority: 'High',
               ),
@@ -169,7 +180,13 @@ class AdminDashboard extends StatelessWidget {
                 subtitle: 'TBOPROID2',
                 time: '18 Hours',
                 dueDate: '15-07-25',
-                assignedTo: 'Jasir',
+                assignedEmployees: [
+                  {
+                    "name": "Jasir",
+                    "image":
+                        "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
+                  },
+                ],
                 color: const Color(0xFF129476),
                 priority: 'High',
               ),
@@ -378,7 +395,7 @@ class AdminDashboard extends StatelessWidget {
     required String subtitle,
     required String time,
     required String dueDate,
-    required String assignedTo,
+    required List<Map<String, String>> assignedEmployees,
     required Color color,
     required String priority,
   }) {
@@ -499,19 +516,99 @@ class AdminDashboard extends StatelessWidget {
                       style: TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      assignedTo,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
+                    _buildEmployeeAvatars(assignedEmployees),
                   ],
                 ),
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmployeeAvatars(List<Map<String, String>> employees) {
+    const int maxVisible =
+        2; // Maximum number of avatars to show for dashboard cards
+    const double avatarRadius = 12.0; // Radius for CircleAvatar
+    const double overlapOffset = 18.0; // How much avatars overlap
+
+    return SizedBox(
+      height: avatarRadius * 2,
+      child: Stack(
+        children: [
+          // Display visible avatars
+          ...employees.take(maxVisible).map((employee) {
+            int index = employees.indexOf(employee);
+            return Positioned(
+              left: index * overlapOffset,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 10,
+                  backgroundColor: Colors.blue[400],
+                  backgroundImage:
+                      employee["image"] != null && employee["image"]!.isNotEmpty
+                      ? NetworkImage(employee["image"]!)
+                      : null,
+                  onBackgroundImageError: (exception, stackTrace) {
+                    // Handle image loading error - will show the child text instead
+                  },
+                  child: employee["image"] == null || employee["image"]!.isEmpty
+                      ? Text(
+                          employee["name"]![0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            );
+          }),
+
+          // Show "+X more" indicator if there are more employees
+          if (employees.length > maxVisible)
+            Positioned(
+              left: maxVisible * overlapOffset,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: avatarRadius,
+                  backgroundColor: Colors.grey[600],
+                  child: Text(
+                    "+${employees.length - maxVisible}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

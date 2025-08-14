@@ -6,35 +6,78 @@ class AdminCompleteTaskList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Local task list (inside the widget)
-    final List<Map<String, String>> tasks = [
+    final List<Map<String, dynamic>> tasks = [
       {
         "title": "Champion Car Wash App",
         "priority": "High",
         "time": "18 Hours",
         "dueDate": "15-07-25",
-        "assignedTo": "Shameer",
+        "assignedEmployees": [
+          {
+            "name": "Shameer",
+            "image":
+                "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
+          },
+          {
+            "name": "Priya",
+            "image":
+                "https://media.istockphoto.com/id/1489414046/photo/portrait-of-an-attractive-empowered-multiethnic-woman-looking-at-camera-and-charmingly.jpg?s=612x612&w=0&k=20&c=p9-7xtXTjNUUDYJVJmZ2pka98lr2xiFCM1jFLqpgF6Q=",
+          },
+        ],
       },
       {
         "title": "Onshore Website",
         "priority": "Medium",
         "time": "18 Hours",
         "dueDate": "15-07-25",
-        "assignedTo": "Jasir",
+        "assignedEmployees": [
+          {
+            "name": "Jasir",
+            "image":
+                "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
+          },
+        ],
       },
       {
         "title": "Flyday Website",
         "priority": "High",
         "time": "18 Hours",
         "dueDate": "15-07-25",
-        "assignedTo": "Ajmal",
+        "assignedEmployees": [
+          {
+            "name": "Ajmal",
+            "image":
+                "https://media.istockphoto.com/id/1332104710/photo/shot-of-a-young-male-engineer-working-in-a-server-room.jpg?s=612x612&w=0&k=20&c=msvzP5OAQMSsq8Zh4gasPKabPYq4kWB3t9R4NoNpMZc=",
+          },
+          {
+            "name": "Arjun",
+            "image":
+                "https://media.istockphoto.com/id/1332104710/photo/shot-of-a-young-male-engineer-working-in-a-server-room.jpg?s=612x612&w=0&k=20&c=msvzP5OAQMSsq8Zh4gasPKabPYq4kWB3t9R4NoNpMZc=",
+          },
+          {
+            "name": "Maya",
+            "image":
+                "https://media.istockphoto.com/id/1489414046/photo/portrait-of-an-attractive-empowered-multiethnic-woman-looking-at-camera-and-charmingly.jpg?s=612x612&w=0&k=20&c=p9-7xtXTjNUUDYJVJmZ2pka98lr2xiFCM1jFLqpgF6Q=",
+          },
+        ],
       },
       {
         "title": "Chundakadan Website",
         "priority": "Medium",
         "time": "20 Hours",
         "dueDate": "15-07-25",
-        "assignedTo": "Thanha",
+        "assignedEmployees": [
+          {
+            "name": "Thanha",
+            "image":
+                "https://media.istockphoto.com/id/1489414046/photo/portrait-of-an-attractive-empowered-multiethnic-woman-looking-at-camera-and-charmingly.jpg?s=612x612&w=0&k=20&c=p9-7xtXTjNUUDYJVJmZ2pka98lr2xiFCM1jFLqpgF6Q=",
+          },
+          {
+            "name": "Rahul",
+            "image":
+                "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
+          },
+        ],
       },
     ];
 
@@ -43,6 +86,10 @@ class AdminCompleteTaskList extends StatelessWidget {
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         var task = tasks[index];
+        List<Map<String, String>> employees = List<Map<String, String>>.from(
+          task["assignedEmployees"],
+        );
+
         return InkWell(
           onTap: () {
             Navigator.push(
@@ -93,14 +140,13 @@ class AdminCompleteTaskList extends StatelessWidget {
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF00AD85), // ✅ Inside fill color
+                        color: const Color(0xFF00AD85),
                         border: Border.all(color: Colors.green[800]!, width: 1),
                       ),
                       child: const Icon(
                         Icons.done,
                         size: 18,
-                        color: Colors
-                            .white, // Icon color contrasts with background
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -128,7 +174,7 @@ class AdminCompleteTaskList extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Time & Due Date labels
+                // Time & Due Date & Assigned To labels
                 Row(
                   children: [
                     const Icon(
@@ -141,7 +187,7 @@ class AdminCompleteTaskList extends StatelessWidget {
                       "Time",
                       style: TextStyle(color: Colors.black, fontSize: 12),
                     ),
-                    SizedBox(width: 60),
+                    const SizedBox(width: 60),
                     const Icon(
                       Icons.calendar_today_outlined,
                       size: 16,
@@ -152,18 +198,20 @@ class AdminCompleteTaskList extends StatelessWidget {
                       "Due Date",
                       style: TextStyle(color: Colors.black, fontSize: 12),
                     ),
-                    SizedBox(width: 60),
+                    const SizedBox(width: 60),
                     const Text(
                       "Assigned To",
                       style: TextStyle(color: Colors.black, fontSize: 12),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
 
-                // Time & Due Date values
+                // Time & Due Date values & Employee Avatars
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Time
                     Text(
                       task["time"]!,
                       style: const TextStyle(
@@ -172,7 +220,9 @@ class AdminCompleteTaskList extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 60),
+                    const SizedBox(width: 60),
+
+                    // Due Date
                     Text(
                       task["dueDate"]!,
                       style: const TextStyle(
@@ -181,15 +231,10 @@ class AdminCompleteTaskList extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 60),
-                    Text(
-                      task["assignedTo"]!,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const SizedBox(width: 60),
+
+                    // Employee Avatars
+                    Expanded(child: _buildEmployeeAvatars(employees)),
                   ],
                 ),
               ],
@@ -197,6 +242,137 @@ class AdminCompleteTaskList extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmployeeAvatars(List<Map<String, String>> employees) {
+    const int maxVisible = 3; // Maximum number of avatars to show
+    const double avatarSize = 32.0;
+    const double overlapOffset = 24.0; // How much avatars overlap
+
+    return SizedBox(
+      height: avatarSize,
+      child: Stack(
+        children: [
+          // Display visible avatars
+          ...employees.take(maxVisible).map((employee) {
+            int index = employees.indexOf(employee);
+            return Positioned(
+              left: index * overlapOffset,
+              child: Container(
+                width: avatarSize,
+                height: avatarSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child:
+                      employee["image"] != null && employee["image"]!.isNotEmpty
+                      ? Image.network(
+                          employee["image"]!,
+                          width: avatarSize,
+                          height: avatarSize,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Show first letter if image fails to load
+                            return Container(
+                              width: avatarSize,
+                              height: avatarSize,
+                              color: Colors.blue[400],
+                              child: Center(
+                                child: Text(
+                                  employee["name"]![0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              width: avatarSize,
+                              height: avatarSize,
+                              color: Colors.grey[300],
+                              child: Center(
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.blue[400]!,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          width: avatarSize,
+                          height: avatarSize,
+                          color: Colors.blue[400],
+                          child: Center(
+                            child: Text(
+                              employee["name"]![0].toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            );
+          }),
+
+          // Show "+X more" indicator if there are more employees
+          if (employees.length > maxVisible)
+            Positioned(
+              left: maxVisible * overlapOffset,
+              child: Container(
+                width: avatarSize,
+                height: avatarSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey[600],
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    "+${employees.length - maxVisible}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
