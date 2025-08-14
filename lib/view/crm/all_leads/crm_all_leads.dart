@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/admin/leads/lead_detail.dart';
+import 'package:tbo_app/view/crm/all_leads/crm_leads_details.dart';
 
 class Lead {
   final String status;
@@ -81,7 +81,7 @@ class CRMAllLeadsPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const LeadDetailsScreen(),
+                    builder: (context) => const CRMLeadsDetails(),
                   ),
                 );
               },
