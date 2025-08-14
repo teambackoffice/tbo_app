@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tbo_app/view/admin/leads/lead_detail.dart';
 
-class AdminLeads extends StatelessWidget {
-  const AdminLeads({super.key});
+class AdminLeadsPage extends StatelessWidget {
+  const AdminLeadsPage({super.key});
 
   Widget _buildStatusBadge(String status) {
     Color backgroundColor;
