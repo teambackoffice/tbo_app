@@ -65,7 +65,7 @@ class _TaskPageState extends State<TaskPage>
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 tabs: [
-                  _buildTab(Icons.access_time, "To Do"),
+                  _buildTab(Icons.access_time, "Open"),
                   _buildTab(Icons.incomplete_circle, "In Progress"),
                   _buildTab(Icons.check_circle, "Completed"),
                 ],
