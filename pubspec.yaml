@@ -36,6 +36,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   fl_chart: ^1.0.0
   hugeicons: ^0.0.11
+  provider: ^6.1.5
+  http: ^1.5.0
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
