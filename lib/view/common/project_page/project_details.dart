@@ -40,84 +40,88 @@ class CommonProjectPageDetails extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          children: [
-            SizedBox(height: 50),
-            // Main content card
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      project.projectName,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Project ID
-                    Text(
-                      project.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Project details
-                    _buildDetailRow('Project Type', project.projectType),
-                    _buildDetailRow('Department', 'Digital Marketing'),
-                    _buildDetailRow('Priority', 'Medium'),
-                    _buildDetailRow(
-                      'Expected Start Date',
-                      DateFormat(
-                        'dd MMM yyyy',
-                      ).format(project.expectedStartDate),
-                    ),
-
-                    _buildDetailRow(
-                      'Expected End Date',
-                      DateFormat('dd MMM yyyy').format(project.expectedEndDate),
-                    ),
-
-                    const SizedBox(height: 12),
-                    // Description
-                    Text(
-                      project.notes,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                        height: 1.5,
-                        letterSpacing: 0.2,
-                      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 50),
+              // Main content card
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        project.projectName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Project ID
+                      Text(
+                        project.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Project details
+                      _buildDetailRow('Project Type', project.projectType),
+                      _buildDetailRow('Department', 'Digital Marketing'),
+                      _buildDetailRow('Priority', 'Medium'),
+                      _buildDetailRow(
+                        'Expected Start Date',
+                        DateFormat(
+                          'dd MMM yyyy',
+                        ).format(project.expectedStartDate),
+                      ),
+                      _buildDetailRow(
+                        'Expected End Date',
+                        DateFormat(
+                          'dd MMM yyyy',
+                        ).format(project.expectedEndDate),
+                      ),
+
+                      const SizedBox(height: 12),
+                      // Description
+                      Text(
+                        project.notes,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          height: 1.5,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20), // Add bottom padding
+            ],
+          ),
         ),
       ),
     );
@@ -144,7 +148,7 @@ class CommonProjectPageDetails extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
           ),
         ],
