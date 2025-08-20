@@ -7,7 +7,7 @@ import 'package:tbo_app/config/api_constants.dart';
 class LoginService {
   final _storage = const FlutterSecureStorage();
 
-  final String loginUrl = "${ApiConstants.baseUrl}user_login";
+  final String loginUrl = "${ApiConstants.baseUrl}auth.user_login";
 
   Future<Map<String, dynamic>?> loginUser({
     required String username,

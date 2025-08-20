@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:tbo_app/config/api_constants.dart';
 
 class LogOutService {
-  final String baseUrl = "${ApiConstants.baseUrl}logout";
+  final String baseUrl = "${ApiConstants.baseUrl}auth.logout";
 
   Future<Map<String, dynamic>> logout({required String username}) async {
     try {

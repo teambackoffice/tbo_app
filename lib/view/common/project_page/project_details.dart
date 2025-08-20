@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/project_list_modal.dart';
 
 class CommonProjectPageDetails extends StatelessWidget {
-  const CommonProjectPageDetails({super.key});
+  final ProjectDetails project;
+  const CommonProjectPageDetails({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +65,8 @@ class CommonProjectPageDetails extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title
-                    const Text(
-                      'Onshore Website',
+                    Text(
+                      project.projectName,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -73,8 +76,8 @@ class CommonProjectPageDetails extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     // Project ID
-                    const Text(
-                      'TBOPROID21',
+                    Text(
+                      project.name,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
@@ -84,17 +87,25 @@ class CommonProjectPageDetails extends StatelessWidget {
                     const SizedBox(height: 32),
 
                     // Project details
-                    _buildDetailRow('Project Type', 'Website'),
+                    _buildDetailRow('Project Type', project.projectType),
                     _buildDetailRow('Department', 'Digital Marketing'),
                     _buildDetailRow('Priority', 'Medium'),
-                    _buildDetailRow('Expected Start Date', 'Jul 27 2025'),
-                    _buildDetailRow('Expected End Date', 'Aug 10 2025'),
+                    _buildDetailRow(
+                      'Expected Start Date',
+                      DateFormat(
+                        'dd MMM yyyy',
+                      ).format(project.expectedStartDate),
+                    ),
+
+                    _buildDetailRow(
+                      'Expected End Date',
+                      DateFormat('dd MMM yyyy').format(project.expectedEndDate),
+                    ),
 
                     const SizedBox(height: 12),
-
                     // Description
-                    const Text(
-                      'Lorem ipsum dolor sit amet consectetur. Diam dictum ultricies nisl nisl tempus ante. Est nisl ultricies aliquam elementum. Aliquet nisl et aenean tristique. Nisl volutpat accumsan ac enim sit tempus. Sagittis sit laoreet purus viverra enim hac pellentesque non. Amet vel lectus purus congue egestas sed.',
+                    Text(
+                      project.notes,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
