@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AdminProjectDetails extends StatelessWidget {
-  const AdminProjectDetails({super.key});
+class CommonProjectPageDetails extends StatelessWidget {
+  const CommonProjectPageDetails({super.key});
 
   @override
   Widget build(BuildContext context) {

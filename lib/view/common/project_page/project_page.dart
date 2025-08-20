@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/employee/projects/project_details.dart';
+import 'package:tbo_app/view/common/project_page/project_details.dart';
 
-class ProjectsPage extends StatelessWidget {
+class CommonProjectPage extends StatelessWidget {
   final List<Map<String, String>> projects = [
     {"name": "Onshore Website", "type": "Website"},
     {"name": "Flyaday", "type": "Website"},
@@ -10,7 +10,7 @@ class ProjectsPage extends StatelessWidget {
     {"name": "Hydrotech", "type": "Website"},
   ];
 
-  ProjectsPage({super.key});
+  CommonProjectPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class ProjectsPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ProjectDetails(),
+                            builder: (context) => CommonProjectPageDetails(),
                           ),
                         );
                       },

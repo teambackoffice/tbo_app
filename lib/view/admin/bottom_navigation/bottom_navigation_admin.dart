@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tbo_app/view/admin/dashboard/dashboard.dart';
 import 'package:tbo_app/view/admin/leads/leads.dart';
 import 'package:tbo_app/view/admin/profile/profile.dart';
-import 'package:tbo_app/view/admin/project/project.dart';
 import 'package:tbo_app/view/admin/task/task.dart';
+import 'package:tbo_app/view/common/project_page/project_page.dart';
 
 class AdminBottomNavigation extends StatefulWidget {
   final int initialIndex;
@@ -19,7 +19,7 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
   final List<Widget> _pages = [
     const AdminDashboard(),
     const AdminTaskPage(),
-    AdminProjects(),
+    CommonProjectPage(),
     const AdminLeadsPage(),
     const AdminProfile(),
   ];
