@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _loginIdController,
                 decoration: InputDecoration(
-                  hintText: "Login Id",
+                  hintText: "Username",
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
@@ -86,10 +86,19 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: authController.isLoading
                       ? null
                       : () async {
-                          await authController.login(
+                          // Get the result from login
+                          final result = await authController.login(
                             _loginIdController.text.trim(),
                             _passwordController.text.trim(),
                           );
+
+                          // Handle navigation based on result
+                          if (result != null && result["success"] == true) {
+                            // Navigation will be handled automatically by AuthWrapper
+                            // since LoginController updates isLoggedIn and currentRole
+                          } else {
+                            // Error is already set in the controller and will be displayed
+                          }
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1C7690),

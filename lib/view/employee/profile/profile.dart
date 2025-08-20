@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
-import 'package:tbo_app/view/login_page/login_page.dart';
+import 'package:tbo_app/controller/login_controller.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -264,64 +264,9 @@ class ProfilePage extends StatelessWidget {
                 showDialog(
                   context: parentContext,
                   barrierDismissible: false,
-                  builder: (BuildContext loadingContext) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      backgroundColor: Colors.white,
-                      content: Container(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF1C7690),
-                                    Color(0xFF4A9FB8),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: const Icon(
-                                Icons.logout,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const CircularProgressIndicator(
-                              color: Color(0xFF1C7690),
-                              strokeWidth: 3,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Logging out...',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2D2D2D),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Please wait a moment',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF8E8E8E),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                  builder: (_) => const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF1C7690)),
+                  ),
                 );
 
                 try {
@@ -329,89 +274,33 @@ class ProfilePage extends StatelessWidget {
                     parentContext,
                     listen: false,
                   );
-                  await logoutController.logout("Administrator");
+                  final loginController = Provider.of<LoginController>(
+                    parentContext,
+                    listen: false,
+                  );
+
+                  // clear session from API / storage
+                  await logoutController.logout("Employee");
+
+                  // update login state so AuthWrapper rebuilds
+                  await loginController.clearSession();
 
                   if (parentContext.mounted) {
-                    // Close loading dialog
-                    Navigator.of(parentContext).pop();
-
-                    // Navigate to login page
-                    Navigator.pushAndRemoveUntil(
-                      parentContext,
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                      (route) => false,
-                    );
+                    Navigator.of(parentContext).pop(); // close loading
+                    // ✅ No manual navigation needed, AuthWrapper will now show LoginPage
                   }
                 } catch (e) {
                   if (parentContext.mounted) {
-                    // Close loading dialog
-                    Navigator.of(parentContext).pop();
-
-                    // Show error dialog
-                    showDialog(
-                      context: parentContext,
-                      builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        backgroundColor: Colors.white,
-                        title: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.error_outline,
-                                color: Colors.red,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Error',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                        content: const Text(
-                          'Failed to log out. Please try again.',
-                          style: TextStyle(
-                            color: Color(0xFF8E8E8E),
-                            fontSize: 16,
-                          ),
-                        ),
-                        actions: [
-                          ElevatedButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: const Text(
-                              'OK',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                        ],
+                    Navigator.of(parentContext).pop(); // close loading
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text("Failed to log out. Please try again."),
                       ),
                     );
                   }
                 }
               },
+
               child: const Text(
                 'Log Out',
                 style: TextStyle(

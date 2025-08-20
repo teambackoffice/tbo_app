@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/log_out_controller.dart';
+import 'package:tbo_app/controller/login_controller.dart';
 
 class CRMProfilePage extends StatelessWidget {
   const CRMProfilePage({super.key});
+
+  final storage = const FlutterSecureStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -217,46 +223,80 @@ class CRMProfilePage extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) {
+    final parentContext = context;
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            'Confirm Logout',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          title: const Text('Confirm Logout'),
           content: const Text('Are you sure you want to log out?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Color(0xFF8E8E8E)),
-              ),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Add your logout logic here
-                // Example:
-                // Navigator.of(context).pushReplacementNamed('/login');
-                print('User logged out');
-              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1C7690),
+                foregroundColor: Color(0xFF1C7690),
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
+              onPressed: () async {
+                // Close confirmation dialog
+                Navigator.of(dialogContext).pop();
+
+                // Show loading dialog
+                showDialog(
+                  context: parentContext,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF1C7690)),
+                  ),
+                );
+
+                try {
+                  final logoutController = Provider.of<LogOutController>(
+                    parentContext,
+                    listen: false,
+                  );
+                  final loginController = Provider.of<LoginController>(
+                    parentContext,
+                    listen: false,
+                  );
+
+                  // clear session from API / storage
+                  await logoutController.logout("CRM");
+
+                  // update login state so AuthWrapper rebuilds
+                  await loginController.clearSession();
+
+                  if (parentContext.mounted) {
+                    Navigator.of(parentContext).pop(); // close loading
+                    // ✅ No manual navigation needed, AuthWrapper will now show LoginPage
+                  }
+                } catch (e) {
+                  if (parentContext.mounted) {
+                    Navigator.of(parentContext).pop(); // close loading
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text("Failed to log out. Please try again."),
+                      ),
+                    );
+                  }
+                }
+              },
+
               child: const Text(
                 'Log Out',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],

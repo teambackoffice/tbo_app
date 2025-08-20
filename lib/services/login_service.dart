@@ -14,30 +14,22 @@ class LoginService {
     required String password,
   }) async {
     try {
-      print("🔑 Attempting login...");
-      print("➡️ Username: $username | Password: $password");
-
       var uri = Uri.parse(
         "$loginUrl?usr=$username&pwd=$password",
       ); // API expects query params
-      print("🌐 Request URL: $uri");
 
       var request = http.Request('POST', uri);
 
       http.StreamedResponse response = await request.send();
-      print("📡 Status Code: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final body = await response.stream.bytesToString();
-        print("📥 Raw Response Body: $body");
 
         final data = json.decode(body);
-        print("✅ Decoded Response Data: $data");
 
         // Extract sid from cookie if returned in headers
         String? sid;
         if (response.headers['set-cookie'] != null) {
-          print("🍪 Set-Cookie Header: ${response.headers['set-cookie']}");
           final cookies = response.headers['set-cookie']!.split(';');
           for (var c in cookies) {
             if (c.trim().startsWith('sid=')) {
@@ -47,40 +39,61 @@ class LoginService {
           }
         }
 
-        print("📌 Extracted SID: $sid");
-
-        // Store sid & username in secure storage
+        // Store sid, username & role_profile_name in secure storage
         if (sid != null) {
           await _storage.write(key: "sid", value: sid);
           await _storage.write(key: "username", value: username);
-          print("🔒 Stored SID & Username in Secure Storage");
+
+          // ✅ NEW: store role_profile_name if present
+          final roleProfileName = data["message"]?["role_profile_name"];
+          if (roleProfileName != null) {
+            await _storage.write(
+              key: "role_profile_name",
+              value: roleProfileName,
+            );
+          }
         }
 
         return {"data": data, "sid": sid};
       } else {
-        print("❌ Error: ${response.reasonPhrase}");
         return {"error": response.reasonPhrase};
       }
     } catch (e) {
-      print("⚠️ Exception: $e");
       return {"error": e.toString()};
     }
   }
 
+  // Fix: This should get the stored SID, not API key
   Future<String?> getStoredSid() async {
     final sid = await _storage.read(key: "sid");
-    print("📦 Retrieved SID from storage: $sid");
     return sid;
+  }
+
+  // Keep this if you actually store an API key separately
+  Future<String?> getStoredApiKey() async {
+    final apiKey = await _storage.read(key: "api_key");
+    return apiKey;
   }
 
   Future<String?> getStoredUsername() async {
     final username = await _storage.read(key: "username");
-    print("📦 Retrieved Username from storage: $username");
     return username;
+  }
+
+  Future<String?> getStoredRoleProfileName() async {
+    final roleProfileName = await _storage.read(key: "role_profile_name");
+    return roleProfileName;
+  }
+
+  Future<void> storeSession({
+    required String sid,
+    required String username,
+  }) async {
+    await _storage.write(key: "sid", value: sid);
+    await _storage.write(key: "username", value: username);
   }
 
   Future<void> logout() async {
     await _storage.deleteAll();
-    print("🚪 User logged out — storage cleared");
   }
 }
