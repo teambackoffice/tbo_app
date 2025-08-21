@@ -25,7 +25,10 @@ class ProjectListService {
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-          return ProjectList.fromJson(decoded);
+
+          final projectList = ProjectList.fromJson(decoded);
+
+          return projectList;
         } catch (e) {
           throw Exception('Failed to parse response: $e');
         }

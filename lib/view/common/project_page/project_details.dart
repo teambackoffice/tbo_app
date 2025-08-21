@@ -46,7 +46,6 @@ class CommonProjectPageDetails extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 50),
-              // Main content card
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -67,7 +66,7 @@ class CommonProjectPageDetails extends StatelessWidget {
                     children: [
                       // Title
                       Text(
-                        project.projectName,
+                        project.projectName!,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -78,7 +77,7 @@ class CommonProjectPageDetails extends StatelessWidget {
 
                       // Project ID
                       Text(
-                        project.name,
+                        project.name!,
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
@@ -88,33 +87,45 @@ class CommonProjectPageDetails extends StatelessWidget {
                       const SizedBox(height: 32),
 
                       // Project details
-                      _buildDetailRow('Project Type', project.projectType),
+                      project.projectType?.isEmpty ?? true
+                          ? const SizedBox.shrink()
+                          : _buildDetailRow(
+                              'Project Type',
+                              project.projectType ?? '',
+                            ),
                       _buildDetailRow('Department', 'Digital Marketing'),
-                      _buildDetailRow('Priority', 'Medium'),
-                      _buildDetailRow(
-                        'Expected Start Date',
-                        DateFormat(
-                          'dd MMM yyyy',
-                        ).format(project.expectedStartDate),
-                      ),
-                      _buildDetailRow(
-                        'Expected End Date',
-                        DateFormat(
-                          'dd MMM yyyy',
-                        ).format(project.expectedEndDate),
-                      ),
+                      _buildDetailRow('Priority', project.priority!),
+                      project.expectedStartDate == null
+                          ? const SizedBox.shrink()
+                          : _buildDetailRow(
+                              'Expected Start Date',
+                              DateFormat(
+                                'dd MMM yyyy',
+                              ).format(project.expectedStartDate!),
+                            ),
+
+                      project.expectedEndDate == null
+                          ? const SizedBox.shrink()
+                          : _buildDetailRow(
+                              'Expected End Date',
+                              DateFormat(
+                                'dd MMM yyyy',
+                              ).format(project.expectedEndDate!),
+                            ),
 
                       const SizedBox(height: 12),
                       // Description
-                      Text(
-                        project.notes,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                          height: 1.5,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
+                      (project.notes?.isEmpty ?? true)
+                          ? const SizedBox.shrink()
+                          : Text(
+                              project.notes!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                                height: 1.5,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
                     ],
                   ),
                 ),

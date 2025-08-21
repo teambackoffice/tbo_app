@@ -80,19 +80,21 @@ class _CommonProjectPageState extends State<CommonProjectPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  project.projectName,
+                                  project.projectName!,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                Text(
-                                  project.projectType,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
+                                project.projectType == null
+                                    ? const Text('')
+                                    : Text(
+                                        project.projectType!,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                               ],
                             ),
                           ),
