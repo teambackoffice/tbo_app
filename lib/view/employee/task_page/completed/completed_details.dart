@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/task_list_modal.dart';
 
 class CompletedDetails extends StatelessWidget {
-  const CompletedDetails({super.key});
+  final TaskDetails task;
+  const CompletedDetails({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +55,9 @@ class CompletedDetails extends StatelessWidget {
                         color: const Color(0xFF1C7690),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "High",
-                        style: TextStyle(
+                      child: Text(
+                        task.priority,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
@@ -64,7 +67,7 @@ class CompletedDetails extends StatelessWidget {
 
                     // Title
                     const Text(
-                      "Champion Car Wash App",
+                      "##########",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -82,7 +85,7 @@ class CompletedDetails extends StatelessWidget {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          "Time",
+                          "Start Date",
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: Colors.black54,
@@ -91,7 +94,10 @@ class CompletedDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text("18 Hours", style: TextStyle(fontSize: 18)),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expStartDate),
+                      style: const TextStyle(fontSize: 18),
+                    ),
                     const SizedBox(height: 12),
 
                     // Due Date
@@ -113,12 +119,15 @@ class CompletedDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text("15-07-25", style: TextStyle(fontSize: 18)),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expEndDate),
+                      style: const TextStyle(fontSize: 18),
+                    ),
                     const SizedBox(height: 16),
 
                     // Description
-                    const Text(
-                      "The Champion Car Wash App is designed to streamline your vehicle cleaning experience.\n With just a few taps, you can book a wash, track service time, and receive timely updates.\n Our professional team ensures high-quality cleaning while you focus on your day. The app also helps you manage appointments, track past services, and enjoy exclusive offers.",
+                    Text(
+                      task.description,
                       style: TextStyle(fontSize: 14, height: 1.4),
                     ),
                   ],
