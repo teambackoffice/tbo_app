@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/task_list_modal.dart';
 import 'package:tbo_app/view/employee/task_page/inprogress/request_time.dart';
 
 class InprogressDetails extends StatelessWidget {
-  const InprogressDetails({super.key});
+  final TaskDetails task;
+  const InprogressDetails({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +51,8 @@ class InprogressDetails extends StatelessWidget {
                         color: const Color(0xFF0E7C92),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "High",
+                      child: Text(
+                        task.priority,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -60,7 +63,7 @@ class InprogressDetails extends StatelessWidget {
 
                     // Title
                     const Text(
-                      "Champion Car Wash App",
+                      "#########",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -74,7 +77,7 @@ class InprogressDetails extends StatelessWidget {
                         Icon(Icons.access_time, size: 18),
                         SizedBox(width: 8),
                         Text(
-                          "Time",
+                          "Start Date",
                           style: TextStyle(
                             color: Colors.black54,
                             fontWeight: FontWeight.w500,
@@ -83,7 +86,10 @@ class InprogressDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text("18 Hours", style: TextStyle(fontSize: 16)),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expStartDate),
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 12),
 
                     // Due Date
@@ -101,12 +107,15 @@ class InprogressDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text("15-07-25", style: TextStyle(fontSize: 16)),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expEndDate),
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 16),
 
                     // Description
-                    const Text(
-                      "The Champion Car Wash App is designed to streamline your vehicle cleaning experience.\n With just a few taps, you can book a wash, track service time, and receive timely updates.\n Our professional team ensures high-quality cleaning while you focus on your day. The app also helps you manage appointments, track past services, and enjoy exclusive offers.",
+                    Text(
+                      task.description,
                       style: TextStyle(fontSize: 14, color: Colors.black87),
                     ),
                     const SizedBox(height: 24),

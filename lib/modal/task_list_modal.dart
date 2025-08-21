@@ -12,7 +12,7 @@ String allTaskListModalToJson(AllTaskListModal data) =>
 
 class AllTaskListModal {
   String message;
-  List<Datum> data;
+  List<TaskDetails> data;
   bool success;
 
   AllTaskListModal({
@@ -24,7 +24,9 @@ class AllTaskListModal {
   factory AllTaskListModal.fromJson(Map<String, dynamic> json) =>
       AllTaskListModal(
         message: json["message"],
-        data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+        data: List<TaskDetails>.from(
+          json["data"].map((x) => TaskDetails.fromJson(x)),
+        ),
         success: json["success"],
       );
 
@@ -35,7 +37,7 @@ class AllTaskListModal {
   };
 }
 
-class Datum {
+class TaskDetails {
   String name;
   String subject;
   String status;
@@ -48,7 +50,7 @@ class Datum {
   DateTime creation;
   List<String> assignedUsers;
 
-  Datum({
+  TaskDetails({
     required this.name,
     required this.subject,
     required this.status,
@@ -62,7 +64,7 @@ class Datum {
     required this.assignedUsers,
   });
 
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory TaskDetails.fromJson(Map<String, dynamic> json) => TaskDetails(
     name: json["name"],
     subject: json["subject"],
     status: json["status"],

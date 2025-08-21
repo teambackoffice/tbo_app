@@ -40,6 +40,9 @@ class TaskListService {
       );
 
       if (response.statusCode == 200) {
+        print('Response body: ${response.body}'); // Debugging line
+        print('Response status code: ${response.statusCode}'); // Debugging line
+        print(uri);
         try {
           final decoded = jsonDecode(response.body);
 

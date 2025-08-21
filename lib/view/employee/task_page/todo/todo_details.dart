@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/task_list_modal.dart';
 
 class TodoDetails extends StatelessWidget {
-  const TodoDetails({super.key});
+  final TaskDetails task;
+  const TodoDetails({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -44,15 +47,15 @@ class TodoDetails extends StatelessWidget {
                         color: const Color(0xFF1C7690),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "High",
+                      child: Text(
+                        task.priority,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                     const SizedBox(height: 8),
                     // Title
                     const Text(
-                      "Champion Car Wash App",
+                      '#########',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -65,15 +68,15 @@ class TodoDetails extends StatelessWidget {
                         Icon(Icons.access_time, size: 18),
                         SizedBox(width: 6),
                         Text(
-                          "Time",
+                          "Start Date",
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "18 Hours",
-                      style: TextStyle(
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expStartDate),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
@@ -94,17 +97,17 @@ class TodoDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "15-07-25",
-                      style: TextStyle(
+                    Text(
+                      DateFormat('dd MMM yyyy').format(task.expEndDate),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Description
-                    const Text(
-                      "The Champion Car Wash App is designed to streamline your vehicle cleaning experience.\n With just a few taps, you can book a wash, track service time, and receive timely updates.\n Our professional team ensures high-quality cleaning while you focus on your day. The app also helps you manage appointments, track past services, and enjoy exclusive offers.",
+                    Text(
+                      task.description,
                       style: TextStyle(fontSize: 16, height: 1.4),
                     ),
                     const SizedBox(height: 20),

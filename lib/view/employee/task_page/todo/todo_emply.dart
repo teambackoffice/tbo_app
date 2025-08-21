@@ -182,7 +182,7 @@ class _ToDoTaskListState extends State<ToDoTaskList> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const TodoDetails(), // Your details page
+                                  TodoDetails(task: task), // Your details page
                             ),
                           );
                         },
