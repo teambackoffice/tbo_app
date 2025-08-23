@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/leads_details_controller.dart';
 
 // Simple Note model
 class Note {
@@ -18,13 +20,25 @@ class Note {
 }
 
 class LeadDetailsScreen extends StatefulWidget {
-  const LeadDetailsScreen({super.key});
+  final String? leadId; // Pass lead ID to fetch details
+  const LeadDetailsScreen({super.key, this.leadId});
 
   @override
   State<LeadDetailsScreen> createState() => _LeadDetailsScreenState();
 }
 
 class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Provider.of<AllLeadsDetailsController>(
+        context,
+        listen: false,
+      ).fetchLeadDetails(leadId: widget.leadId!);
+    });
+  }
+
   final TextEditingController _noteController = TextEditingController();
   final String currentUserRole =
       'admin'; // This would come from your auth system
@@ -87,267 +101,289 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
 
             // Card Content
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green[600],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          "Closed",
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
+              child: Consumer<AllLeadsDetailsController>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (provider.error != null) {
+                    return Center(child: Text('Error: ${provider.error}'));
+                  } else if (provider.leadDetails == null) {
+                    return const Center(child: Text('Lead details not found'));
+                  }
+                  final lead = provider.leadDetails!.data;
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(height: 12),
-
-                      // Title & Location
-                      const Text(
-                        "Calicut Textiles",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on, size: 14, color: Colors.grey),
-                          SizedBox(width: 4),
+                          // Status badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green[600],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              lead.status,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Title & Location
                           Text(
-                            "Calicut",
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            lead.companyName,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Name
-                      const Text("John", style: TextStyle(fontSize: 14)),
-                      const SizedBox(height: 14),
-
-                      // Email
-                      const Text(
-                        "john@gmail.com",
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Phone
-                      const Text(
-                        "+91 8192 838 271",
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Lead Source
-                      Row(
-                        children: [
-                          const Text(
-                            "Lead Source",
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                          const SizedBox(width: 18),
-                          const Text("Website", style: TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Description
-                      const Text(
-                        "Lorem ipsum dolor sit amet consectetur. "
-                        "Cum ac viverra euismod volutpat scelerisque porttitor. "
-                        "Nibh id dui tortor cras. Eget arcu tellus arcu tempus bibendum. "
-                        "At aliquam scelerisque vitae lectus phasellus mollis. "
-                        "Morbi vitae aliquet urna fames ornare.",
-                        style: TextStyle(fontSize: 14, height: 1.4),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Notes Section Toggle
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
                           Row(
                             children: [
                               Icon(
-                                Icons.message_outlined,
-                                size: 18,
-                                color: Colors.blue[600],
+                                Icons.location_on,
+                                size: 14,
+                                color: Colors.grey,
                               ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                "Team Communication",
+                              SizedBox(width: 4),
+                              Text(
+                                lead.territory,
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: Colors.grey,
                                 ),
                               ),
-                              if (_notes.isNotEmpty)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[100],
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${_notes.length}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.blue[800],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _showNotes = !_showNotes;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(6),
+                          const SizedBox(height: 12),
+
+                          // Name
+                          Text(lead.leadOwner, style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 14),
+
+                          // Email
+                          Text(lead.emailId, style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 14),
+
+                          // Phone
+                          Text(lead.phone, style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 12),
+
+                          // Lead Source
+                          Row(
+                            children: [
+                              const Text(
+                                "Lead Source",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
                               ),
-                              child: Icon(
-                                _showNotes
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                color: Colors.blue[600],
-                                size: 20,
-                              ),
-                            ),
+                              const SizedBox(width: 18),
+                              Text(lead.source, style: TextStyle(fontSize: 14)),
+                            ],
                           ),
-                        ],
-                      ),
+                          const SizedBox(height: 12),
 
-                      // Notes List (Expandable)
-                      if (_showNotes) ...[
-                        const SizedBox(height: 12),
+                          // Description
+                          const Text(
+                            "Lorem ipsum dolor sit amet consectetur. "
+                            "Cum ac viverra euismod volutpat scelerisque porttitor. "
+                            "Nibh id dui tortor cras. Eget arcu tellus arcu tempus bibendum. "
+                            "At aliquam scelerisque vitae lectus phasellus mollis. "
+                            "Morbi vitae aliquet urna fames ornare.",
+                            style: TextStyle(fontSize: 14, height: 1.4),
+                          ),
+                          const SizedBox(height: 20),
 
-                        // Admin can send notes to CRM
-                        if (currentUserRole == 'admin') ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.blue[200]!),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          // Notes Section Toggle
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.message_outlined,
+                                    size: 18,
+                                    color: Colors.blue[600],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    "Team Communication",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (_notes.isNotEmpty)
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue[100],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '${_notes.length}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.blue[800],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _showNotes = !_showNotes;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[50],
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    _showNotes
+                                        ? Icons.expand_less
+                                        : Icons.expand_more,
+                                    color: Colors.blue[600],
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Notes List (Expandable)
+                          if (_showNotes) ...[
+                            const SizedBox(height: 12),
+
+                            // Admin can send notes to CRM
+                            if (currentUserRole == 'admin') ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue[200]!),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.admin_panel_settings,
+                                          size: 16,
+                                          color: Colors.blue[600],
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Send instruction to CRM team',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.blue[800],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextField(
+                                      controller: _noteController,
+                                      maxLines: 3,
+                                      minLines: 1,
+                                      decoration: const InputDecoration(
+                                        hintText:
+                                            'Type your message to CRM team...',
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton.icon(
+                                          onPressed: _addNote,
+                                          icon: const Icon(
+                                            Icons.send,
+                                            size: 16,
+                                          ),
+                                          label: const Text('Send Message'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+
+                            // CRM users see read-only view with info message
+                            if (currentUserRole == 'crm') ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Row(
                                   children: [
                                     Icon(
-                                      Icons.admin_panel_settings,
+                                      Icons.info_outline,
                                       size: 16,
-                                      color: Colors.blue[600],
+                                      color: Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Send instruction to CRM team',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.blue[800],
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Messages from admin will appear here',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                          fontStyle: FontStyle.italic,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: _noteController,
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  decoration: const InputDecoration(
-                                    hintText:
-                                        'Type your message to CRM team...',
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: _addNote,
-                                      icon: const Icon(Icons.send, size: 16),
-                                      label: const Text('Send Message'),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+
+                            // Notes List (All notes visible to admin, only admin notes to CRM)
+                            ...(_getVisibleNotes()).map(
+                              (note) => _buildNoteCard(note),
                             ),
-                          ),
-                          const SizedBox(height: 12),
+                          ],
+
+                          const SizedBox(height: 20),
                         ],
-
-                        // CRM users see read-only view with info message
-                        if (currentUserRole == 'crm') ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 16,
-                                  color: Colors.grey[600],
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Messages from admin will appear here',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Notes List (All notes visible to admin, only admin notes to CRM)
-                        ...(_getVisibleNotes()).map(
-                          (note) => _buildNoteCard(note),
-                        ),
-                      ],
-
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
