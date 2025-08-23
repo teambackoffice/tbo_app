@@ -1,12 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/admin/dashboard/add_project_task/add_project.dart';
 import 'package:tbo_app/view/admin/dashboard/add_project_task/add_task.dart';
 import 'package:tbo_app/view/admin/dashboard/notification/notification.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  final _storage = const FlutterSecureStorage();
+
+  Future<String?> _getSid() async {
+    return await _storage.read(key: "sid");
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Provider.of<AllEmployeesController>(
+        context,
+        listen: false,
+      ).fetchallemployees();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +67,7 @@ class AdminDashboard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Sabisha !',
+                              'Admin !',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -89,7 +114,9 @@ class AdminDashboard extends StatelessWidget {
               // Search Bar
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFF129476).withOpacity(1)),
+                  border: Border.all(
+                    color: const Color(0xFF129476).withOpacity(1),
+                  ),
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
@@ -100,16 +127,13 @@ class AdminDashboard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: TextField(
+                child: const TextField(
                   decoration: InputDecoration(
                     hintText: 'Search here...',
-                    hintStyle: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                    ),
-                    suffixIcon: const Icon(Icons.search, color: Colors.grey),
+                    hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                    suffixIcon: Icon(Icons.search, color: Colors.grey),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
+                    contentPadding: EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 15,
                     ),
@@ -225,7 +249,7 @@ class AdminDashboard extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // Team Members Section
+              // Team Members Section - Now using real API data
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -256,31 +280,97 @@ class AdminDashboard extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-              // Team Members List
-              _buildTeamMember(
-                'Sabisha',
-                'Digital Marketing Manager',
-                'https://media.istockphoto.com/id/1481165140/photo/portrait-of-biracial-young-woman-smiling-and-using-laptop-in-bright-contemporary-office.jpg?s=612x612&w=0&k=20&c=p4WaudLa74dVkawzcjLnEqDnIO5EE7IZaJzUqav8wfE=',
-              ),
-              _buildTeamMember(
-                'Zidan',
-                'SEO Specialist',
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1287&q=80',
-              ),
-              _buildTeamMember(
-                'Shameer',
-                'Graphic Designer',
-                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-              ),
-              _buildTeamMember(
-                'Ajmal',
-                'Product Designer',
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1287&q=80',
-              ),
-              _buildTeamMember(
-                'Thanha',
-                'Content Creator',
-                'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
+              // Team Members List - Using Consumer to get real data
+              Consumer<AllEmployeesController>(
+                builder: (context, controller, child) {
+                  if (controller.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF1C7690),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (controller.error != null) {
+                    return Card(
+                      color: Colors.red.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error, color: Colors.red),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Failed to load team members',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  Text(
+                                    controller.error!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.refresh,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => controller.fetchallemployees(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (controller.allEmployees?.message.isEmpty ?? true) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            'No team members found',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Show limited number of employees on dashboard
+                  final employees = controller.allEmployees!.message
+                      .take(5)
+                      .toList();
+
+                  return Column(
+                    children: employees.map((employee) {
+                      return _buildTeamMember(
+                        employee.employeeName.isNotEmpty
+                            ? employee.employeeName
+                            : employee.name,
+                        employee.designation,
+                        employee.imageUrl.isNotEmpty
+                            ? employee.imageUrl
+                            : employee.image,
+                        employee.department,
+                      );
+                    }).toList(),
+                  );
+                },
               ),
 
               const SizedBox(height: 20),
@@ -305,16 +395,14 @@ class AdminDashboard extends StatelessWidget {
               alignment: Alignment.topRight,
               child: InkWell(
                 onTap: () => Navigator.pop(context),
-                borderRadius: BorderRadius.circular(
-                  20,
-                ), // ripple effect stays circular
+                borderRadius: BorderRadius.circular(20),
                 child: Container(
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Color(0xFF1C7690).withOpacity(1),
+                      color: const Color(0xFF1C7690).withOpacity(1),
                       width: 1.2,
                     ),
                   ),
@@ -337,7 +425,6 @@ class AdminDashboard extends StatelessWidget {
                       builder: (context) => const AddNewProjectPage(),
                     ),
                   );
-                  // Add project action here
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1C7690),
@@ -416,7 +503,7 @@ class AdminDashboard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFE5E5),
+                  color: const Color(0xFFFFE5E5),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
@@ -528,10 +615,9 @@ class AdminDashboard extends StatelessWidget {
   }
 
   Widget _buildEmployeeAvatars(List<Map<String, String>> employees) {
-    const int maxVisible =
-        2; // Maximum number of avatars to show for dashboard cards
-    const double avatarRadius = 12.0; // Radius for CircleAvatar
-    const double overlapOffset = 18.0; // How much avatars overlap
+    const int maxVisible = 2;
+    const double avatarRadius = 12.0;
+    const double overlapOffset = 18.0;
 
     return SizedBox(
       height: avatarRadius * 2,
@@ -540,6 +626,13 @@ class AdminDashboard extends StatelessWidget {
           // Display visible avatars
           ...employees.take(maxVisible).map((employee) {
             int index = employees.indexOf(employee);
+            final imageUrl = employee["image"] ?? '';
+            final name = employee["name"] ?? '';
+            final hasValidImage =
+                imageUrl.isNotEmpty &&
+                (imageUrl.startsWith('http://') ||
+                    imageUrl.startsWith('https://'));
+
             return Positioned(
               left: index * overlapOffset,
               child: Container(
@@ -556,21 +649,22 @@ class AdminDashboard extends StatelessWidget {
                 ),
                 child: CircleAvatar(
                   radius: 10,
-                  backgroundColor: Colors.blue[400],
-                  backgroundImage:
-                      employee["image"] != null && employee["image"]!.isNotEmpty
-                      ? NetworkImage(employee["image"]!)
+                  backgroundColor: const Color(0xFF1C7690),
+                  backgroundImage: hasValidImage
+                      ? NetworkImage(imageUrl)
                       : null,
-                  onBackgroundImageError: (exception, stackTrace) {
-                    // Handle image loading error - will show the child text instead
-                  },
-                  child: employee["image"] == null || employee["image"]!.isEmpty
+                  onBackgroundImageError: hasValidImage
+                      ? (exception, stackTrace) {
+                          debugPrint('Failed to load avatar image: $imageUrl');
+                        }
+                      : null,
+                  child: !hasValidImage
                       ? Text(
-                          employee["name"]![0].toUpperCase(),
+                          _getInitials(name),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 8,
                           ),
                         )
                       : null,
@@ -614,40 +708,147 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamMember(String name, String role, String imageUrl) {
-    return Card(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      margin: const EdgeInsets.only(bottom: 15),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 25, backgroundImage: NetworkImage(imageUrl)),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
+  Widget _buildTeamMember(
+    String name,
+    String role,
+    String imageUrl,
+    String department,
+  ) {
+    return FutureBuilder<String?>(
+      future: _getSid(),
+      builder: (context, snapshot) {
+        final sid = snapshot.data;
+
+        // Build full URL if image path exists
+        String? fullImageUrl;
+        if (imageUrl.isNotEmpty) {
+          if (imageUrl.startsWith('http://') ||
+              imageUrl.startsWith('https://')) {
+            fullImageUrl = imageUrl;
+          } else if (imageUrl.startsWith('/')) {
+            // Convert relative path to full URL
+            fullImageUrl =
+                'https://tbo-smart.tbo365.cloud$imageUrl'; // Replace with your base URL
+          }
+        }
+
+        final hasValidImage = fullImageUrl != null && fullImageUrl.isNotEmpty;
+
+        return Card(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          margin: const EdgeInsets.only(bottom: 15),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: const Color(0xFF1C7690),
+                  child: hasValidImage && sid != null
+                      ? ClipOval(
+                          child: Image.network(
+                            fullImageUrl,
+                            headers: {
+                              "Cookie": "sid=$sid",
+                              "Accept": "image/*",
+                              "User-Agent": "Flutter App",
+                            },
+                            fit: BoxFit.cover,
+                            width: 50,
+                            height: 50,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              print('❌ Failed to load image: $fullImageUrl');
+                              print('❌ Error: $error');
+                              return Center(
+                                child: Text(
+                                  _getInitials(name),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Text(
+                          _getInitials(name),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        role,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      if (department.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          department,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    role,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return '?';
+
+    final parts = name.trim().split(' ');
+    if (parts.length == 1) {
+      return parts[0][0].toUpperCase();
+    } else {
+      return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+    }
   }
 }

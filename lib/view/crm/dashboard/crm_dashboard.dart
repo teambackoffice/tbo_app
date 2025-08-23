@@ -1,12 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/services/login_service.dart';
 import 'package:tbo_app/view/crm/dashboard/_create_new_lead/create_new_lead.dart';
 import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
 import 'package:tbo_app/view/crm/dashboard/leads_contacted/leads_contact.dart';
 import 'package:tbo_app/view/crm/dashboard/new_leads/new_leads.dart';
 import 'package:tbo_app/view/crm/dashboard/prposal_sent/proposal_sent.dart';
 
-class CRMDashboardPage extends StatelessWidget {
+class CRMDashboardPage extends StatefulWidget {
   const CRMDashboardPage({super.key});
+
+  @override
+  State<CRMDashboardPage> createState() => _CRMDashboardPageState();
+
+  static Widget _buildStatCard({
+    required String title,
+    required String value,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 179,
+        width: 150,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 50,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CRMDashboardPageState extends State<CRMDashboardPage> {
+  final LoginService _loginService = LoginService();
+  String? fullName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final storedFullName = await _loginService.getStoredFullName();
+    setState(() {
+      fullName = storedFullName;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +104,9 @@ class CRMDashboardPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        "Hello Danish !",
+                        "Hello $fullName !",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -62,7 +136,7 @@ class CRMDashboardPage extends StatelessWidget {
                 mainAxisSpacing: 15,
                 childAspectRatio: 1.0,
                 children: [
-                  _buildStatCard(
+                  CRMDashboardPage._buildStatCard(
                     title: "New\nLeads",
                     value: "12",
                     color: const Color(0xFF1ABC9C),
@@ -75,7 +149,7 @@ class CRMDashboardPage extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildStatCard(
+                  CRMDashboardPage._buildStatCard(
                     title: "Leads\nContacted",
                     value: "24",
                     color: const Color(0xFF3B5998),
@@ -88,7 +162,7 @@ class CRMDashboardPage extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildStatCard(
+                  CRMDashboardPage._buildStatCard(
                     title: "Proposals\nSent",
                     value: "4",
                     color: const Color(0xFFF39C12),
@@ -101,7 +175,7 @@ class CRMDashboardPage extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildStatCard(
+                  CRMDashboardPage._buildStatCard(
                     title: "Deals\nClosed",
                     value: "3",
                     color: const Color(0xFF27AE60),
@@ -154,58 +228,6 @@ class CRMDashboardPage extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  static Widget _buildStatCard({
-    required String title,
-    required String value,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 179,
-        width: 150,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 22,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 50,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
         ),
       ),
     );

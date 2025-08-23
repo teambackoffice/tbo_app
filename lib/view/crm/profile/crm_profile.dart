@@ -3,9 +3,31 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
+import 'package:tbo_app/services/login_service.dart';
 
-class CRMProfilePage extends StatelessWidget {
+class CRMProfilePage extends StatefulWidget {
   const CRMProfilePage({super.key});
+
+  @override
+  State<CRMProfilePage> createState() => _CRMProfilePageState();
+}
+
+class _CRMProfilePageState extends State<CRMProfilePage> {
+  final LoginService _loginService = LoginService();
+  String? fullName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final storedFullName = await _loginService.getStoredFullName();
+    setState(() {
+      fullName = storedFullName;
+    });
+  }
 
   final storage = const FlutterSecureStorage();
 
@@ -69,9 +91,9 @@ class CRMProfilePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        "Danish ",
-                        style: TextStyle(
+                      Text(
+                        "$fullName",
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF2D2D2D),

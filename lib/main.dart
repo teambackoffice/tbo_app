@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/leads_details_controller.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
@@ -39,6 +40,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<AllLeadsDetailsController>(
           create: (_) => AllLeadsDetailsController(),
+        ),
+
+        ChangeNotifierProvider<AllEmployeesController>(
+          create: (_) => AllEmployeesController(),
         ),
       ],
       child: MaterialApp(

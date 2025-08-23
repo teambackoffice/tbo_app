@@ -19,14 +19,14 @@ class LoginService {
       ); // API expects query params
 
       var request = http.Request('POST', uri);
-
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
         final body = await response.stream.bytesToString();
+
         final data = json.decode(body);
 
-        // Extract sid from cookie if returned in headers
+        // Extract sid from cookie
         String? sid;
         if (response.headers['set-cookie'] != null) {
           final cookies = response.headers['set-cookie']!.split(';');
@@ -38,12 +38,12 @@ class LoginService {
           }
         }
 
-        // Store sid, username, email & role_profile_name in secure storage
+        // Store session details
         if (sid != null) {
           await _storage.write(key: "sid", value: sid);
           await _storage.write(key: "username", value: username);
 
-          // ✅ NEW: store role_profile_name if present
+          // role_profile_name
           final roleProfileName = data["message"]?["role_profile_name"];
           if (roleProfileName != null) {
             await _storage.write(
@@ -52,10 +52,16 @@ class LoginService {
             );
           }
 
-          // ✅ NEW: store email if present
+          // email
           final email = data["message"]?["email"];
           if (email != null) {
             await _storage.write(key: "email", value: email);
+          }
+
+          // full_name
+          final fullName = data["full_name"];
+          if (fullName != null) {
+            await _storage.write(key: "full_name", value: fullName);
           }
         }
 
@@ -68,29 +74,33 @@ class LoginService {
     }
   }
 
+  // Getters
   Future<String?> getStoredSid() async => await _storage.read(key: "sid");
-
   Future<String?> getStoredApiKey() async =>
       await _storage.read(key: "api_key");
-
   Future<String?> getStoredUsername() async =>
       await _storage.read(key: "username");
-
   Future<String?> getStoredRoleProfileName() async =>
       await _storage.read(key: "role_profile_name");
-
-  // ✅ NEW: get stored email
   Future<String?> getStoredEmail() async => await _storage.read(key: "email");
+
+  // ✅ NEW: get stored full_name
+  Future<String?> getStoredFullName() async =>
+      await _storage.read(key: "full_name");
 
   Future<void> storeSession({
     required String sid,
     required String username,
-    String? email, // optional
+    String? email,
+    String? fullName, // optional
   }) async {
     await _storage.write(key: "sid", value: sid);
     await _storage.write(key: "username", value: username);
     if (email != null) {
       await _storage.write(key: "email", value: email);
+    }
+    if (fullName != null) {
+      await _storage.write(key: "full_name", value: fullName);
     }
   }
 
