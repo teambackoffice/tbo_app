@@ -91,7 +91,8 @@ class _CRMAllLeadsPageState extends State<CRMAllLeadsPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CRMLeadsDetails(),
+                        builder: (context) =>
+                            CRMLeadsDetails(leadId: lead.leadId),
                       ),
                     );
                   },

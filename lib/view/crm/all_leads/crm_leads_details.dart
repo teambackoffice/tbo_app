@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/leads_details_controller.dart';
 
 // Simple Message model
 class Message {
@@ -18,13 +20,25 @@ class Message {
 }
 
 class CRMLeadsDetails extends StatefulWidget {
-  const CRMLeadsDetails({super.key});
+  final String? leadId;
+  const CRMLeadsDetails({super.key, required this.leadId});
 
   @override
   State<CRMLeadsDetails> createState() => _CRMLeadsDetailsState();
 }
 
 class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Provider.of<AllLeadsDetailsController>(
+        context,
+        listen: false,
+      ).fetchLeadDetails(leadId: widget.leadId!);
+    });
+  }
+
   final TextEditingController _messageController = TextEditingController();
   final String currentUserRole = 'crm'; // This is a CRM user screen
   final String currentUserName =
@@ -99,304 +113,325 @@ class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
 
             // Main content card
             Expanded(
-              child: SingleChildScrollView(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Proposal Sent badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF9500),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Proposal Sent',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
+              child: Consumer<AllLeadsDetailsController>(
+                builder: (context, controller, child) {
+                  if (controller.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (controller.error != null) {
+                    return Center(child: Text('Error: ${controller.error}'));
+                  } else if (controller.leadDetails == null) {
+                    return const Center(
+                      child: Text('No lead details available'),
+                    );
+                  }
 
-                      const SizedBox(height: 20),
-
-                      // Company name
-                      const Text(
-                        'Calicut Textiles',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // Location
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: Colors.grey[500],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Calicut',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
+                  final lead = controller.leadDetails!.data;
+                  return SingleChildScrollView(
+                    child: Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 20),
-
-                      // Contact name
-                      const Text(
-                        'John',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Email
-                      Text(
-                        'john@gmail.com',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Phone
-                      Text(
-                        '+91 8192 838 271',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Lead Source section
-                      Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Lead Source',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
+                          // Proposal Sent badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF9500),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              lead.status,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 16),
+
+                          const SizedBox(height: 20),
+
+                          // Company name
                           Text(
-                            'Website',
+                            lead.companyName,
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[800],
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
                           ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 24),
+                          const SizedBox(height: 4),
 
-                      // Description
-                      Text(
-                        'Lorem ipsum dolor sit amet consectetur. Cum ac viverra euismod volutpat scelerisque porttitor. Nibh id dui tortor cras. Eget arcu tellus arcu tempus bibendum. At aliquam scelerisque vitae lectus phasellus mollis. Morbi vitae aliquet urna fames metus ornare.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Admin Messages Section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                          // Location
                           Row(
                             children: [
                               Icon(
-                                Icons.message_outlined,
-                                size: 18,
-                                color: Colors.green[600],
+                                Icons.location_on,
+                                size: 16,
+                                color: Colors.grey[500],
                               ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                "Admin Messages",
+                              const SizedBox(width: 4),
+                              Text(
+                                lead.territory,
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
                                 ),
                               ),
-                              if (_unreadCount > 0)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red[500],
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$_unreadCount',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _showMessages = !_showMessages;
-                                if (_showMessages) {
-                                  _unreadCount = 0; // Mark as read when opened
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.green[50],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                _showMessages
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                color: Colors.green[600],
-                                size: 20,
-                              ),
+
+                          const SizedBox(height: 20),
+
+                          // Contact name
+                          Text(
+                            lead.leadName,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
                             ),
                           ),
-                        ],
-                      ),
 
-                      // Messages List (Expandable)
-                      if (_showMessages) ...[
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                        // Messages Container
-                        Container(
-                          height: 300,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[200]!),
-                            borderRadius: BorderRadius.circular(12),
+                          // Email
+                          Text(
+                            lead.emailId,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[700],
+                            ),
                           ),
-                          child: Column(
+
+                          const SizedBox(height: 12),
+
+                          // Phone
+                          Text(
+                            lead.mobileNo,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Lead Source section
+                          Row(
                             children: [
-                              // Messages List
-                              Expanded(
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.all(12),
-                                  itemCount: _messages.length,
-                                  itemBuilder: (context, index) {
-                                    final message = _messages[index];
-                                    return _buildMessageCard(message);
-                                  },
+                              Text(
+                                'Lead Source',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
                                 ),
                               ),
-
-                              // Message Input
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[50],
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(12),
-                                    bottomRight: Radius.circular(12),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey[300]!,
-                                          ),
-                                        ),
-                                        child: TextField(
-                                          controller: _messageController,
-                                          decoration: const InputDecoration(
-                                            hintText: 'Send update to admin...',
-                                            border: InputBorder.none,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
-                                          maxLines: null,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    GestureDetector(
-                                      onTap: _sendMessage,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green[600],
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.send,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(width: 16),
+                              Text(
+                                lead.source,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[800],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
 
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+                          const SizedBox(height: 24),
+
+                          // Description
+                          Text(
+                            'Lorem ipsum dolor sit amet consectetur. Cum ac viverra euismod volutpat scelerisque porttitor. Nibh id dui tortor cras. Eget arcu tellus arcu tempus bibendum. At aliquam scelerisque vitae lectus phasellus mollis. Morbi vitae aliquet urna fames metus ornare.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Admin Messages Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.message_outlined,
+                                    size: 18,
+                                    color: Colors.green[600],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    "Admin Messages",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (_unreadCount > 0)
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red[500],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$_unreadCount',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _showMessages = !_showMessages;
+                                    if (_showMessages) {
+                                      _unreadCount =
+                                          0; // Mark as read when opened
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[50],
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    _showMessages
+                                        ? Icons.expand_less
+                                        : Icons.expand_more,
+                                    color: Colors.green[600],
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Messages List (Expandable)
+                          if (_showMessages) ...[
+                            const SizedBox(height: 16),
+
+                            // Messages Container
+                            Container(
+                              height: 300,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[200]!),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                children: [
+                                  // Messages List
+                                  Expanded(
+                                    child: ListView.builder(
+                                      padding: const EdgeInsets.all(12),
+                                      itemCount: _messages.length,
+                                      itemBuilder: (context, index) {
+                                        final message = _messages[index];
+                                        return _buildMessageCard(message);
+                                      },
+                                    ),
+                                  ),
+
+                                  // Message Input
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(12),
+                                        bottomRight: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: Colors.grey[300]!,
+                                              ),
+                                            ),
+                                            child: TextField(
+                                              controller: _messageController,
+                                              decoration: const InputDecoration(
+                                                hintText:
+                                                    'Send update to admin...',
+                                                border: InputBorder.none,
+                                                contentPadding: EdgeInsets.zero,
+                                              ),
+                                              maxLines: null,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: _sendMessage,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green[600],
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: const Icon(
+                                              Icons.send,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
