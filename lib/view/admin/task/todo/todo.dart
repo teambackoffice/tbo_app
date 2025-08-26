@@ -269,10 +269,10 @@ class _AdminToDoTaskListState extends State<AdminToDoTaskList> {
       }
 
       return Text(
-        DateFormat('d-MMM-yyyy').format(date),
+        DateFormat('d MMM yyyy').format(date),
         style: const TextStyle(
           color: Colors.black87,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       );

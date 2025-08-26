@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/task_list_modal.dart';
 
 class AdminInprogressDetails extends StatelessWidget {
-  const AdminInprogressDetails({super.key});
+  final TaskDetails? task;
+  const AdminInprogressDetails({super.key, this.task});
+  static const double avatarSize = 32.0;
+  static const double overlapOffset = 24.0;
+  static const int maxVisible = 3;
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+      default:
+        return const Color(0xFF1C7690);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,18 +63,18 @@ class AdminInprogressDetails extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1C7690),
+                        color: _getPriorityColor(task!.priority ?? ''),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "High",
+                      child: Text(
+                        task!.priority ?? '',
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                     const SizedBox(height: 8),
                     // Title
-                    const Text(
-                      "Champion Car Wash App",
+                    Text(
+                      task!.subject ?? '',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -74,13 +91,100 @@ class AdminInprogressDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "Jasir",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    task!.assignedUsers.isNotEmpty
+                        ? SizedBox(
+                            height: avatarSize,
+                            child: Stack(
+                              children: [
+                                // Display visible avatars
+                                ...task!.assignedUsers.take(maxVisible).map((
+                                  employee,
+                                ) {
+                                  int index = task!.assignedUsers.indexOf(
+                                    employee,
+                                  );
+                                  return Positioned(
+                                    left: index * overlapOffset,
+                                    child: Container(
+                                      width: avatarSize,
+                                      height: avatarSize,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: CircleAvatar(
+                                        backgroundColor: const Color(
+                                          0xFFF9F7F3,
+                                        ),
+                                        radius: (avatarSize - 4) / 2,
+                                        child: Text(
+                                          _getInitials(employee),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+
+                                // Show "+X more" indicator if there are more employees
+                                if (task!.assignedUsers.length > maxVisible)
+                                  Positioned(
+                                    left: maxVisible * overlapOffset,
+                                    child: Container(
+                                      width: avatarSize,
+                                      height: avatarSize,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey[600],
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "+${task!.assignedUsers.length - maxVisible}",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : Text(
+                            " No one assigned",
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
                     const SizedBox(height: 12),
                     // Time
                     Row(
@@ -88,19 +192,30 @@ class AdminInprogressDetails extends StatelessWidget {
                         Icon(Icons.access_time, size: 18),
                         SizedBox(width: 6),
                         Text(
-                          "Time",
+                          "Start Date",
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "18 Hours",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    task!.expStartDate != null
+                        ? Text(
+                            DateFormat('dd-MM-yy').format(
+                              task!.expStartDate!,
+                            ), // Use task start date
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          )
+                        : Text(
+                            "No start date",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey,
+                            ),
+                          ),
                     const SizedBox(height: 12),
                     // Due Date
                     Row(
@@ -109,25 +224,31 @@ class AdminInprogressDetails extends StatelessWidget {
                         SizedBox(width: 6),
                         Text(
                           "Due Date",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "15-07-25",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    task!.expEndDate != null
+                        ? Text(
+                            DateFormat('dd-MM-yy').format(task!.expEndDate!),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          )
+                        : Text(
+                            "No due date",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey,
+                            ),
+                          ),
                     const SizedBox(height: 16),
                     // Description
-                    const Text(
-                      "The Champion Car Wash App is designed to streamline your vehicle cleaning experience.\n With just a few taps, you can book a wash, track service time, and receive timely updates.\n Our professional team ensures high-quality cleaning while you focus on your day. The app also helps you manage appointments, track past services, and enjoy exclusive offers.",
+                    Text(
+                      task!.description!,
                       style: TextStyle(fontSize: 16, height: 1.4),
                     ),
                     const SizedBox(height: 24),
@@ -141,5 +262,22 @@ class AdminInprogressDetails extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getInitials(String email) {
+    if (email.isEmpty) return '?';
+
+    // Extract name part from email (before @)
+    String name = email.split('@').first;
+
+    // If name contains dots or underscores, split and take first letters
+    List<String> parts = name.split(RegExp(r'[._]'));
+    if (parts.length > 1) {
+      return (parts[0].isNotEmpty ? parts[0][0] : '') +
+          (parts[1].isNotEmpty ? parts[1][0] : '');
+    }
+
+    // Otherwise, take first letter
+    return name[0].toUpperCase();
   }
 }
