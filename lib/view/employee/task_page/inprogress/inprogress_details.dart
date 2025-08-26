@@ -87,7 +87,7 @@ class InprogressDetails extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat('dd MMM yyyy').format(task.expStartDate),
+                      DateFormat('dd MMM yyyy').format(task.expStartDate!),
                       style: const TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 12),
@@ -108,14 +108,14 @@ class InprogressDetails extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat('dd MMM yyyy').format(task.expEndDate),
+                      DateFormat('dd MMM yyyy').format(task.expEndDate!),
                       style: const TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 16),
 
                     // Description
                     Text(
-                      task.description,
+                      task.description!,
                       style: TextStyle(fontSize: 14, color: Colors.black87),
                     ),
                     const SizedBox(height: 24),

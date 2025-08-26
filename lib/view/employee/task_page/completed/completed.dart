@@ -98,7 +98,7 @@ class _EmployeeCompleteTaskListState extends State<EmployeeCompleteTaskList> {
                     children: [
                       Expanded(
                         child: Text(
-                          task.subject,
+                          task.subject!,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
@@ -158,7 +158,7 @@ class _EmployeeCompleteTaskListState extends State<EmployeeCompleteTaskList> {
                   Row(
                     children: [
                       Text(
-                        DateFormat('dd MMM yyyy').format(task.expStartDate),
+                        DateFormat('dd MMM yyyy').format(task.expStartDate!),
                         style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 14,
@@ -167,7 +167,7 @@ class _EmployeeCompleteTaskListState extends State<EmployeeCompleteTaskList> {
                       ),
                       const SizedBox(width: 60),
                       Text(
-                        DateFormat('dd MMM yyyy').format(task.expEndDate),
+                        DateFormat('dd MMM yyyy').format(task.expEndDate!),
                         style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 14,

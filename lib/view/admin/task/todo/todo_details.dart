@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/task_list_modal.dart';
 
 class AdminTodoDetails extends StatelessWidget {
-  const AdminTodoDetails({super.key});
+  final TaskDetails task;
+  const AdminTodoDetails({super.key, required this.task});
+  static const double avatarSize = 32.0;
+  static const double overlapOffset = 24.0;
+  static const int maxVisible = 3;
 
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
@@ -58,164 +64,294 @@ class AdminTodoDetails extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F7F3),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top bar with back button and delete option
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_outlined),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 50),
-              // Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top bar with back button and delete option
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Priority Chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_outlined),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1C7690),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        "High",
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Title
-                    const Text(
-                      "Champion Car Wash App",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: const [
-                        SizedBox(width: 6),
-                        Text(
-                          "Assigned To",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "Jasir",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Time
-                    Row(
-                      children: const [
-                        Icon(Icons.access_time, size: 18),
-                        SizedBox(width: 6),
-                        Text(
-                          "Time",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "18 Hours",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Due Date
-                    Row(
-                      children: const [
-                        Icon(Icons.calendar_today, size: 18),
-                        SizedBox(width: 6),
-                        Text(
-                          "Due Date",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "15-07-25",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Description
-                    const Text(
-                      "The Champion Car Wash App is designed to streamline your vehicle cleaning experience.\n With just a few taps, you can book a wash, track service time, and receive timely updates.\n Our professional team ensures high-quality cleaning while you focus on your day. The app also helps you manage appointments, track past services, and enjoy exclusive offers.",
-                      style: TextStyle(fontSize: 16, height: 1.4),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Action buttons at bottom
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _showDeleteConfirmation(context),
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                              size: 20,
-                            ),
-                            label: const Text(
-                              'Delete Task',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.red),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 50),
+                // Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Priority Chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1C7690),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          task.priority, // Use task priority
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Title
+                      Text(
+                        task.subject!, // Use task name
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: const [
+                          SizedBox(width: 6),
+                          Text(
+                            "Assigned To",
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      task.assignedUsers.isNotEmpty
+                          ? SizedBox(
+                              height: avatarSize,
+                              child: Stack(
+                                children: [
+                                  // Display visible avatars
+                                  ...task.assignedUsers.take(maxVisible).map((
+                                    employee,
+                                  ) {
+                                    int index = task.assignedUsers.indexOf(
+                                      employee,
+                                    );
+                                    return Positioned(
+                                      left: index * overlapOffset,
+                                      child: Container(
+                                        width: avatarSize,
+                                        height: avatarSize,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(
+                                                0.1,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: CircleAvatar(
+                                          backgroundColor: const Color(
+                                            0xFFF9F7F3,
+                                          ),
+                                          radius: (avatarSize - 4) / 2,
+                                          child: Text(
+                                            _getInitials(employee),
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+
+                                  // Show "+X more" indicator if there are more employees
+                                  if (task.assignedUsers.length > maxVisible)
+                                    Positioned(
+                                      left: maxVisible * overlapOffset,
+                                      child: Container(
+                                        width: avatarSize,
+                                        height: avatarSize,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey[600],
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(
+                                                0.1,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "+${task.assignedUsers.length - maxVisible}",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            )
+                          : Text(
+                              " No one assigned",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                      const SizedBox(height: 12),
+                      // Time
+                      Row(
+                        children: const [
+                          Icon(Icons.access_time, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            "Start Time",
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      task.expStartDate != null
+                          ? Text(
+                              DateFormat('dd-MM-yy').format(
+                                task.expStartDate!,
+                              ), // Use task start date
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                          : Text(
+                              "No start date",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey,
+                              ),
+                            ),
+                      const SizedBox(height: 12),
+                      // Due Date
+                      Row(
+                        children: const [
+                          Icon(Icons.calendar_today, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            "Due Date",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      task.expEndDate != null
+                          ? Text(
+                              DateFormat('dd-MM-yy').format(task.expEndDate!),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                          : Text(
+                              "No due date",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey,
+                              ),
+                            ),
+                      const SizedBox(height: 16),
+                      // Description
+                      Text(
+                        task.description ?? "",
+                        style: TextStyle(fontSize: 16, height: 1.4),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action buttons at bottom
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showDeleteConfirmation(context),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              label: const Text(
+                                'Delete Task',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  String _getInitials(String email) {
+    if (email.isEmpty) return '?';
+
+    // Extract name part from email (before @)
+    String name = email.split('@').first;
+
+    // If name contains dots or underscores, split and take first letters
+    List<String> parts = name.split(RegExp(r'[._]'));
+    if (parts.length > 1) {
+      return (parts[0].isNotEmpty ? parts[0][0] : '') +
+          (parts[1].isNotEmpty ? parts[1][0] : '');
+    }
+
+    // Otherwise, take first letter
+    return name[0].toUpperCase();
   }
 }

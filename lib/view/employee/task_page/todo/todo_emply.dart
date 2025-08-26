@@ -99,7 +99,7 @@ class _ToDoTaskListState extends State<ToDoTaskList> {
                     children: [
                       Expanded(
                         child: Text(
-                          task.subject,
+                          task.subject!,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
@@ -159,7 +159,7 @@ class _ToDoTaskListState extends State<ToDoTaskList> {
                   Row(
                     children: [
                       Text(
-                        DateFormat('dd MMM yyyy').format(task.expStartDate),
+                        DateFormat('dd MMM yyyy').format(task.expStartDate!),
                         style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 14,
@@ -168,7 +168,7 @@ class _ToDoTaskListState extends State<ToDoTaskList> {
                       ),
                       const SizedBox(width: 60),
                       Text(
-                        DateFormat('dd MMM yyyy').format(task.expEndDate),
+                        DateFormat('dd MMM yyyy').format(task.expEndDate!),
                         style: const TextStyle(
                           color: Colors.black87,
                           fontSize: 14,

@@ -381,9 +381,6 @@ class _AddNewProjectPageState extends State<AddNewProjectPage>
       String apiStartDate = _convertToApiFormat(_startDateController.text);
       String apiEndDate = _convertToApiFormat(_endDateController.text);
 
-      print('Start Date (Display): ${_startDateController.text}'); // 29-8-2025
-      print('Start Date (API): $apiStartDate'); // 2025-08-29
-
       await Provider.of<CreateProjectController>(
         context,
         listen: false,
