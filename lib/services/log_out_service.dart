@@ -19,6 +19,7 @@ class LogOutService {
 
       // Handle response
       if (response.statusCode == 200) {
+        print(response);
         String body = await response.stream.bytesToString();
 
         var decoded = jsonDecode(body);
@@ -31,6 +32,7 @@ class LogOutService {
         };
       }
     } catch (e) {
+      print(e);
       return {"status": "error", "message": e.toString()};
     }
   }

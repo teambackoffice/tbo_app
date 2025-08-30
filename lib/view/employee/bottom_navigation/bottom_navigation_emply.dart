@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:tbo_app/view/common/project_page/project_page.dart';
 import 'package:tbo_app/view/employee/dashboard/homepage.dart';
 import 'package:tbo_app/view/employee/profile/profile.dart';
 import 'package:tbo_app/view/employee/task_page/task_page.dart';
+import 'package:tbo_app/view/employee/timesheet/timesheet.dart';
 
 class EmployeeBottomNavigation extends StatefulWidget {
   final int initialIndex;
@@ -19,7 +19,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
   final List<Widget> _pages = [
     const Homepage(),
     const TaskPage(),
-    CommonProjectPage(),
+    Timesheet(),
     const ProfilePage(),
   ];
 
@@ -62,7 +62,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
               children: [
                 _buildNavItem(0, 'assets/home.png', 'Dashboard', 24, 24),
                 _buildNavItem(1, 'assets/task.png', 'My Task', 24, 24),
-                _buildNavItem(2, 'assets/projects.png', 'Projects', 24, 24),
+                _buildNavItem(2, 'assets/cloak_icon.png', 'Projects', 24, 24),
                 _buildNavItem(3, 'assets/user.png', 'Profile', 18, 24),
               ],
             ),
@@ -74,7 +74,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
 
   Widget _buildNavItem(
     int index,
-    String iconPath,
+    String? iconPath,
     String label,
     double width,
     double height,
@@ -91,7 +91,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              iconPath,
+              iconPath!,
               width: width,
               height: height,
               color: isSelected ? Colors.orange : Colors.grey,
