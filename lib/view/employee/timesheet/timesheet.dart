@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_timesheet.dart';
 
 class EmployeeSchedulePage extends StatefulWidget {
   const EmployeeSchedulePage({super.key});
@@ -196,7 +197,14 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: TextButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CreateNewTimesheet(),
+                            ),
+                          );
+                        },
                         icon: Icon(Icons.add, color: Colors.white, size: 16),
                         label: Text(
                           'New',
