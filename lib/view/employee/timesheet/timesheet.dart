@@ -171,18 +171,17 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       SizedBox(width: 8),
                       GestureDetector(
                         onTap: _clearDateFilter,
-                        child: Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors
+                              .click, // 👈 shows pointer on hover (web/desktop)
                           child: Text(
                             "Clear",
                             style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 10,
+                              color: Colors.blue,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.blue,
                             ),
                           ),
                         ),
