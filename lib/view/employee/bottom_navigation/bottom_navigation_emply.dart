@@ -19,7 +19,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
   final List<Widget> _pages = [
     const Homepage(),
     const TaskPage(),
-    Timesheet(),
+    EmployeeSchedulePage(),
     const ProfilePage(),
   ];
 
@@ -62,7 +62,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
               children: [
                 _buildNavItem(0, 'assets/home.png', 'Dashboard', 24, 24),
                 _buildNavItem(1, 'assets/task.png', 'My Task', 24, 24),
-                _buildNavItem(2, 'assets/cloak_icon.png', 'Projects', 24, 24),
+                _buildNavItem(2, 'assets/cloak_icon.png', 'Timesheet', 24, 24),
                 _buildNavItem(3, 'assets/user.png', 'Profile', 18, 24),
               ],
             ),
