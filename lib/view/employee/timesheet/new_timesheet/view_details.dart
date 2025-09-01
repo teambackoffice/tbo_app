@@ -199,16 +199,25 @@ class TimesheetCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("From time"),
-                Text(
-                  fromTime,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                const Text(
+                  "From time",
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
+                Text(fromTime, style: TextStyle(color: Colors.black54)),
                 const SizedBox(height: 12),
-                const Text("To time"),
+                const Text(
+                  "To time",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(toTime, style: TextStyle(color: Colors.black54)),
+                const SizedBox(height: 12),
+                const Text(
+                  "Description",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 Text(
-                  toTime,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  " description description description description description description description description",
+                  style: TextStyle(color: Colors.black54),
                 ),
               ],
             ),
