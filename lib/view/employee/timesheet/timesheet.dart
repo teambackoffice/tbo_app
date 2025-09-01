@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_timesheet.dart';
+import 'package:tbo_app/view/employee/timesheet/new_timesheet/view_details.dart';
 
 class EmployeeSchedulePage extends StatefulWidget {
   const EmployeeSchedulePage({super.key});
@@ -479,18 +480,26 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1C7690),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'View Details',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ViewDetails()),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF1C7690),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'View Details',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
