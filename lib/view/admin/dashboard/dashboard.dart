@@ -7,6 +7,8 @@ import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dar
 import 'package:tbo_app/view/admin/dashboard/add_project_task/add_project.dart';
 import 'package:tbo_app/view/admin/dashboard/add_project_task/add_task.dart';
 import 'package:tbo_app/view/admin/dashboard/notification/notification.dart';
+import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.dart';
+import 'package:tbo_app/view/admin/task/task.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -215,54 +217,166 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 priority: 'High',
               ),
 
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
 
               // Add Project/Task Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (context) => _buildDialog(context),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1C7690),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Add Project / Task',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-
+              // SizedBox(
+              //   width: double.infinity,
+              //   height: 50,
+              //   child: ElevatedButton(
+              //     onPressed: () {
+              //       showDialog(
+              //         context: context,
+              //         barrierDismissible: true,
+              //         builder: (context) => _buildDialog(context),
+              //       );
+              //     },
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: const Color(0xFF1C7690),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(25),
+              //       ),
+              //       elevation: 0,
+              //     ),
+              //     child: const Text(
+              //       'Add Project / Task',
+              //       style: TextStyle(
+              //         fontSize: 16,
+              //         fontWeight: FontWeight.w500,
+              //         color: Colors.white,
+              //       ),
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 30),
 
               // Team Members Section - Now using real API data
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     const Text(
+              //       'Team Members',
+              //       style: TextStyle(
+              //         fontSize: 20,
+              //         fontWeight: FontWeight.bold,
+              //         color: Colors.black,
+              //       ),
+              //     ),
+              //     TextButton(
+              //       onPressed: () {
+              //         Navigator.push(
+              //           context,
+              //           MaterialPageRoute(
+              //             builder: (context) => const TeamMembersPage(),
+              //           ),
+              //         );
+              //       },
+              //       child: const Text(
+              //         'View all',
+              //         style: TextStyle(color: Colors.grey, fontSize: 14),
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              // const SizedBox(height: 10),
+
+              // Team Members List - Using Consumer to get real data
+              // Consumer<AllEmployeesController>(
+              //   builder: (context, controller, child) {
+              //     if (controller.isLoading) {
+              //       return const Center(
+              //         child: Padding(
+              //           padding: EdgeInsets.all(20),
+              //           child: CircularProgressIndicator(
+              //             color: Color(0xFF1C7690),
+              //           ),
+              //         ),
+              //       );
+              //     }
+
+              //     if (controller.error != null) {
+              //       return Card(
+              //         color: Colors.red.shade50,
+              //         child: Padding(
+              //           padding: const EdgeInsets.all(16),
+              //           child: Row(
+              //             children: [
+              //               const Icon(Icons.error, color: Colors.red),
+              //               const SizedBox(width: 10),
+              //               Expanded(
+              //                 child: Column(
+              //                   crossAxisAlignment: CrossAxisAlignment.start,
+              //                   children: [
+              //                     const Text(
+              //                       'Failed to load team members',
+              //                       style: TextStyle(
+              //                         fontWeight: FontWeight.bold,
+              //                         color: Colors.red,
+              //                       ),
+              //                     ),
+              //                     Text(
+              //                       controller.error!,
+              //                       style: const TextStyle(
+              //                         fontSize: 12,
+              //                         color: Colors.red,
+              //                       ),
+              //                     ),
+              //                   ],
+              //                 ),
+              //               ),
+              //               IconButton(
+              //                 icon: const Icon(
+              //                   Icons.refresh,
+              //                   color: Colors.red,
+              //                 ),
+              //                 onPressed: () => controller.fetchallemployees(),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       );
+              //     }
+
+              //     if (controller.allEmployees?.message.isEmpty ?? true) {
+              //       return const Card(
+              //         child: Padding(
+              //           padding: EdgeInsets.all(16),
+              //           child: Center(
+              //             child: Text(
+              //               'No team members found',
+              //               style: TextStyle(fontSize: 16, color: Colors.grey),
+              //             ),
+              //           ),
+              //         ),
+              //       );
+              //     }
+
+              //     // Show limited number of employees on dashboard
+              //     final employees = controller.allEmployees!.message
+              //         .take(5)
+              //         .toList();
+
+              //     return Column(
+              //       children: employees.map((employee) {
+              //         return _buildTeamMember(
+              //           employee.employeeName.isNotEmpty
+              //               ? employee.employeeName
+              //               : employee.name,
+              //           employee.designation,
+              //           employee.imageUrl.isNotEmpty
+              //               ? employee.imageUrl
+              //               : employee.image,
+              //           employee.department,
+              //         );
+              //       }).toList(),
+              //     );
+              //   },
+              // ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Team Members',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
+                  InkWell(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -270,110 +384,106 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         ),
                       );
                     },
-                    child: const Text(
-                      'View all',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    child: Container(
+                      width: 100,
+                      height: 100, // extra height to fit text
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1C7690),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Image
+                          Image.asset("assets/employees.png"),
+                          // Text
+                          const Text(
+                            "    Team\n Members",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 15),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AdminTaskPage(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 100,
+                      height: 100, // extra height to fit text
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1C7690),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Image
+                          Image.asset("assets/alltasks.png"),
+                          const SizedBox(height: 5),
+                          // Text
+                          const Text(
+                            "   All\n Tasks",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 15),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EmployeeTimesheet(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 100,
+                      height: 100, // extra height to fit text
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1C7690),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Image
+                          Image.asset("assets/timesheet.png"),
+                          // Text
+                          const Text(
+                            " Time\n Sheet",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 10),
-
-              // Team Members List - Using Consumer to get real data
-              Consumer<AllEmployeesController>(
-                builder: (context, controller, child) {
-                  if (controller.isLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF1C7690),
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (controller.error != null) {
-                    return Card(
-                      color: Colors.red.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error, color: Colors.red),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Failed to load team members',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                  Text(
-                                    controller.error!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.refresh,
-                                color: Colors.red,
-                              ),
-                              onPressed: () => controller.fetchallemployees(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (controller.allEmployees?.message.isEmpty ?? true) {
-                    return const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: Text(
-                            'No team members found',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  // Show limited number of employees on dashboard
-                  final employees = controller.allEmployees!.message
-                      .take(5)
-                      .toList();
-
-                  return Column(
-                    children: employees.map((employee) {
-                      return _buildTeamMember(
-                        employee.employeeName.isNotEmpty
-                            ? employee.employeeName
-                            : employee.name,
-                        employee.designation,
-                        employee.imageUrl.isNotEmpty
-                            ? employee.imageUrl
-                            : employee.image,
-                        employee.department,
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tbo_app/view/admin/dashboard/dashboard.dart';
 import 'package:tbo_app/view/admin/leads/leads.dart';
 import 'package:tbo_app/view/admin/profile/profile.dart';
-import 'package:tbo_app/view/admin/task/task.dart';
 import 'package:tbo_app/view/common/project_page/project_page.dart';
 
 class AdminBottomNavigation extends StatefulWidget {
@@ -18,7 +17,6 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
 
   final List<Widget> _pages = [
     const AdminDashboard(),
-    const AdminTaskPage(),
     CommonProjectPage(),
     const AdminLeadsPage(),
     const AdminProfile(),
@@ -62,10 +60,9 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
                   .spaceEvenly, // Change to spaceAround for closer spacing
               children: [
                 _buildNavItem(0, 'assets/home.png', 'Dashboard', 24, 24),
-                _buildNavItem(1, 'assets/task.png', 'My Task', 24, 24),
-                _buildNavItem(2, 'assets/projects.png', 'Projects', 24, 24),
-                _buildNavItem(3, 'assets/leads.png', 'Leads', 24, 24),
-                _buildNavItem(4, 'assets/user.png', 'Profile', 18, 24),
+                _buildNavItem(1, 'assets/projects.png', 'Projects', 24, 24),
+                _buildNavItem(2, 'assets/leads.png', 'Leads', 24, 24),
+                _buildNavItem(3, 'assets/user.png', 'Profile', 18, 24),
               ],
             ),
           ),

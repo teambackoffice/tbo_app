@@ -29,15 +29,27 @@ class _AdminTaskPageState extends State<AdminTaskPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                "Tasks",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_outlined,
+                    color: Colors.black87,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                 ),
-              ),
+                const SizedBox(width: 120),
+                Text(
+                  "Tasks",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
 
