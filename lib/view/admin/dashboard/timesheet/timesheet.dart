@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.details.dart';
 
 class EmployeeTimesheet extends StatefulWidget {
   const EmployeeTimesheet({super.key});
@@ -175,13 +176,11 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                       height: 30,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Handle view details action
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'View details for ${employee['name']}',
-                              ),
-                              duration: const Duration(seconds: 2),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TimesheetApprovalPage(),
                             ),
                           );
                         },
@@ -218,15 +217,26 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
       backgroundColor: const Color(0xFFF9F7F3),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back_ios_new_outlined,
-            color: Colors.black,
+        leading: Container(
+          width: 10, // smaller size
+          height: 10,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle, // makes it perfectly circular
+          ),
+          child: IconButton(
+            padding: EdgeInsets.zero, // remove extra padding
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_new_outlined,
+              color: Colors.black,
+              size: 20, // smaller icon
+            ),
           ),
         ),
+
         backgroundColor: const Color(0xFFF9F7F3),
         title: const Text(
           'Timesheet',
