@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:tbo_app/modal/project_list_modal.dart';
 
-class CommonProjectPageDetails extends StatelessWidget {
-  final ProjectDetails project;
-  const CommonProjectPageDetails({super.key, required this.project});
+class ProjectDetailsPage extends StatelessWidget {
+  const ProjectDetailsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,156 +10,255 @@ class CommonProjectPageDetails extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F5F5),
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Projects',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        // ✅ for scrolling
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Project Info Container
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.black,
-                  size: 18,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Project Planning Name',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Onshore Website',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  Text(
+                    'Project Type',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Internal',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  Text(
+                    'Status',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Open',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  Text(
+                    'Estimated Duration (Days)',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '17 Days',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  Text(
+                    'Planned Start Date',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '28-08-2025',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  Text(
+                    'Planned End Date',
+                    style: TextStyle(
+                      color: Color(0xFF9E9E9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '20-09-2025',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 50),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+
+            const SizedBox(height: 40),
+
+            // Action Buttons Row
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF475569),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Text(
-                        project.projectName!,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset("assets/resources.png"),
+                        SizedBox(height: 8),
+                        Text(
+                          'Resources',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Project ID
-                      Text(
-                        project.name!,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Project details
-                      project.projectType?.isEmpty ?? true
-                          ? const SizedBox.shrink()
-                          : _buildDetailRow(
-                              'Project Type',
-                              project.projectType ?? '',
-                            ),
-                      _buildDetailRow('Department', 'Digital Marketing'),
-                      _buildDetailRow('Priority', project.priority!),
-                      project.expectedStartDate == null
-                          ? const SizedBox.shrink()
-                          : _buildDetailRow(
-                              'Expected Start Date',
-                              DateFormat(
-                                'dd MMM yyyy',
-                              ).format(project.expectedStartDate!),
-                            ),
-
-                      project.expectedEndDate == null
-                          ? const SizedBox.shrink()
-                          : _buildDetailRow(
-                              'Expected End Date',
-                              DateFormat(
-                                'dd MMM yyyy',
-                              ).format(project.expectedEndDate!),
-                            ),
-
-                      const SizedBox(height: 12),
-                      // Description
-                      (project.notes?.isEmpty ?? true)
-                          ? const SizedBox.shrink()
-                          : Text(
-                              project.notes!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                                height: 1.5,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20), // Add bottom padding
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF129476),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          "assets/admin_tasks.png",
+                          color: Colors.white,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Tasks (6)',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            const SizedBox(height: 24),
+
+            // Estimated Cost
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF129476), width: 1),
+              ),
+              child: const Column(
+                children: [
+                  Text(
+                    'Estimated Cost',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '100.00',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 50),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16, color: Colors.black),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
