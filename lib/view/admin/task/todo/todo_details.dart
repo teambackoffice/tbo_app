@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:tbo_app/modal/task_list_modal.dart';
 
 class AdminTodoDetails extends StatelessWidget {
-  final TaskDetails task;
-  const AdminTodoDetails({super.key, required this.task});
+  final TaskDetails? task;
+  const AdminTodoDetails({super.key, this.task});
   static const double avatarSize = 32.0;
   static const double overlapOffset = 24.0;
   static const int maxVisible = 3;
@@ -107,14 +107,14 @@ class AdminTodoDetails extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          task.priority, // Use task priority
+                          task!.priority, // Use task priority
                           style: TextStyle(color: Colors.white, fontSize: 12),
                         ),
                       ),
                       const SizedBox(height: 8),
                       // Title
                       Text(
-                        task.subject!, // Use task name
+                        task!.subject!, // Use task name
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -130,16 +130,16 @@ class AdminTodoDetails extends StatelessWidget {
                           ),
                         ],
                       ),
-                      task.assignedUsers.isNotEmpty
+                      task!.assignedUsers.isNotEmpty
                           ? SizedBox(
                               height: avatarSize,
                               child: Stack(
                                 children: [
                                   // Display visible avatars
-                                  ...task.assignedUsers.take(maxVisible).map((
+                                  ...task!.assignedUsers.take(maxVisible).map((
                                     employee,
                                   ) {
-                                    int index = task.assignedUsers.indexOf(
+                                    int index = task!.assignedUsers.indexOf(
                                       employee,
                                     );
                                     return Positioned(
@@ -182,7 +182,7 @@ class AdminTodoDetails extends StatelessWidget {
                                   }),
 
                                   // Show "+X more" indicator if there are more employees
-                                  if (task.assignedUsers.length > maxVisible)
+                                  if (task!.assignedUsers.length > maxVisible)
                                     Positioned(
                                       left: maxVisible * overlapOffset,
                                       child: Container(
@@ -207,7 +207,7 @@ class AdminTodoDetails extends StatelessWidget {
                                         ),
                                         child: Center(
                                           child: Text(
-                                            "+${task.assignedUsers.length - maxVisible}",
+                                            "+${task!.assignedUsers.length - maxVisible}",
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 10,
@@ -240,10 +240,10 @@ class AdminTodoDetails extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      task.expStartDate != null
+                      task!.expStartDate != null
                           ? Text(
                               DateFormat('dd-MM-yy').format(
-                                task.expStartDate!,
+                                task!.expStartDate!,
                               ), // Use task start date
                               style: TextStyle(
                                 fontSize: 20,
@@ -274,9 +274,9 @@ class AdminTodoDetails extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      task.expEndDate != null
+                      task!.expEndDate != null
                           ? Text(
-                              DateFormat('dd-MM-yy').format(task.expEndDate!),
+                              DateFormat('dd-MM-yy').format(task!.expEndDate!),
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w400,
@@ -293,7 +293,7 @@ class AdminTodoDetails extends StatelessWidget {
                       const SizedBox(height: 16),
                       // Description
                       Text(
-                        task.description ?? "",
+                        task!.description ?? "",
                         style: TextStyle(fontSize: 16, height: 1.4),
                       ),
                       const SizedBox(height: 24),
