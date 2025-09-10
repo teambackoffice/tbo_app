@@ -18,7 +18,7 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
   final List<Widget> _pages = [
     const AdminDashboard(),
     CommonProjectPage(),
-    const AdminLeadsPage(),
+    AdminLeadsPage(),
     const AdminProfile(),
   ];
 
