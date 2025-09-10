@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/view/admin/leads/project_planning.dart';
 
 class LeadDetailsPage extends StatelessWidget {
   const LeadDetailsPage({super.key});
@@ -104,10 +105,15 @@ class LeadDetailsPage extends StatelessWidget {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Handle project planning action
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProjectPlanningScreen(),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2E8B8B),
+                              backgroundColor: const Color(0xFF1C7690),
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
