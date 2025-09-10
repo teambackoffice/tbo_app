@@ -97,7 +97,7 @@ class _ProjectTasksState extends State<ProjectTasks> {
             child: Text(
               'Add Task',
               style: TextStyle(
-                color: Color(0xFF007AFF),
+                color: Color(0xFF1C7690),
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
               ),
@@ -164,6 +164,17 @@ class TaskCard extends StatelessWidget {
               GestureDetector(
                 onTap: onDelete,
                 child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   padding: EdgeInsets.all(4),
                   child: Icon(
                     Icons.delete_outline,
@@ -190,7 +201,7 @@ class TaskCard extends StatelessWidget {
                 Text(
                   'Assign Employees',
                   style: TextStyle(
-                    color: Color(0xFF007AFF),
+                    color: Color(0xFF1C7690),
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                   ),
@@ -419,7 +430,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                         Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF34C759),
+                        backgroundColor: Color(0xFF1C7690),
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
