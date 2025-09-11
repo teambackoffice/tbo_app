@@ -39,7 +39,9 @@ class ProjectDetails {
   String? name;
   String? projectName;
   String? projectType;
+  String? status; // Added this field
   String? priority;
+  String? department; // Added this field
   DateTime? expectedStartDate;
   DateTime? expectedEndDate;
   String? isActive;
@@ -49,7 +51,9 @@ class ProjectDetails {
     this.name,
     this.projectName,
     this.projectType,
+    this.status, // Added this field
     this.priority,
+    this.department, // Added this field
     this.expectedStartDate,
     this.expectedEndDate,
     this.isActive,
@@ -60,7 +64,9 @@ class ProjectDetails {
     name: json["name"],
     projectName: json["project_name"],
     projectType: json["project_type"],
+    status: json["status"], // Added this mapping
     priority: json["priority"],
+    department: json["department"], // Added this mapping
     expectedStartDate: json["expected_start_date"] != null
         ? DateTime.tryParse(json["expected_start_date"])
         : null,
@@ -75,7 +81,9 @@ class ProjectDetails {
     "name": name,
     "project_name": projectName,
     "project_type": projectType,
+    "status": status, // Added this field
     "priority": priority,
+    "department": department, // Added this field
     "expected_start_date": expectedStartDate != null
         ? "${expectedStartDate!.year.toString().padLeft(4, '0')}-${expectedStartDate!.month.toString().padLeft(2, '0')}-${expectedStartDate!.day.toString().padLeft(2, '0')}"
         : null,

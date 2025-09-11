@@ -28,6 +28,8 @@ class ProjectListService {
 
           final projectList = ProjectList.fromJson(decoded);
 
+          try {} catch (_) {}
+
           return projectList;
         } catch (e) {
           throw Exception('Failed to parse response: $e');

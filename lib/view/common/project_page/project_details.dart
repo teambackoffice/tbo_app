@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/common/project_page/project_tasks.dart';
 import 'package:tbo_app/view/common/project_page/resources.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
-  const ProjectDetailsPage({super.key});
+  final ProjectDetails project;
+  const ProjectDetailsPage({super.key, required this.project});
+
+  int calculateDuration(DateTime startDate, DateTime endDate) {
+    return endDate.difference(startDate).inDays +
+        1; // +1 to include both start and end days
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +57,7 @@ class ProjectDetailsPage extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Project Planning Name',
                     style: TextStyle(
@@ -60,7 +68,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Onshore Website',
+                    project.projectName!,
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -79,7 +87,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Internal',
+                    project.projectType!,
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -98,7 +106,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Open',
+                    project.status!,
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -117,7 +125,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '17 Days',
+                    '${calculateDuration(project.expectedStartDate!, project.expectedEndDate!)} Days',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -136,7 +144,9 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '28-08-2025',
+                    DateFormat(
+                      'EEEE, MMM d, y',
+                    ).format(project.expectedStartDate!),
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -155,7 +165,9 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '20-09-2025',
+                    DateFormat(
+                      'EEEE, MMM d, y',
+                    ).format(project.expectedEndDate!),
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,

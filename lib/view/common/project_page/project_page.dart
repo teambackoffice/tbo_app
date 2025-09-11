@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/common/project_page/project_details.dart';
 
 class CommonProjectPage extends StatefulWidget {
@@ -15,6 +18,13 @@ class _CommonProjectPageState extends State<CommonProjectPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<GetProjectListController>(
+        context,
+        listen: false,
+      ).fetchprojectlist();
+    });
+
     // Set today's date when the page loads
     final now = DateTime.now();
     selectedDate =
@@ -23,68 +33,43 @@ class _CommonProjectPageState extends State<CommonProjectPage> {
 
   final List<String> filterOptions = ['All', 'Open', 'Progress', 'Completed'];
 
-  final List<Map<String, dynamic>> projects = [
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Open',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Progress',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Completed',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Exetrnal',
-      'status': 'Open',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Open',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Open',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Open',
-    },
-    {
-      'planningName': 'Project Planning Name',
-      'projectName': 'Onshore Website',
-      'projectType': 'Internal',
-      'status': 'Open',
-    },
-  ];
-
-  Color getStatusColor(String status) {
-    switch (status) {
-      case 'Open':
+  Color getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'open':
         return Color(0xFF129476);
-      case 'Progress':
+      case 'progress':
+      case 'in progress':
         return Color(0xFF007BFF);
-      case 'Completed':
+      case 'completed':
+      case 'closed':
         return Colors.green;
       default:
         return Color(0xFF28A745);
     }
+  }
+
+  // Filter projects based on selected filter and date
+  List<ProjectDetails> getFilteredProjects(List<ProjectDetails>? projects) {
+    if (projects == null) return [];
+
+    List<ProjectDetails> filtered = projects;
+
+    // Filter by status
+    if (selectedFilter != 'All') {
+      filtered = filtered.where((project) {
+        final projectStatus = project.status ?? 'Open';
+
+        // Handle different status mappings
+        if (selectedFilter == 'Progress') {
+          return projectStatus.toLowerCase() == 'progress' ||
+              projectStatus.toLowerCase() == 'in progress';
+        }
+
+        return projectStatus.toLowerCase() == selectedFilter.toLowerCase();
+      }).toList();
+    }
+
+    return filtered;
   }
 
   @override
@@ -226,110 +211,255 @@ class _CommonProjectPageState extends State<CommonProjectPage> {
             SizedBox(height: 32),
             // Projects List
             Expanded(
-              child: ListView.builder(
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  final project = projects[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProjectDetailsPage(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 16),
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
+              child: Consumer<GetProjectListController>(
+                builder: (context, controller, child) {
+                  if (controller.isLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF28A745),
+                      ),
+                    );
+                  }
+
+                  if (controller.error != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Error loading projects',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            controller.error!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => controller.fetchprojectlist(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF28A745),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text('Retry'),
                           ),
                         ],
                       ),
+                    );
+                  }
+
+                  final projects = controller.projectList?.data;
+                  final filteredProjects = getFilteredProjects(projects);
+
+                  if (projects != null && projects.isNotEmpty) {}
+
+                  if (filteredProjects.isEmpty &&
+                      projects?.isNotEmpty == true) {
+                    return Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Project Planning Name Label
-                                    Text(
-                                      project['planningName'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade500,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    // Project Name
-                                    Text(
-                                      project['projectName'],
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    // Project Type Label
-                                    Text(
-                                      'Project Type',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade500,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    // Project Type Value
-                                    Text(
-                                      project['projectType'],
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Status Badge
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: getStatusColor(project['status']),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  project['status'],
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                          Icon(
+                            Icons.filter_list_off,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No projects match your filters',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Try selecting "All" or different filters',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                selectedFilter = 'All';
+                                selectedDate = '';
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF28A745),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text('Clear Filters'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (projects == null || projects.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.folder_open_outlined,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No projects found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'No projects available',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredProjects.length,
+                    itemBuilder: (context, index) {
+                      final project = filteredProjects[index];
+                      final status = project.status ?? 'Open';
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProjectDetailsPage(project: project),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Project ID
+                                        Text(
+                                          project.name ?? 'Unknown Project',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        // Project Name
+                                        Text(
+                                          project.projectName ??
+                                              'No Project Name',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        // Project Type Label
+                                        Text(
+                                          'Project Type',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        // Project Type Value
+                                        Text(
+                                          project.projectType ??
+                                              'Not specified',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Status Badge
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: getStatusColor(status),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      status,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
