@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/modal/all_lead_list_modal.dart';
 import 'package:tbo_app/view/admin/leads/project_planning.dart';
 
 class LeadDetailsPage extends StatelessWidget {
-  const LeadDetailsPage({super.key});
+  final Leads lead;
+  const LeadDetailsPage({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context) {
@@ -68,67 +70,76 @@ class LeadDetailsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Company Name
-                        _buildInfoField('Company Name', 'Onshore'),
+                        _buildInfoField('Company Name', lead.leadName!),
                         const SizedBox(height: 24),
 
                         // Lead Segment
-                        _buildInfoField('Lead Segment', 'Digital Marketing'),
+                        _buildInfoField(
+                          'Lead Segment',
+                          lead.customLeadSegment!,
+                        ),
                         const SizedBox(height: 24),
 
                         // Lead Type
-                        _buildInfoField('Lead Type', 'High'),
+                        _buildInfoField('Lead Type', 'High[Harcoded]'),
                         const SizedBox(height: 24),
 
                         // Full Name
-                        _buildInfoField('Full Name', 'John'),
+                        _buildInfoField('Full Name', lead.companyName!),
                         const SizedBox(height: 24),
 
                         // Email
-                        _buildInfoField('Email', 'john@gmail.com'),
+                        _buildInfoField('Email', lead.emailId ?? 'N/A'),
                         const SizedBox(height: 24),
 
                         // Phone Number
-                        _buildInfoField('Phone Number', '+9832197462874'),
+                        _buildInfoField('Phone Number', lead.mobileNo!),
                         const SizedBox(height: 24),
 
                         // Location
-                        _buildInfoField('Location', 'Calicut'),
+                        _buildInfoField(
+                          'Project Type',
+                          lead.customProjectType!,
+                        ),
                         const SizedBox(height: 24),
 
                         // Status
-                        _buildStatusField('Status', 'Converted'),
+                        _buildStatusField('Status', lead.status!),
                         SizedBox(height: 50),
 
                         // Project Planning Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ProjectPlanningScreen(),
+                        lead.status == "Converted"
+                            ? SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ProjectPlanningScreen(),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1C7690),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(28),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Project Planning',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1C7690),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                            ),
-                            child: const Text(
-                              'Project Planning',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
+                              )
+                            : SizedBox(),
                         const SizedBox(height: 20),
                       ],
                     ),

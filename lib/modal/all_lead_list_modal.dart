@@ -11,7 +11,7 @@ String allLeadsModalToJson(AllLeadsModal? data) => json.encode(data?.toJson());
 
 class AllLeadsModal {
   String? message;
-  List<Datum>? data;
+  List<Leads>? data;
   bool? success;
 
   AllLeadsModal({this.message, this.data, this.success});
@@ -20,7 +20,7 @@ class AllLeadsModal {
     message: json["message"],
     data: json["data"] == null
         ? []
-        : List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+        : List<Leads>.from(json["data"].map((x) => Leads.fromJson(x))),
     success: json["success"],
   );
 
@@ -33,7 +33,7 @@ class AllLeadsModal {
   };
 }
 
-class Datum {
+class Leads {
   String? leadId;
   String? leadName;
   String? companyName;
@@ -44,8 +44,11 @@ class Datum {
   dynamic campaignName;
   String? leadOwner;
   String? territory;
+  String? marketSegment;
+  String? customLeadSegment;
+  String? customProjectType;
 
-  Datum({
+  Leads({
     this.leadId,
     this.leadName,
     this.companyName,
@@ -56,9 +59,12 @@ class Datum {
     this.campaignName,
     this.leadOwner,
     this.territory,
+    this.marketSegment,
+    this.customLeadSegment,
+    this.customProjectType,
   });
 
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory Leads.fromJson(Map<String, dynamic> json) => Leads(
     leadId: json["lead_id"],
     leadName: json["lead_name"],
     companyName: json["company_name"],
@@ -69,6 +75,9 @@ class Datum {
     campaignName: json["campaign_name"],
     leadOwner: json["lead_owner"],
     territory: json["territory"],
+    marketSegment: json["market_segment"],
+    customLeadSegment: json["custom_lead_segment"],
+    customProjectType: json["custom_project_type"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -82,5 +91,8 @@ class Datum {
     "campaign_name": campaignName,
     "lead_owner": leadOwner,
     "territory": territory,
+    "market_segment": marketSegment,
+    "custom_lead_segment": customLeadSegment,
+    "custom_project_type": customProjectType,
   };
 }
