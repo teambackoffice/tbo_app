@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/create_project_controller.dart'; // 🔥 ADD THIS IMPORT
 import 'package:tbo_app/controller/lead_segment_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
+import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 
 class Resource {
   String type;
@@ -19,7 +22,8 @@ class Resource {
 
 class ProjectPlanningScreen extends StatefulWidget {
   final Leads lead;
-  const ProjectPlanningScreen({super.key, required this.lead});
+  final String? planningId; // 🔥 ADD PLANNING_ID PARAMETER
+  const ProjectPlanningScreen({super.key, required this.lead, this.planningId});
 
   @override
   _ProjectPlanningScreenState createState() => _ProjectPlanningScreenState();
@@ -57,10 +61,34 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
   // Dropdown values
   String? selectedLeadSegment;
   String selectedProjectType = 'Internal';
-  String selectedStatus = 'Draft';
 
   // Resources list
   List<Resource> resources = [];
+
+  // 🔥 ADD THIS METHOD TO CALCULATE TOTAL COST
+  void _updateEstimatedCost() {
+    double totalResourceCost = resources.fold(
+      0.0,
+      (sum, resource) => sum + resource.cost,
+    );
+
+    // Get base cost from lead segment if available
+    double baseCost = 0.0;
+    final controller = Provider.of<LeadSegmentController>(
+      context,
+      listen: false,
+    );
+    if (selectedLeadSegment != null && controller.leadsegments != null) {
+      final selectedSegment = controller.leadsegments!.data.firstWhere(
+        (seg) => seg.leadSegment == selectedLeadSegment,
+        orElse: () => throw Exception("Segment not found"),
+      );
+      baseCost = selectedSegment.totalEstimatedCost;
+    }
+
+    double totalCost = baseCost + totalResourceCost;
+    estimatedCostController.text = totalCost.toStringAsFixed(2);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,17 +135,6 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                     (value) {
                       setState(() {
                         selectedProjectType = value!;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  _buildDropdownField(
-                    'Status',
-                    selectedStatus,
-                    ['Draft', 'In Progress', 'Completed'],
-                    (value) {
-                      setState(() {
-                        selectedStatus = value!;
                       });
                     },
                   ),
@@ -189,12 +206,12 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
 
                   // Resources list
                   ...resources.map((resource) => _buildResourceItem(resource)),
-
-                  // Estimated Cost field
                 ],
               ),
             ),
-            SizedBox(height: 32),
+            SizedBox(height: 16),
+
+            // 🔥 MOVED ESTIMATED COST OUTSIDE RESOURCE PLANNING SECTION
             _buildTextField(
               'Estimated Cost',
               estimatedCostController,
@@ -202,36 +219,139 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
             ),
 
             SizedBox(height: 32),
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Handle save action
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Project saved successfully!')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF008B8B),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+            // Save Button with API integration
+            Consumer<CreateProjectController>(
+              builder: (context, createController, child) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: createController.isLoading
+                        ? null
+                        : _createProject,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF008B8B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: createController.isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Create New Project',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
-                ),
-                child: Text(
-                  'Save',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // 🔥 ADD THIS METHOD FOR API CALL
+  Future<void> _createProject() async {
+    if (_validateForm()) {
+      final createController = Provider.of<CreateProjectController>(
+        context,
+        listen: false,
+      );
+
+      // Prepare resource requirements for API
+      List<Map<String, dynamic>> resourceRequirements = resources
+          .map(
+            (resource) => {
+              'resource_type': resource.type,
+              'resource_name': resource.name,
+              'quantity_required': resource.quantity,
+              'estimated_cost': resource.cost,
+            },
+          )
+          .toList();
+
+      await createController.updateProject(
+        planningId: widget.planningId ?? '', // 🔥 USE THE PASSED PLANNING_ID
+        planningName: leadController.text,
+        lead: widget.lead.leadId!,
+        leadSegment: selectedLeadSegment ?? '',
+        projectType: selectedProjectType,
+        status: "Approved",
+        planningDate: DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd-MM-yyyy').parse(planningDateController.text)),
+        estimatedDuration: int.tryParse(estimatedDurationController.text) ?? 0,
+        estimatedCost: double.tryParse(estimatedCostController.text) ?? 0.0,
+        plannedStartDate: DateFormat('yyyy-MM-dd').format(
+          DateFormat('dd-MM-yyyy').parse(plannedStartDateController.text),
+        ),
+        plannedEndDate: DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateFormat('dd-MM-yyyy').parse(plannedEndDateController.text)),
+
+        resourceRequirements: resourceRequirements,
+      );
+
+      // Show result message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            createController.responseMessage.contains('Error')
+                ? 'Failed to create project'
+                : 'Project created successfully!',
+          ),
+          backgroundColor: createController.responseMessage.contains('Error')
+              ? Colors.red
+              : Colors.green,
+        ),
+      );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const AdminBottomNavigation(initialIndex: 2),
+        ),
+        (route) => false, // remove all previous routes
+      );
+    }
+  }
+
+  // 🔥 ADD VALIDATION METHOD
+  bool _validateForm() {
+    if (leadController.text.isEmpty) {
+      _showErrorSnackBar('Please enter lead name');
+      return false;
+    }
+    if (selectedLeadSegment == null) {
+      _showErrorSnackBar('Please select lead segment');
+      return false;
+    }
+    if (planningDateController.text.isEmpty) {
+      _showErrorSnackBar('Please enter planning date');
+      return false;
+    }
+    if (estimatedDurationController.text.isEmpty) {
+      _showErrorSnackBar('Please enter estimated duration');
+      return false;
+    }
+    if (plannedStartDateController.text.isEmpty) {
+      _showErrorSnackBar('Please enter planned start date');
+      return false;
+    }
+    if (plannedEndDateController.text.isEmpty) {
+      _showErrorSnackBar('Please enter planned end date');
+      return false;
+    }
+    return true;
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -296,7 +416,12 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
         SizedBox(height: 4),
         TextField(
           controller: controller,
-          readOnly: readOnly,
+          readOnly: suffixIcon == Icons.calendar_today
+              ? true
+              : readOnly, // 🔥 MAKE DATE FIELDS READONLY
+          onTap: suffixIcon == Icons.calendar_today
+              ? () => _selectDate(controller)
+              : null, // 🔥 ADD DATE PICKER
           decoration: InputDecoration(
             filled: true,
             fillColor: Color(0xFFF8F9FA),
@@ -323,9 +448,39 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
     );
   }
 
+  // 🔥 ADD THIS DATE PICKER METHOD
+  Future<void> _selectDate(TextEditingController controller) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF008B8B),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Color(0xFF008B8B)),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      controller.text =
+          "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
+    }
+  }
+
   Widget _buildDropdownField(
     String label,
-    String? value, // allow null
+    String? value,
     List<String> items,
     ValueChanged<String?> onChanged,
   ) {
@@ -349,9 +504,9 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value, // can be null
+              value: value,
               isExpanded: true,
-              hint: Text("Select $label"), // 👈 hint when null
+              hint: Text("Select $label"),
               onChanged: onChanged,
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
@@ -417,10 +572,9 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
             (seg) => seg.leadSegment == value,
           );
 
-          // Update Estimated Cost field
+          // Update Estimated Cost field and recalculate total
           if (selectedSegment != null) {
-            estimatedCostController.text = selectedSegment.totalEstimatedCost
-                .toStringAsFixed(2);
+            _updateEstimatedCost(); // 🔥 USE NEW METHOD
           }
         });
       },
@@ -528,6 +682,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
   void _deleteResource(Resource resource) {
     setState(() {
       resources.remove(resource);
+      _updateEstimatedCost(); // 🔥 RECALCULATE COST AFTER DELETE
     });
   }
 
@@ -606,6 +761,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                           // Add new resource
                           resources.add(newResource);
                         }
+                        _updateEstimatedCost(); // 🔥 RECALCULATE COST AFTER ADD/EDIT
                       });
                       Navigator.of(context).pop();
                     },

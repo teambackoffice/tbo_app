@@ -5,52 +5,68 @@ import 'package:http/http.dart' as http;
 import 'package:tbo_app/config/api_constants.dart';
 
 class CreateProjectService {
-  final _storage = const FlutterSecureStorage();
+  final String url =
+      '${ApiConstants.baseUrl}project_planning_api.update_project_planning';
 
-  Future<Map<String, dynamic>?> createProject({
-    required String projectName,
-    required String status,
-    required String startDate,
-    required String endDate,
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  Future<String> createProject({
+    required String planningId,
+    required String planningName,
+    required String lead,
+    required String leadSegment,
     required String projectType,
-    required String priority,
-    required String department,
-    String? notes,
+    required String status,
+    required String planningDate,
+    required int estimatedDuration,
+    required double estimatedCost,
+    required String plannedStartDate,
+    required String plannedEndDate,
+    required List<Map<String, dynamic>> resourceRequirements,
   }) async {
     try {
-      // Read sid directly
-      String? sid = await _storage.read(key: "sid");
+      // 🔑 Read SID
+      String? sid = await _secureStorage.read(key: 'sid');
+      if (sid == null) throw Exception("SID not found. Please login again.");
 
-      if (sid == null) {
-        throw Exception("No session found. Please login again.");
-      }
-
-      var headers = {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'};
-
-      var url = Uri.parse("${ApiConstants.baseUrl}project_api.create_project");
+      var headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'sid=$sid; ',
+      };
 
       var body = json.encode({
-        "project_name": projectName,
-        "status": status,
-        "expected_start_date": startDate,
-        "expected_end_date": endDate,
+        "planning_id": planningId,
+        "planning_name": planningName,
+        "lead": lead,
+        "lead_segment": leadSegment,
         "project_type": projectType,
-        "priority": priority,
-        "department": department,
-        "notes": notes,
+        "status": status,
+        "planning_date": planningDate,
+        "estimated_duration": estimatedDuration,
+        "estimated_cost": estimatedCost,
+        "planned_start_date": plannedStartDate,
+        "planned_end_date": plannedEndDate,
+        "resource_requirements": json.encode(
+          resourceRequirements,
+        ), // ✅ keep as List<Map>
       });
 
-      // 🔹 Debug logs
+      var request = http.Request('POST', Uri.parse(url));
+      request.body = body;
+      request.headers.addAll(headers);
 
-      var response = await http.post(url, headers: headers, body: body);
+      http.StreamedResponse response = await request.send();
+
+      // 🖨️ Print response details
+      String responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        return responseBody;
       } else {
-        throw Exception("Failed: ${response.body}");
+        throw Exception("Error: ${response.reasonPhrase}, Body: $responseBody");
       }
-    } catch (e) {
-      rethrow;
+    } catch (e, stack) {
+      throw Exception("Failed to update project planning: $e");
     }
   }
 }

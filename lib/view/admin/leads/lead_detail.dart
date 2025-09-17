@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/create_project_planning_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
 import 'package:tbo_app/view/admin/leads/project_planning.dart';
 
@@ -109,35 +113,102 @@ class LeadDetailsPage extends StatelessWidget {
 
                         // Project Planning Button
                         lead.status == "Converted"
-                            ? SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ProjectPlanningScreen(lead: lead),
+                            ? Consumer<ProjectPlanningController>(
+                                builder: (context, controller, child) {
+                                  return SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: ElevatedButton(
+                                      onPressed: controller.isLoading
+                                          ? null
+                                          : () async {
+                                              try {
+                                                // 🔥 CHANGE 2: Await the API response and extract planning_id
+                                                String
+                                                response = await controller
+                                                    .createProjectPlanning(
+                                                      planningName:
+                                                          lead.leadName!,
+                                                      leadSegment: lead
+                                                          .customLeadSegment!,
+                                                    );
+
+                                                // 🔥 CHANGE 3: Parse the response to get planning_id
+                                                String? planningId =
+                                                    _extractPlanningId(
+                                                      response,
+                                                    );
+
+                                                if (planningId != null) {
+                                                  // Navigate with planning_id
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ProjectPlanningScreen(
+                                                            lead: lead,
+                                                            planningId:
+                                                                planningId, // 🔥 PASS PLANNING_ID
+                                                          ),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  // Show error if planning_id not found
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Failed to get planning ID',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                // Show error message
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Error: $e'),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF1C7690,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            28,
+                                          ),
+                                        ),
                                       ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1C7690),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(28),
+                                      child: controller.isLoading
+                                          ? const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Project Planning',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
                                     ),
-                                  ),
-                                  child: const Text(
-                                    'Project Planning',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
+                                  );
+                                },
                               )
                             : SizedBox(),
                         const SizedBox(height: 20),
@@ -152,6 +223,20 @@ class LeadDetailsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Add this method to your LeadDetailsPage class
+  String? _extractPlanningId(String response) {
+    try {
+      Map<String, dynamic> jsonResponse = json.decode(response);
+      String? planningId = jsonResponse['data']?['planning_id']?.toString();
+
+      print("Extracted planning_id: $planningId");
+      return planningId;
+    } catch (e) {
+      print('Error parsing response: $e');
+      return null;
+    }
   }
 
   Widget _buildInfoField(String label, String value) {

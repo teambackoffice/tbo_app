@@ -1,43 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:tbo_app/services/create_project_service.dart';
 
-class CreateProjectController with ChangeNotifier {
+class CreateProjectController extends ChangeNotifier {
   final CreateProjectService _service = CreateProjectService();
 
-  bool isLoading = false;
-  String? errorMessage;
-  Map<String, dynamic>? responseData;
+  bool _isLoading = false;
+  String _responseMessage = '';
 
-  Future<void> createProject({
-    required String projectName,
-    required String status,
-    required String startDate,
-    required String endDate,
+  bool get isLoading => _isLoading;
+  String get responseMessage => _responseMessage;
+
+  Future<void> updateProject({
+    required String planningId,
+    required String planningName,
+    required String lead,
+    required String leadSegment,
     required String projectType,
-    required String priority,
-    required String department,
-    String? notes,
+    required String status,
+    required String planningDate,
+    required int estimatedDuration,
+    required double estimatedCost,
+    required String plannedStartDate,
+    required String plannedEndDate,
+    required List<Map<String, dynamic>> resourceRequirements,
   }) async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
+    _isLoading = true;
+    notifyListeners();
 
-      responseData = await _service.createProject(
-        projectName: projectName,
-        status: status,
-        startDate: startDate,
-        endDate: endDate,
+    try {
+      final response = await _service.createProject(
+        planningId: planningId,
+        planningName: planningName,
+        lead: lead,
+        leadSegment: leadSegment,
         projectType: projectType,
-        priority: priority,
-        department: department,
-        notes: notes,
+        status: status,
+        planningDate: planningDate,
+        estimatedDuration: estimatedDuration,
+        estimatedCost: estimatedCost,
+        plannedStartDate: plannedStartDate,
+        plannedEndDate: plannedEndDate,
+        resourceRequirements: resourceRequirements,
       );
+
+      _responseMessage = response;
     } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
+      _responseMessage = e.toString();
     }
+
+    _isLoading = false;
+    notifyListeners();
   }
 }
