@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/lead_segment_controller.dart';
+import 'package:tbo_app/modal/all_lead_list_modal.dart';
 
 class Resource {
   String type;
@@ -15,7 +18,8 @@ class Resource {
 }
 
 class ProjectPlanningScreen extends StatefulWidget {
-  const ProjectPlanningScreen({super.key});
+  final Leads lead;
+  const ProjectPlanningScreen({super.key, required this.lead});
 
   @override
   _ProjectPlanningScreenState createState() => _ProjectPlanningScreenState();
@@ -28,7 +32,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
   bool isResourcePlanningExpanded = false;
 
   // Controllers
-  final TextEditingController leadController = TextEditingController();
+  late TextEditingController leadController;
   final TextEditingController planningDateController = TextEditingController();
   final TextEditingController estimatedDurationController =
       TextEditingController();
@@ -38,8 +42,20 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
       TextEditingController();
   final TextEditingController estimatedCostController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    leadController = TextEditingController(text: widget.lead.leadName ?? '');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<LeadSegmentController>(
+        context,
+        listen: false,
+      ).fetchleadsegments();
+    });
+  }
+
   // Dropdown values
-  String selectedLeadSegment = 'Digital Marketing';
+  String? selectedLeadSegment;
   String selectedProjectType = 'Internal';
   String selectedStatus = 'Draft';
 
@@ -48,6 +64,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<LeadSegmentController>(context);
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -75,20 +92,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                 children: [
                   _buildTextField('Lead', leadController),
                   SizedBox(height: 16),
-                  _buildDropdownField(
-                    'Lead Segment',
-                    selectedLeadSegment,
-                    [
-                      'Digital Marketing',
-                      'Traditional Marketing',
-                      'Social Media',
-                    ],
-                    (value) {
-                      setState(() {
-                        selectedLeadSegment = value!;
-                      });
-                    },
-                  ),
+                  _buildLeadSegmentField(controller),
                   SizedBox(height: 16),
                   _buildTextField(
                     'Planning Date',
@@ -191,7 +195,12 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
               ),
             ),
             SizedBox(height: 32),
-            _buildTextField('Estimated Cost', estimatedCostController),
+            _buildTextField(
+              'Estimated Cost',
+              estimatedCostController,
+              readOnly: true,
+            ),
+
             SizedBox(height: 32),
             // Save Button
             SizedBox(
@@ -271,6 +280,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
     String label,
     TextEditingController controller, {
     IconData? suffixIcon,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,6 +296,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
         SizedBox(height: 4),
         TextField(
           controller: controller,
+          readOnly: readOnly,
           decoration: InputDecoration(
             filled: true,
             fillColor: Color(0xFFF8F9FA),
@@ -314,7 +325,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
 
   Widget _buildDropdownField(
     String label,
-    String value,
+    String? value, // allow null
     List<String> items,
     ValueChanged<String?> onChanged,
   ) {
@@ -338,8 +349,9 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
+              value: value, // can be null
               isExpanded: true,
+              hint: Text("Select $label"), // 👈 hint when null
               onChanged: onChanged,
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
@@ -351,6 +363,67 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLeadSegmentField(LeadSegmentController controller) {
+    if (controller.isLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Lead Segment",
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          ),
+          SizedBox(height: 8),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text("Loading lead segments..."),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (controller.error != null) {
+      return Text("Error: ${controller.error}");
+    }
+
+    return _buildDropdownField(
+      "Lead Segment",
+      selectedLeadSegment,
+      controller.leadsegments?.data.map((seg) => seg.leadSegment).toList() ??
+          [],
+      (value) {
+        setState(() {
+          selectedLeadSegment = value;
+
+          // Find selected segment object
+          final selectedSegment = controller.leadsegments?.data.firstWhere(
+            (seg) => seg.leadSegment == value,
+          );
+
+          // Update Estimated Cost field
+          if (selectedSegment != null) {
+            estimatedCostController.text = selectedSegment.totalEstimatedCost
+                .toStringAsFixed(2);
+          }
+        });
+      },
     );
   }
 

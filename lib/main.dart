@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/create_project_controller.dart';
+import 'package:tbo_app/controller/lead_segment_controller.dart';
 import 'package:tbo_app/controller/leads_details_controller.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
@@ -48,6 +49,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<CreateProjectController>(
           create: (_) => CreateProjectController(),
+        ),
+        ChangeNotifierProvider<LeadSegmentController>(
+          create: (_) => LeadSegmentController(),
         ),
       ],
       child: MaterialApp(

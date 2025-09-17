@@ -118,7 +118,7 @@ class LeadDetailsPage extends StatelessWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            ProjectPlanningScreen(),
+                                            ProjectPlanningScreen(lead: lead),
                                       ),
                                     );
                                   },
