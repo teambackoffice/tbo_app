@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/get_timesheet_controller.dart';
+import 'package:tbo_app/modal/timesheet_modal.dart';
 import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.details.dart';
 
 class EmployeeTimesheet extends StatefulWidget {
@@ -11,8 +14,9 @@ class EmployeeTimesheet extends StatefulWidget {
 class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   String selectedFilter = 'All';
   DateTime selectedDate = DateTime.now();
+  String searchQuery = '';
 
-  final List<String> filterOptions = ['All', 'Pending', 'Approved', 'Rejected'];
+  final List<String> filterOptions = ['All', 'Draft', 'Submitted', 'Approved'];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -28,60 +32,75 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
     }
   }
 
-  String _formatDate(DateTime date) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<GetTimesheetController>(
+        context,
+        listen: false,
+      ).fetchtimesheet();
+    });
+  }
+
+  String formatDate(DateTime date) {
     String day = date.day.toString().padLeft(2, '0');
     String month = date.month.toString().padLeft(2, '0');
-    String year = date.year.toString().substring(2); // Get last 2 digits
+    String year = date.year.toString().substring(2);
     return '$day-$month-$year';
   }
 
-  Widget _buildEmployeeCard(int index) {
-    // Sample employee data with explicit typing
-    final List<Map<String, dynamic>> employees = [
-      {
-        'name': 'Shameer TK',
-        'id': 'TS251440',
-        'date': '28-08-2025',
-        'hours': '6.903',
-        'status': 'Pending',
-        'isApproved': false,
-      },
-      {
-        'name': 'Jasir',
-        'id': 'TS251440',
-        'date': '28-08-2025',
-        'hours': '6.903',
-        'status': 'Approved',
-        'isApproved': true,
-      },
-      {
-        'name': 'Ahmed Khan',
-        'id': 'TS251441',
-        'date': '28-08-2025',
-        'hours': '8.000',
-        'status': 'Pending',
-        'isApproved': false,
-      },
-      {
-        'name': 'Sarah Ali',
-        'id': 'TS251442',
-        'date': '28-08-2025',
-        'hours': '7.500',
-        'status': 'Approved',
-        'isApproved': true,
-      },
-      {
-        'name': 'Mohammed Hassan',
-        'id': 'TS251443',
-        'date': '28-08-2025',
-        'hours': '6.750',
-        'status': 'Pending',
-        'isApproved': false,
-      },
-    ];
+  String formatDateFromApi(DateTime date) {
+    String day = date.day.toString().padLeft(2, '0');
+    String month = date.month.toString().padLeft(2, '0');
+    String year = date.year.toString().substring(2);
+    return '$day-$month-$year';
+  }
 
-    final Map<String, dynamic> employee = employees[index];
+  double convertHoursToDecimal(int totalHours) {
+    return totalHours / 3600; // Assuming totalHours is in seconds
+  }
 
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Colors.green;
+      case 'submitted':
+        return Colors.blue;
+      case 'draft':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  List<Datum> getFilteredTimesheets(List<Datum> timesheets) {
+    return timesheets.where((timesheet) {
+      // Filter by status
+      bool statusMatch =
+          selectedFilter == 'All' ||
+          timesheet.status.toLowerCase() == selectedFilter.toLowerCase();
+
+      // Filter by search query
+      bool searchMatch =
+          searchQuery.isEmpty ||
+          timesheet.employeeName.toLowerCase().contains(
+            searchQuery.toLowerCase(),
+          ) ||
+          timesheet.employee.toLowerCase().contains(searchQuery.toLowerCase());
+
+      // Filter by date (check if selected date is within start and end date)
+      bool dateMatch =
+          selectedDate.isAfter(
+            timesheet.startDate.subtract(const Duration(days: 1)),
+          ) &&
+          selectedDate.isBefore(timesheet.endDate.add(const Duration(days: 1)));
+
+      return statusMatch && searchMatch && dateMatch;
+    }).toList();
+  }
+
+  Widget buildEmployeeCard(Datum timesheet) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
@@ -99,7 +118,6 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
       ),
       child: Row(
         children: [
-          // Left side - Employee info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,12 +125,15 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      employee['name']!,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                    Expanded(
+                      child: Text(
+                        timesheet.employeeName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
@@ -121,13 +142,11 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: employee['isApproved'] as bool
-                            ? Colors.green
-                            : Colors.orange,
+                        color: getStatusColor(timesheet.status),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        employee['status']!,
+                        timesheet.status,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -139,7 +158,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  employee['id']!,
+                  timesheet.employee,
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 12),
@@ -148,7 +167,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Text(
-                  employee['date']!,
+                  '${formatDateFromApi(timesheet.startDate)} ',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -157,14 +176,14 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Total Working Hour',
+                  'Total Working Hours',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      employee['hours']!,
+                      '${timesheet.totalHours.toInt()} hrs',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -180,14 +199,13 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const TimesheetApprovalPage(),
+                                  TimesheetApprovalPage(timesheet: timesheet),
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2E7D8A),
                           foregroundColor: Colors.white,
-
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -218,25 +236,24 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Container(
-          width: 10, // smaller size
+          width: 10,
           height: 10,
           decoration: const BoxDecoration(
             color: Colors.white,
-            shape: BoxShape.circle, // makes it perfectly circular
+            shape: BoxShape.circle,
           ),
           child: IconButton(
-            padding: EdgeInsets.zero, // remove extra padding
+            padding: EdgeInsets.zero,
             onPressed: () {
               Navigator.pop(context);
             },
             icon: const Icon(
               Icons.arrow_back_ios_new_outlined,
               color: Colors.black,
-              size: 20, // smaller icon
+              size: 20,
             ),
           ),
         ),
-
         backgroundColor: const Color(0xFFF9F7F3),
         title: const Text(
           'Timesheet',
@@ -249,6 +266,11 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
@@ -347,7 +369,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _formatDate(selectedDate),
+                            formatDate(selectedDate),
                             style: const TextStyle(
                               color: Colors.black,
                               fontSize: 16,
@@ -372,11 +394,141 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
 
           // Employee Cards List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                return _buildEmployeeCard(index);
+            child: Consumer<GetTimesheetController>(
+              builder: (context, controller, child) {
+                if (controller.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF2E7D8A)),
+                  );
+                }
+
+                if (controller.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading timesheets',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          controller.error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            controller.fetchtimesheet();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E7D8A),
+                          ),
+                          child: const Text(
+                            'Retry',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (controller.allLeads?.data == null ||
+                    controller.allLeads!.data.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No timesheets found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No timesheet data available at the moment',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final filteredTimesheets = getFilteredTimesheets(
+                  controller.allLeads!.data,
+                );
+
+                if (filteredTimesheets.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.filter_list_off,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No matching timesheets',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your filters or search query',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await controller.fetchtimesheet();
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredTimesheets.length,
+                    itemBuilder: (context, index) {
+                      return buildEmployeeCard(filteredTimesheets[index]);
+                    },
+                  ),
+                );
               },
             ),
           ),

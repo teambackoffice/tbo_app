@@ -11,21 +11,16 @@ class CreateProjectPlanningService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   Future<String> createProjectPlanning({
-    // 🔥 CHANGE: Return String instead of void
     required String planningName,
     required String leadSegment,
   }) async {
-    // 🔑 Read SID from secure storage
     final sid = await _secureStorage.read(key: 'sid');
 
     if (sid == null) {
       throw Exception("Session ID not found in storage");
     }
 
-    var headers = {
-      'Content-Type': 'application/json',
-      'Cookie': 'full_name=Admin; sid=$sid;',
-    };
+    var headers = {'Content-Type': 'application/json', 'Cookie': ' sid=$sid;'};
 
     var body = jsonEncode({
       "planning_name": planningName,

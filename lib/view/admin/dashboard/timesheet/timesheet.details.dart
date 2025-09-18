@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/modal/timesheet_modal.dart';
 
 class TimesheetApprovalPage extends StatefulWidget {
-  const TimesheetApprovalPage({super.key});
+  final Datum timesheet;
+
+  const TimesheetApprovalPage({super.key, required this.timesheet});
 
   @override
   State<TimesheetApprovalPage> createState() => _TimesheetApprovalPageState();
@@ -10,6 +13,56 @@ class TimesheetApprovalPage extends StatefulWidget {
 class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
   // Track which cards are expanded
   Set<int> expandedCards = <int>{};
+
+  String formatDate(DateTime date) {
+    String day = date.day.toString().padLeft(2, '0');
+    String month = date.month.toString().padLeft(2, '0');
+    String year = date.year.toString().substring(2);
+    return '$day-$month-$year';
+  }
+
+  String formatTime(DateTime time) {
+    int hour = time.hour;
+    int minute = time.minute;
+    String period = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour > 12) hour = hour - 12;
+    if (hour == 0) hour = 12;
+
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  double convertHoursToDecimal(int totalHours) {
+    return totalHours / 3600; // Assuming totalHours is in seconds
+  }
+
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Colors.green;
+      case 'submitted':
+        return Colors.blue;
+      case 'pending':
+        return Colors.orange;
+      case 'draft':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String getStatusDisplayText(String status) {
+    switch (status.toLowerCase()) {
+      case 'submitted':
+        return 'Send to Approval';
+      case 'approved':
+        return 'Approved';
+      case 'draft':
+        return 'Draft';
+      default:
+        return status;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,30 +82,30 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Employee Header Section
-            const Text(
-              'Employee Name',
-              style: TextStyle(
+            Text(
+              widget.timesheet.employeeName,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'TS251440',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+            Text(
+              widget.timesheet.employee,
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 16),
 
             // Date Section
             const Text(
-              'Date',
+              'Date Range',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '28-08-2025',
-              style: TextStyle(
+            Text(
+              '${formatDate(widget.timesheet.startDate)} - ${formatDate(widget.timesheet.endDate)}',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black,
@@ -62,13 +115,13 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
 
             // Total Working Hours Section
             const Text(
-              'Total Working Hour',
+              'Total Working Hours',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '6.903',
-              style: TextStyle(
+            Text(
+              '${widget.timesheet.totalHours.toInt()} hrs',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black,
@@ -82,125 +135,322 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Send to Approval',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(widget.timesheet.status),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    getStatusDisplayText(widget.timesheet.status),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
 
             // Time Sheets Section
             const Text(
-              'Time Sheets :-',
+              'Time Logs :-',
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 20),
 
-            // Task Cards
-            _buildTaskCard(
-              index: 0,
-              title: 'Website Design',
-              subtitle: 'Onshore Website',
-              fromTime: '10:05 Am',
-              toTime: '12:10 Pm',
-              totalHours: '2.05 Hr',
-              description:
-                  'Worked on the main landing page design and implemented responsive layout for mobile devices.',
-              project: 'E-commerce Platform',
-              client: 'ABC Corporation',
-            ),
-            const SizedBox(height: 16),
+            // Task Cards from API data
+            if (widget.timesheet.timeLogs.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Text(
+                    'No time logs available',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ...widget.timesheet.timeLogs.asMap().entries.map((entry) {
+                int index = entry.key;
+                TimeLog timeLog = entry.value;
 
-            _buildTaskCard(
-              index: 1,
-              title: 'App UI',
-              subtitle: 'TBO Task Management',
-              fromTime: '12:10 Pm',
-              toTime: '13:10 Pm',
-              totalHours: '1.00 Hr',
-              description:
-                  'Created task management interface mockups and refined the user experience flow.',
-              project: 'Task Manager Pro',
-              client: 'Internal Project',
-            ),
-            const SizedBox(height: 16),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildTaskCard(
+                    index: index,
+                    title: timeLog.activityType,
+                    subtitle: timeLog.task,
+                    fromTime: formatTime(timeLog.fromTime),
+                    toTime: formatTime(timeLog.toTime),
+                    totalHours: '${timeLog.hours.toInt()} Hr',
+                    description: timeLog.description,
+                    project: timeLog.project,
+                    client:
+                        'Client Information', // This might need to be added to your API
+                  ),
+                );
+              }),
 
-            _buildTaskCard(
-              index: 2,
-              title: 'App UI',
-              subtitle: 'TBO Task Management',
-              fromTime: '12:10 Pm',
-              toTime: '13:10 Pm',
-              totalHours: '1.00 Hr',
-              description:
-                  'Finalized the dashboard components and integrated the notification system UI.',
-              project: 'Task Manager Pro',
-              client: 'Internal Project',
-            ),
             const SizedBox(height: 40),
 
             // Action Buttons at the bottom of scroll content
+            // Always show buttons for testing - you can modify this condition later
             Column(
               children: [
-                // Reject Button
-                SizedBox(
+                // Show current status for debugging
+                Container(
                   width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle reject action
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE53E3E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: const Text(
-                      'Reject',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    border: Border.all(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Current Status: ${widget.timesheet.status}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blue,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
 
-                // Approve Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle approve action
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2D9CDB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                // Show buttons based on status
+                if (widget.timesheet.status.toLowerCase() == 'submitted' ||
+                    widget.timesheet.status.toLowerCase() == 'draft' ||
+                    widget.timesheet.status.toLowerCase() == 'pending') ...[
+                  // Reject Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showRejectDialog();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53E3E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Approval',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                      child: const Text(
+                        'Reject',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20), // Bottom padding
+                  const SizedBox(height: 12),
+
+                  // Approve Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showApprovalDialog();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2D9CDB),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text(
+                        'Approve',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ] else if (widget.timesheet.status.toLowerCase() ==
+                    'approved') ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      border: Border.all(color: Colors.green),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'This timesheet has been approved',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ] else ...[
+                  // For any other status, show action buttons anyway for testing
+                  // Reject Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showRejectDialog();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53E3E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text(
+                        'Reject',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Approve Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showApprovalDialog();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2D9CDB),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text(
+                        'Approve',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showApprovalDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Approve Timesheet'),
+          content: Text(
+            'Are you sure you want to approve ${widget.timesheet.employeeName}\'s timesheet?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Implement approval API call
+                Navigator.of(context).pop();
+                _showSuccessMessage('Timesheet approved successfully');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2D9CDB),
+              ),
+              child: const Text(
+                'Approve',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRejectDialog() {
+    final TextEditingController reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Reject Timesheet'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Are you sure you want to reject ${widget.timesheet.employeeName}\'s timesheet?',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  labelText: 'Reason for rejection',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Implement rejection API call with reason
+                Navigator.of(context).pop();
+                _showSuccessMessage('Timesheet rejected');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE53E3E),
+              ),
+              child: const Text(
+                'Reject',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
@@ -237,23 +487,25 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
               GestureDetector(
                 onTap: () {
@@ -366,7 +618,9 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  description.isNotEmpty
+                      ? description
+                      : 'No description provided',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -389,7 +643,7 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            project,
+                            project.isNotEmpty ? project : 'N/A',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
