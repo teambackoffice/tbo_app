@@ -4,6 +4,7 @@ import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/create_project_controller.dart';
 import 'package:tbo_app/controller/create_project_planning_controller.dart';
+import 'package:tbo_app/controller/employee_assignments_controller.dart';
 import 'package:tbo_app/controller/get_timesheet_controller.dart';
 import 'package:tbo_app/controller/lead_segment_controller.dart';
 import 'package:tbo_app/controller/leads_details_controller.dart';
@@ -60,6 +61,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<GetTimesheetController>(
           create: (_) => GetTimesheetController(),
+        ),
+        ChangeNotifierProvider<EmployeeAssignmentsController>(
+          create: (_) => EmployeeAssignmentsController(),
         ),
       ],
       child: MaterialApp(

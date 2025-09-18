@@ -1,52 +1,27 @@
 import 'package:flutter/material.dart';
-
-class Task {
-  final String id;
-  final String title;
-  final List<String> assignedEmployees;
-
-  Task({
-    required this.id,
-    required this.title,
-    required this.assignedEmployees,
-  });
-}
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_assignments_controller.dart';
+import 'package:tbo_app/modal/employee_assignment_modal.dart';
 
 class ProjectTasks extends StatefulWidget {
-  const ProjectTasks({super.key});
+  final String? projectId;
+  const ProjectTasks({super.key, required this.projectId});
 
   @override
   _ProjectTasksState createState() => _ProjectTasksState();
 }
 
 class _ProjectTasksState extends State<ProjectTasks> {
-  List<Task> tasks = [
-    Task(
-      id: 'Task 1',
-      title: 'Gather Client Requirements',
-      assignedEmployees: [],
-    ),
-    Task(
-      id: 'Task 2',
-      title: 'Create UI/UX Wireframes',
-      assignedEmployees: ['Employee 1', 'Employee 2', 'Employee 3'],
-    ),
-    Task(
-      id: 'Task 3',
-      title: 'Develop Frontend',
-      assignedEmployees: ['Employee 1', 'Employee 2', 'Employee 3'],
-    ),
-    Task(
-      id: 'Task 4',
-      title: 'Integrate Backend & Database',
-      assignedEmployees: ['Employee 1', 'Employee 2', 'Employee 3'],
-    ),
-    Task(
-      id: 'Task 5',
-      title: 'Testing & Deployment',
-      assignedEmployees: ['Employee 1', 'Employee 2', 'Employee 3'],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<EmployeeAssignmentsController>(
+        context,
+        listen: false,
+      ).feetchemployeeassignments(projectId: widget.projectId!);
+    });
+  }
 
   void _showAddTaskDialog() {
     showDialog(
@@ -54,15 +29,12 @@ class _ProjectTasksState extends State<ProjectTasks> {
       builder: (BuildContext context) {
         return AddTaskDialog(
           onTaskAdded: (String project, String task, String employee) {
-            setState(() {
-              tasks.add(
-                Task(
-                  id: 'Task ${tasks.length + 1}',
-                  title: task,
-                  assignedEmployees: employee.isNotEmpty ? [employee] : [],
-                ),
-              );
-            });
+            // TODO: Implement API call to add new task
+            // For now, refresh the data
+            Provider.of<EmployeeAssignmentsController>(
+              context,
+              listen: false,
+            ).feetchemployeeassignments(projectId: widget.projectId!);
           },
         );
       },
@@ -105,31 +77,128 @@ class _ProjectTasksState extends State<ProjectTasks> {
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ListView.builder(
-          itemCount: tasks.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              task: tasks[index],
-              onDelete: () {
-                setState(() {
-                  tasks.removeAt(index);
-                });
-              },
+      body: Consumer<EmployeeAssignmentsController>(
+        builder: (context, employeeAssignmentsController, child) {
+          if (employeeAssignmentsController.isLoading) {
+            return Center(
+              child: CircularProgressIndicator(color: Color(0xFF1C7690)),
             );
-          },
-        ),
+          }
+
+          if (employeeAssignmentsController.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text(
+                    'Error: ${employeeAssignmentsController.error}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      employeeAssignmentsController.feetchemployeeassignments(
+                        projectId: widget.projectId!,
+                      );
+                    },
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final assignments =
+              employeeAssignmentsController.allLeads?.data ?? [];
+
+          // Flatten all task assignments from all assignments
+          final List<TaskAssignment> allTasks = [];
+          for (var assignment in assignments) {
+            allTasks.addAll(assignment.taskAssignments);
+          }
+
+          if (allTasks.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.task_alt, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No tasks available',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: ListView.builder(
+              itemCount: allTasks.length,
+              itemBuilder: (context, index) {
+                return TaskCard(
+                  taskAssignment: allTasks[index],
+                  onDelete: () {
+                    // TODO: Implement API call to delete task
+                    // For now, show a confirmation dialog
+                    _showDeleteConfirmation(context, allTasks[index]);
+                  },
+                );
+              },
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, TaskAssignment task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Task'),
+          content: Text(
+            'Are you sure you want to delete "${task.taskSubject}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // TODO: Implement actual delete API call
+                // For now, just refresh the data
+                Provider.of<EmployeeAssignmentsController>(
+                  context,
+                  listen: false,
+                ).feetchemployeeassignments(projectId: widget.projectId!);
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class TaskCard extends StatelessWidget {
-  final Task task;
+  final TaskAssignment taskAssignment;
   final VoidCallback onDelete;
 
-  const TaskCard({super.key, required this.task, required this.onDelete});
+  const TaskCard({
+    super.key,
+    required this.taskAssignment,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +222,19 @@ class TaskCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                task.id,
-                style: TextStyle(
-                  color: Color(0xFF8E8E93),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(taskAssignment.assignmentStatus),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  taskAssignment.assignmentStatus.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               GestureDetector(
@@ -185,56 +261,108 @@ class TaskCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 12),
           Text(
-            task.title,
+            taskAssignment.taskSubject,
             style: TextStyle(
               color: Colors.black,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.assignment, size: 16, color: Color(0xFF8E8E93)),
+              SizedBox(width: 4),
+              Text(
+                'Task ID: ${taskAssignment.task}',
+                style: TextStyle(
+                  color: Color(0xFF8E8E93),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.work_outline, size: 16, color: Color(0xFF8E8E93)),
+              SizedBox(width: 4),
+              Text(
+                'Workload: ${taskAssignment.workloadPercentage}%',
+                style: TextStyle(
+                  color: Color(0xFF8E8E93),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
           SizedBox(height: 12),
           Row(
             children: [
-              if (task.assignedEmployees.isEmpty)
-                Text(
-                  'Assign Employees',
-                  style: TextStyle(
-                    color: Color(0xFF1C7690),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+              if (taskAssignment.employee == null ||
+                  taskAssignment.employeeName == null)
+                GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Not assigned yet'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF1C7690).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFF1C7690), width: 1),
+                    ),
+                    child: Text(
+                      'Assign Employee',
+                      style: TextStyle(
+                        color: Color(0xFF1C7690),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 )
               else ...[
                 Text(
-                  'Assigned Employees',
+                  'Assigned to: ',
                   style: TextStyle(
                     color: Color(0xFF8E8E93),
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Color(0xFF1C7690),
+                  child: Text(
+                    taskAssignment.employeeName?.toString()[0].toUpperCase() ??
+                        'U',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
                 SizedBox(width: 8),
-                Row(
-                  children: task.assignedEmployees.take(3).map((employee) {
-                    int index = task.assignedEmployees.indexOf(employee);
-                    return Container(
-                      margin: EdgeInsets.only(right: 4),
-                      child: CircleAvatar(
-                        radius: 12,
-                        backgroundColor: _getAvatarColor(index),
-                        child: Text(
-                          employee[0].toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                Expanded(
+                  child: Text(
+                    taskAssignment.employeeName?.toString() ?? 'Unknown',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -244,15 +372,20 @@ class TaskCard extends StatelessWidget {
     );
   }
 
-  Color _getAvatarColor(int index) {
-    List<Color> colors = [
-      Color(0xFF34C759),
-      Color(0xFFFF9500),
-      Color(0xFFFF3B30),
-      Color(0xFF007AFF),
-      Color(0xFF5856D6),
-    ];
-    return colors[index % colors.length];
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Color(0xFF34C759);
+      case 'in progress':
+      case 'working':
+        return Color(0xFFFF9500);
+      case 'pending':
+        return Color(0xFF8E8E93);
+      case 'overdue':
+        return Color(0xFFFF3B30);
+      default:
+        return Color(0xFF1C7690);
+    }
   }
 }
 
@@ -438,7 +571,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                         elevation: 0,
                       ),
                       child: Text(
-                        'Add Employee',
+                        'Add Task',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
