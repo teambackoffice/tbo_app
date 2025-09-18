@@ -1,62 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:tbo_app/modal/project_list_modal.dart';
 
 class ResourcesScreen extends StatefulWidget {
-  const ResourcesScreen({super.key});
+  final ProjectDetails projects;
+  const ResourcesScreen({super.key, required this.projects});
 
   @override
   _ResourcesScreenState createState() => _ResourcesScreenState();
 }
 
 class _ResourcesScreenState extends State<ResourcesScreen> {
-  List<Resource> resources = [
-    Resource(
-      type: 'Human Resource',
-      name: 'Sabisha',
-      quantity: 1,
-      estimatedCost: 100.00,
-    ),
-    Resource(
-      type: 'Equipment',
-      name: 'Mouse',
-      quantity: 1,
-      estimatedCost: 100.00,
-    ),
-    Resource(
-      type: 'Equipment',
-      name: 'Mouse',
-      quantity: 1,
-      estimatedCost: 100.00,
-    ),
-  ];
-
-  void _showDeleteDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Resource'),
-          content: Text('Are you sure you want to delete this resource?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  resources.removeAt(index);
-                });
-                Navigator.of(context).pop();
-              },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showDeleteDialog(int index) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text('Delete Resource'),
+  //         content: Text('Are you sure you want to delete this resource?'),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: Text('Cancel'),
+  //           ),
+  //           TextButton(
+  //             onPressed: () {
+  //               setState(() {
+  //                 resources.removeAt(index);
+  //               });
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: Text('Delete', style: TextStyle(color: Colors.red)),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +65,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: ListView.builder(
-          itemCount: resources.length,
+          itemCount: widget.projects.resourceRequirements!.length,
           itemBuilder: (context, index) {
-            final resource = resources[index];
+            final resource = widget.projects.resourceRequirements![index];
             return Container(
               margin: EdgeInsets.only(bottom: 16),
               padding: EdgeInsets.all(16),
@@ -121,7 +102,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            resource.type,
+                            resource.resourceType!,
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,
@@ -146,7 +127,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        resource.name,
+                        resource.resourceName!,
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 16,
@@ -172,7 +153,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              '${resource.quantity}',
+                              '${resource.quantityRequired!}',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
@@ -192,34 +173,34 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                                 ),
                                 Spacer(),
 
-                                GestureDetector(
-                                  onTap: () => _showDeleteDialog(index),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.grey.withOpacity(0.1),
-                                          spreadRadius: 1,
-                                          blurRadius: 4,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    padding: EdgeInsets.all(8),
-                                    child: Icon(
-                                      Icons.delete_outlined,
-                                      color: Colors.red,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
+                                // GestureDetector(
+                                //   onTap: () => _showDeleteDialog(index),
+                                //   child: Container(
+                                //     decoration: BoxDecoration(
+                                //       color: Colors.white,
+                                //       borderRadius: BorderRadius.circular(12),
+                                //       boxShadow: [
+                                //         BoxShadow(
+                                //           color: Colors.grey.withOpacity(0.1),
+                                //           spreadRadius: 1,
+                                //           blurRadius: 4,
+                                //           offset: Offset(0, 2),
+                                //         ),
+                                //       ],
+                                //     ),
+                                //     padding: EdgeInsets.all(8),
+                                //     child: Icon(
+                                //       Icons.delete_outlined,
+                                //       color: Colors.red,
+                                //       size: 20,
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                             SizedBox(height: 4),
                             Text(
-                              resource.estimatedCost.toStringAsFixed(2),
+                              resource.estimatedCost!.toStringAsFixed(2),
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,

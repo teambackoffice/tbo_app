@@ -8,8 +8,13 @@ import 'package:tbo_app/modal/timesheet_modal.dart';
 class GetTimesheetService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  Future<TimesheetModal> fetchtimesheet() async {
-    final String url = '${ApiConstants.baseUrl}project_api.get_timesheet';
+  Future<TimesheetModal> fetchtimesheet({String? employee}) async {
+    String url = '${ApiConstants.baseUrl}project_api.get_timesheet';
+
+    // 👉 Add employee param only if provided
+    if (employee != null && employee.isNotEmpty) {
+      url += '?employee=$employee';
+    }
 
     try {
       final String? sid = await _secureStorage.read(key: 'sid');
@@ -26,16 +31,13 @@ class GetTimesheetService {
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-
-          final timesheet = TimesheetModal.fromJson(decoded);
-
-          return timesheet;
+          return TimesheetModal.fromJson(decoded);
         } catch (e) {
           throw Exception('Failed to parse response: $e');
         }
       } else {
         throw Exception(
-          'Failed to load projects. Code: ${response.statusCode}',
+          'Failed to load timesheet. Code: ${response.statusCode}',
         );
       }
     } catch (e) {

@@ -189,7 +189,8 @@ class ProjectDetailsPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ResourcesScreen(),
+                          builder: (context) =>
+                              ResourcesScreen(projects: project),
                         ),
                       );
                     },

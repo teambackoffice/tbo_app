@@ -11,11 +11,11 @@ class GetTimesheetController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchtimesheet() async {
+  Future<void> fetchtimesheet({String? employee}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      allLeads = await _service.fetchtimesheet();
+      allLeads = await _service.fetchtimesheet(employee: employee);
       _error = null;
     } catch (e) {
       _error = e.toString();
