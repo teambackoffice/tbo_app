@@ -63,6 +63,12 @@ class LoginService {
           if (fullName != null) {
             await _storage.write(key: "full_name", value: fullName);
           }
+          if (roleProfileName == "Employee") {
+            final employeeName = data["message"]?["employee"]?["name"];
+            if (employeeName != null) {
+              await _storage.write(key: "employee_id", value: employeeName);
+            }
+          }
         }
 
         return {"data": data, "sid": sid};

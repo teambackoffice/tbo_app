@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/get_timesheet_controller.dart';
+import 'package:tbo_app/modal/timesheet_modal.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_timesheet.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/view_details.dart';
 
@@ -13,51 +17,88 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
   String selectedFilter =
       'All'; // Current filter: All, Approved, Rejected, Send to Approval
   DateTime? selectedDate; // Selected date filter
+  GetTimesheetController? _controller;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  String? _employeeId;
+  bool _isLoadingEmployeeId = true;
 
-  // All employee data - one timesheet per day per employee
-  List<EmployeeData> allEmployees = [
-    EmployeeData('John Smith', 'T12244649', '26-08-2025', '8:00', 'approved'),
-    EmployeeData('John Smith', 'T12244650', '27-08-2025', '9:00', 'pending'),
-    EmployeeData('John Smith', 'T12244651', '28-08-2025', '7:30', 'rejected'),
-    EmployeeData('John Smith', 'T12244652', '29-08-2025', '8:30', 'approved'),
-    EmployeeData('John Smith', 'T12244653', '30-08-2025', '9:15', 'pending'),
-    EmployeeData('John Smith', 'T12244654', '31-08-2025', '8:00', 'approved'),
-    EmployeeData('John Smith', 'T12244655', '01-09-2025', '7:45', 'rejected'),
-    EmployeeData('John Smith', 'T12244656', '02-09-2025', '8:15', 'pending'),
-    EmployeeData('Steve Rogers', 'T12244657', '26-08-2025', '9:00', 'approved'),
-    EmployeeData('Steve Rogers', 'T12244658', '27-08-2025', '8:30', 'pending'),
-    EmployeeData('Steve Rogers', 'T12244659', '28-08-2025', '7:30', 'rejected'),
-    EmployeeData('Steve Rogers', 'T12244660', '29-08-2025', '7:00', 'approved'),
-    EmployeeData('Steve Rogers', 'T12244661', '30-08-2025', '8:45', 'pending'),
-    EmployeeData('Tony Stark', 'T12244662', '26-08-2025', '9:15', 'approved'),
-    EmployeeData('Tony Stark', 'T12244663', '27-08-2025', '7:15', 'rejected'),
-    EmployeeData('Tony Stark', 'T12244664', '28-08-2025', '8:00', 'pending'),
-    EmployeeData('Tony Stark', 'T12244665', '29-08-2025', '9:30', 'approved'),
-    EmployeeData('Bruce Banner', 'T12244666', '26-08-2025', '8:15', 'pending'),
-    EmployeeData('Bruce Banner', 'T12244667', '27-08-2025', '7:45', 'approved'),
-    EmployeeData('Bruce Banner', 'T12244668', '28-08-2025', '9:00', 'rejected'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadEmployeeIdAndTimesheets();
+  }
+
+  Future<void> _loadEmployeeIdAndTimesheets() async {
+    try {
+      // Get employee ID from secure storage
+      final employeeId = await _secureStorage.read(key: 'employee_id');
+
+      setState(() {
+        _employeeId = employeeId;
+        _isLoadingEmployeeId = false;
+      });
+
+      // Load timesheets with employee ID
+      if (mounted) {
+        _loadTimesheets();
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingEmployeeId = false;
+      });
+
+      // Show error if employee ID cannot be retrieved
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load employee information: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  void _loadTimesheets() {
+    _controller = Provider.of<GetTimesheetController>(context, listen: false);
+    _controller?.fetchtimesheet(employee: _employeeId);
+  }
 
   // Get filtered employees based on selected filter and date
-  List<EmployeeData> get filteredEmployees {
-    List<EmployeeData> filtered = allEmployees;
+  List<Datum> get filteredEmployees {
+    if (_controller?.allLeads?.data == null) return [];
+
+    List<Datum> filtered = _controller!.allLeads!.data;
 
     // Filter by status
     if (selectedFilter != 'All') {
       if (selectedFilter == 'Approved') {
-        filtered = filtered.where((emp) => emp.status == 'approved').toList();
+        filtered = filtered
+            .where((emp) => emp.status.toLowerCase() == 'approved')
+            .toList();
       } else if (selectedFilter == 'Rejected') {
-        filtered = filtered.where((emp) => emp.status == 'rejected').toList();
+        filtered = filtered
+            .where((emp) => emp.status.toLowerCase() == 'rejected')
+            .toList();
       } else if (selectedFilter == 'Send to Approval') {
-        filtered = filtered.where((emp) => emp.status == 'pending').toList();
+        filtered = filtered
+            .where(
+              (emp) =>
+                  emp.status.toLowerCase() == 'draft' ||
+                  emp.status.toLowerCase() == 'pending',
+            )
+            .toList();
       }
     }
 
     // Filter by date if selected
     if (selectedDate != null) {
-      String formattedDate =
-          '${selectedDate!.day.toString().padLeft(2, '0')}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.year}';
-      filtered = filtered.where((emp) => emp.date == formattedDate).toList();
+      filtered = filtered.where((emp) {
+        return emp.startDate.day == selectedDate!.day &&
+            emp.startDate.month == selectedDate!.month &&
+            emp.startDate.year == selectedDate!.year;
+      }).toList();
     }
 
     return filtered;
@@ -103,6 +144,38 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     });
   }
 
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'draft':
+      case 'pending':
+        return 'Send to Approval';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'draft':
+      case 'pending':
+        return Color(0xFFF3F3F3);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,207 +193,325 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Filters Section
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date Filter Row
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.teal, size: 20),
-                    SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _selectDate(context),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.teal),
-                          borderRadius: BorderRadius.circular(20),
-                          color: selectedDate != null
-                              ? Colors.teal.withOpacity(0.1)
-                              : Colors.transparent,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              dateFilterText,
-                              style: TextStyle(
-                                color: Colors.teal,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.teal,
-                              size: 18,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (selectedDate != null) ...[
-                      SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _clearDateFilter,
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors
-                              .click, // 👈 shows pointer on hover (web/desktop)
-                          child: Text(
-                            "Clear",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    Spacer(), // Push New button to the right
-                    Container(
-                      width: 100,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1C7690),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CreateNewTimesheet(),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.add, color: Colors.white, size: 16),
-                        label: Text(
-                          'New',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                // Status Filter Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFilterChip('All'),
-                    _buildFilterChip('Approved'),
-                    _buildFilterChip('Rejected'),
-                    _buildFilterChip('Send to Approval'),
-                  ],
-                ),
-              ],
-            ),
-          ),
+      body: Consumer<GetTimesheetController>(
+        builder: (context, controller, child) {
+          _controller = controller;
 
-          // Results count
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Row(
-              children: [
-                Text(
-                  '${filteredEmployees.length} timesheets found',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+          // Show loading while getting employee ID
+          if (_isLoadingEmployeeId) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.teal),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading employee information...',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          }
 
-          // Employee List
-          Expanded(
-            child: filteredEmployees.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+          // Show error if no employee ID found
+          if (_employeeId == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.person_off_outlined,
+                    size: 64,
+                    color: Colors.orange[400],
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Employee information not found',
+                    style: TextStyle(
+                      color: Colors.orange[600],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Please login again to continue',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // You can add navigation to login page here
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Back to Login'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (controller.isLoading) {
+            return Center(child: CircularProgressIndicator(color: Colors.teal));
+          }
+
+          if (controller.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                  SizedBox(height: 16),
+                  Text(
+                    'Error loading timesheets',
+                    style: TextStyle(
+                      color: Colors.red[600],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    controller.error!,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadTimesheets,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              // Filters Section
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Date Filter Row
+                    Row(
                       children: [
                         Icon(
-                          Icons.assignment_outlined,
-                          size: 64,
-                          color: Colors.grey[400],
+                          Icons.calendar_today,
+                          color: Colors.teal,
+                          size: 20,
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No timesheets found',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _selectDate(context),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.teal),
+                              borderRadius: BorderRadius.circular(20),
+                              color: selectedDate != null
+                                  ? Colors.teal.withOpacity(0.1)
+                                  : Colors.transparent,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  dateFilterText,
+                                  style: TextStyle(
+                                    color: Colors.teal,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.teal,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your filters',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 14,
+                        if (selectedDate != null) ...[
+                          SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: _clearDateFilter,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Text(
+                                "Clear",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        Spacer(),
+                        Container(
+                          width: 100,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF1C7690),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CreateNewTimesheet(),
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            label: Text(
+                              'New',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    itemCount: filteredEmployees.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < filteredEmployees.length) {
-                        return _buildEmployeeCard(filteredEmployees[index]);
-                      } else {
-                        // Pagination at the end of the list
-                        return Container(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Showing 1-${filteredEmployees.length}',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
+                    SizedBox(height: 16),
+                    // Status Filter Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFilterChip('All'),
+                        _buildFilterChip('Approved'),
+                        _buildFilterChip('Rejected'),
+                        _buildFilterChip('Send to Approval'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Results count
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Row(
+                  children: [
+                    Text(
+                      '${filteredEmployees.length} timesheets found',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Employee List
+              Expanded(
+                child: filteredEmployees.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.assignment_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No timesheets found',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
-                              SizedBox(width: 20),
-                              Icon(Icons.chevron_left, color: Colors.grey[400]),
-                              SizedBox(width: 10),
-                              Icon(
-                                Icons.chevron_right,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Try adjusting your filters',
+                              style: TextStyle(
                                 color: Colors.grey[400],
+                                fontSize: 14,
                               ),
-                            ],
-                          ),
-                        );
-                      }
-                    },
-                  ),
-          ),
-        ],
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        itemCount: filteredEmployees.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < filteredEmployees.length) {
+                            return _buildEmployeeCard(filteredEmployees[index]);
+                          } else {
+                            // Pagination at the end of the list
+                            return Container(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Showing 1-${filteredEmployees.length}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(width: 20),
+                                  Icon(
+                                    Icons.chevron_left,
+                                    color: Colors.grey[400],
+                                  ),
+                                  SizedBox(width: 10),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.grey[400],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -355,27 +546,9 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     );
   }
 
-  Widget _buildEmployeeCard(EmployeeData employee) {
-    Color statusColor;
-    String statusText;
-
-    switch (employee.status) {
-      case 'approved':
-        statusColor = Colors.green;
-        statusText = 'Approved';
-        break;
-      case 'rejected':
-        statusColor = Colors.red;
-        statusText = 'Rejected';
-        break;
-      case 'pending':
-        statusColor = Color(0xFFF3F3F3);
-        statusText = 'Send to Approval';
-        break;
-      default:
-        statusColor = Colors.grey;
-        statusText = 'Unknown';
-    }
+  Widget _buildEmployeeCard(Datum employee) {
+    Color statusColor = _getStatusColor(employee.status);
+    String statusText = _getStatusText(employee.status);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -403,7 +576,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        employee.name,
+                        employee.employeeName,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -412,7 +585,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        employee.id,
+                        employee.employee, // Employee ID
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
@@ -427,7 +600,9 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                   child: Text(
                     statusText,
                     style: TextStyle(
-                      color: employee.status == 'pending'
+                      color:
+                          employee.status.toLowerCase() == 'pending' ||
+                              employee.status.toLowerCase() == 'draft'
                           ? Colors.black
                           : Colors.white,
                       fontSize: 10,
@@ -450,7 +625,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        employee.date,
+                        _formatDate(employee.startDate),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -470,7 +645,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '${employee.startTime}Hrs',
+                        '${employee.totalHours.toStringAsFixed(2)} Hrs',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -484,7 +659,11 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ViewDetails()),
+                      MaterialPageRoute(
+                        builder: (context) => ViewDetails(
+                          timesheetData: employee, // Pass the timesheet data
+                        ),
+                      ),
                     );
                   },
                   child: Container(
@@ -510,15 +689,4 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
       ),
     );
   }
-}
-
-// Employee Data Model
-class EmployeeData {
-  final String name;
-  final String id;
-  final String date;
-  final String startTime;
-  final String status; // 'approved', 'rejected', 'pending'
-
-  EmployeeData(this.name, this.id, this.date, this.startTime, this.status);
 }
