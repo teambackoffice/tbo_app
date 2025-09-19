@@ -11,6 +11,7 @@ import 'package:tbo_app/controller/leads_details_controller.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
@@ -64,6 +65,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EmployeeAssignmentsController>(
           create: (_) => EmployeeAssignmentsController(),
+        ),
+        ChangeNotifierProvider<TaskEmployeeAssignController>(
+          create: (_) => TaskEmployeeAssignController(),
         ),
       ],
       child: MaterialApp(

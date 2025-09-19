@@ -32,6 +32,7 @@ class EmployeeAssignmentsService {
       );
 
       if (response.statusCode == 200) {
+        print('🔹 Response: ${response.body}');
         try {
           final decoded = jsonDecode(response.body);
           return EmployeeAssignments.fromJson(decoded);
