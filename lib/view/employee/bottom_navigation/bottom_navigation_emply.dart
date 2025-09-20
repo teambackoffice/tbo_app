@@ -18,7 +18,7 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
 
   final List<Widget> _pages = [
     const Homepage(),
-    const TaskPage(),
+    TasksPage(),
     EmployeeSchedulePage(),
     const ProfilePage(),
   ];
