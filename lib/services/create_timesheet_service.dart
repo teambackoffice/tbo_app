@@ -39,7 +39,7 @@ class CreateTimesheetService {
       final responseBody = await response.stream.bytesToString();
       print("➡️ Response: $responseBody");
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
         throw Exception("Failed: ${response.reasonPhrase}");

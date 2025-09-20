@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_timesheet.dart';
 
@@ -21,7 +23,7 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
   final TextEditingController _activityTypeController = TextEditingController();
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _projectIdController = TextEditingController();
-  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _taskNameController = TextEditingController();
   final TextEditingController _taskIdController = TextEditingController();
   final TextEditingController _fromTimeController = TextEditingController();
   final TextEditingController _toTimeController = TextEditingController();
@@ -34,36 +36,36 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
   // Controllers for project and task data
   GetProjectListController? _projectController;
+  TaskByEmployeeController? _taskController;
   List<ProjectDetails> _projects = [];
+  List<Task> _tasks = [];
   bool _isLoadingProjects = false;
-
-  // Mock task data - Replace with actual task API when available
-  final List<Map<String, String>> _tasks = [
-    {'id': 'TASK-2025-00001', 'name': 'UI Development'},
-    {'id': 'TASK-2025-00002', 'name': 'Backend Integration'},
-    {'id': 'TASK-2025-00003', 'name': 'Testing & QA'},
-    {'id': 'TASK-2025-00004', 'name': 'Bug Fixes'},
-  ];
+  bool _isLoadingTasks = false;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
 
-    // Initialize project controller and load projects
+    // Initialize controllers and load data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _projectController = Provider.of<GetProjectListController>(
         context,
         listen: false,
       );
+      _taskController = Provider.of<TaskByEmployeeController>(
+        context,
+        listen: false,
+      );
       _loadProjects();
+      _loadTasks();
     });
 
     if (widget.entry != null) {
       _activityTypeController.text = widget.entry!.activityType;
       _projectNameController.text = widget.entry!.projectName;
       _projectIdController.text = widget.entry!.projectId;
-      _taskController.text = widget.entry!.task;
+      _taskNameController.text = widget.entry!.task;
       _taskIdController.text = widget.entry!.taskId;
       _fromTimeController.text = widget.entry!.fromTime;
       _toTimeController.text = widget.entry!.toTime;
@@ -96,6 +98,34 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
     } finally {
       setState(() {
         _isLoadingProjects = false;
+      });
+    }
+  }
+
+  Future<void> _loadTasks() async {
+    if (_taskController == null) return;
+
+    setState(() {
+      _isLoadingTasks = true;
+    });
+
+    try {
+      await _taskController!.fetchTasks();
+      if (_taskController!.taskListResponse?.data != null) {
+        setState(() {
+          _tasks = _taskController!.taskListResponse!.data;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load tasks: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoadingTasks = false;
       });
     }
   }
@@ -191,7 +221,7 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
         activityType: _activityTypeController.text,
         projectName: _projectNameController.text,
         projectId: _projectIdController.text,
-        task: _taskController.text,
+        task: _taskNameController.text,
         taskId: _taskIdController.text,
         fromTime: _fromTimeController.text,
         toTime: _toTimeController.text,
@@ -201,67 +231,6 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
       Navigator.pop(context, entry);
     }
-  }
-
-  Widget _buildTaskDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Task',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFF2E7D7B), width: 1),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: _taskIdController.text.isEmpty
-                ? null
-                : _taskIdController.text,
-            items: _tasks.map((task) {
-              return DropdownMenuItem<String>(
-                value: task['id'],
-                child: Text(task['name']!),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                final selectedTask = _tasks.firstWhere(
-                  (task) => task['id'] == value,
-                );
-                setState(() {
-                  _taskIdController.text = selectedTask['id']!;
-                  _taskController.text = selectedTask['name']!;
-                });
-              }
-            },
-            decoration: InputDecoration(
-              hintText: 'Select Task',
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please select a task';
-              }
-              return null;
-            },
-          ),
-        ),
-        SizedBox(height: 16),
-      ],
-    );
   }
 
   Widget _buildDateSelector() {
@@ -375,6 +344,7 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
         ),
         SizedBox(height: 8),
         Container(
+          width: double.infinity, // Ensure full width
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Color(0xFF2E7D7B), width: 1),
@@ -390,22 +360,26 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       SizedBox(width: 12),
-                      Text('Loading projects...'),
+                      Expanded(
+                        child: Text('Loading projects...'),
+                      ), // Add Expanded
                     ],
                   ),
                 )
               : DropdownButtonFormField<String>(
+                  isExpanded: true, // This is crucial
                   value: _projectIdController.text.isEmpty
                       ? null
                       : _projectIdController.text,
                   items: _projects.map((project) {
                     return DropdownMenuItem<String>(
-                      value: project.name, // Using 'name' as the project ID
+                      value: project.name,
                       child: Text(
                         project.projectName ??
                             project.name ??
                             'Unnamed Project',
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     );
                   }).toList(),
@@ -428,13 +402,93 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                     hintStyle: TextStyle(color: Colors.grey[500]),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12, // Reduce padding
+                      vertical: 16,
+                    ),
+                    isDense: true, // Add this to reduce height
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a project';
+                    }
+                    return null;
+                  },
+                ),
+        ),
+        SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildTaskDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Task',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Color(0xFF2E7D7B), width: 1),
+          ),
+          child: _isLoadingTasks
+              ? Container(
+                  padding: EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 12),
+                      Text('Loading tasks...'),
+                    ],
+                  ),
+                )
+              : DropdownButtonFormField<String>(
+                  value: _taskIdController.text.isEmpty
+                      ? null
+                      : _taskIdController.text,
+                  items: _tasks.map((task) {
+                    return DropdownMenuItem<String>(
+                      value: task.name, // Using 'name' as the task ID
+                      child: Text(
+                        task.subject, // Using 'subject' as display name
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      final selectedTask = _tasks.firstWhere(
+                        (task) => task.name == value,
+                      );
+                      setState(() {
+                        _taskIdController.text = selectedTask.name;
+                        _taskNameController.text = selectedTask.subject;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Select Task',
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please select a project';
+                      return 'Please select a task';
                     }
                     return null;
                   },
@@ -550,10 +604,11 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       body: SafeArea(
-        child: Consumer<GetProjectListController>(
-          builder: (context, projectController, child) {
-            // Update project controller reference
+        child: Consumer2<GetProjectListController, TaskByEmployeeController>(
+          builder: (context, projectController, taskController, child) {
+            // Update controller references
             _projectController ??= projectController;
+            _taskController ??= taskController;
 
             return Column(
               children: [
@@ -574,14 +629,8 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Spacer(),
-                      // Refresh button for projects
-                      if (!_isLoadingProjects)
-                        IconButton(
-                          onPressed: _loadProjects,
-                          icon: Icon(Icons.refresh, size: 20),
-                          tooltip: 'Refresh Projects',
-                        ),
+
+                      // Refresh buttons for projects and tasks
                     ],
                   ),
                 ),
@@ -721,7 +770,7 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
     _activityTypeController.dispose();
     _projectNameController.dispose();
     _projectIdController.dispose();
-    _taskController.dispose();
+    _taskNameController.dispose();
     _taskIdController.dispose();
     _fromTimeController.dispose();
     _toTimeController.dispose();
