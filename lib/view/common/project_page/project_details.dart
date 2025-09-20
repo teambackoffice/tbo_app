@@ -245,7 +245,7 @@ class ProjectDetailsPage extends StatelessWidget {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Tasks (6)',
+                            'Tasks',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -271,7 +271,7 @@ class ProjectDetailsPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF129476), width: 1),
               ),
-              child: const Column(
+              child: Column(
                 children: [
                   Text(
                     'Estimated Cost',
@@ -283,7 +283,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '100.00',
+                    '${project.estimatedCosting} ',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 32,
