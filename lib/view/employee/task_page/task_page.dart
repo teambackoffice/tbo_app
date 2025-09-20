@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
+import 'package:tbo_app/view/employee/task_page/task_card.dart';
+import 'package:tbo_app/view/employee/task_page/task_detail.dart';
 
 class TasksPage extends StatefulWidget {
   const TasksPage({super.key});
@@ -11,6 +13,11 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
+  String selectedStatus = 'All';
+  DateTime? selectedDate;
+
+  final List<String> statusOptions = ['All', 'Open', 'Working', 'Completed'];
+
   @override
   void initState() {
     super.initState();
@@ -18,6 +25,31 @@ class _TasksPageState extends State<TasksPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskByEmployeeController>().fetchTasks();
     });
+  }
+
+  List<Task> _filterTasks(List<Task> tasks) {
+    return tasks.where((task) {
+      // Status filter
+      bool statusMatch =
+          selectedStatus == 'All' ||
+          task.status.toLowerCase() == selectedStatus.toLowerCase();
+
+      // Date filter (by start date)
+      bool dateMatch = true;
+      if (selectedDate != null && task.expStartDate != null) {
+        try {
+          final taskStartDate = DateTime.parse(task.expStartDate!);
+          dateMatch =
+              taskStartDate.year == selectedDate!.year &&
+              taskStartDate.month == selectedDate!.month &&
+              taskStartDate.day == selectedDate!.day;
+        } catch (e) {
+          dateMatch = false;
+        }
+      }
+
+      return statusMatch && dateMatch;
+    }).toList();
   }
 
   @override
@@ -36,14 +68,6 @@ class _TasksPageState extends State<TasksPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black54),
-            onPressed: () {
-              context.read<TaskByEmployeeController>().fetchTasks();
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -52,8 +76,50 @@ class _TasksPageState extends State<TasksPage> {
             // Filter row
             Row(
               children: [
-                // All dropdown
+                // Status dropdown
                 Expanded(
+                  child: GestureDetector(
+                    onTap: () => _showStatusFilter(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 0,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            selectedStatus,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.grey,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Date picker
+                GestureDetector(
+                  onTap: () => _selectDate(context),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -71,53 +137,29 @@ class _TasksPageState extends State<TasksPage> {
                         ),
                       ],
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Row(
                       children: [
                         Text(
-                          'All',
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
+                          selectedDate != null
+                              ? _formatDatePicker(selectedDate!)
+                              : 'Select Date',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: selectedDate != null
+                                ? Colors.black87
+                                : Colors.grey[600],
+                          ),
                         ),
-                        Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Icon(
+                          selectedDate != null
+                              ? Icons.close
+                              : Icons.calendar_today_outlined,
+                          color: Colors.grey,
+                          size: 18,
+                        ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Date picker
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 0,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        _formatCurrentDate(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        color: Colors.grey,
-                        size: 18,
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -182,9 +224,10 @@ class _TasksPageState extends State<TasksPage> {
                     );
                   }
 
-                  final tasks = taskController.taskListResponse?.data ?? [];
+                  final allTasks = taskController.taskListResponse?.data ?? [];
+                  final filteredTasks = _filterTasks(allTasks);
 
-                  if (tasks.isEmpty) {
+                  if (allTasks.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -216,16 +259,65 @@ class _TasksPageState extends State<TasksPage> {
                     );
                   }
 
+                  if (filteredTasks.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.filter_list_off,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No tasks match your filters',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Try adjusting your status or date filters.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                selectedStatus = 'All';
+                                selectedDate = null;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Clear Filters'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
                   return RefreshIndicator(
                     onRefresh: () => taskController.fetchTasks(),
                     color: const Color(0xFF10B981),
                     child: ListView.separated(
-                      itemCount: tasks.length,
+                      itemCount: filteredTasks.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        final task = tasks[index];
-                        return ApiTaskCard(task: task);
+                        final task = filteredTasks[index];
+                        return ApiTaskCard(
+                          task: task,
+                          onTap: () => _navigateToTaskDetail(context, task),
+                        );
                       },
                     ),
                   );
@@ -238,195 +330,101 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
-  String _formatCurrentDate() {
-    final now = DateTime.now();
-    return '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year.toString().substring(2)}';
-  }
-}
-
-class ApiTaskCard extends StatelessWidget {
-  final Task task;
-
-  const ApiTaskCard({super.key, required this.task});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+  void _showStatusFilter(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      task.subject,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      task.projectName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              const Text(
+                'Filter by Status',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(task.status),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  task.status,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+              const SizedBox(height: 20),
+              ...statusOptions.map((status) {
+                return ListTile(
+                  title: Text(status),
+                  leading: Radio<String>(
+                    value: status,
+                    groupValue: selectedStatus,
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedStatus = value!;
+                      });
+                      Navigator.pop(context);
+                    },
+                    activeColor: const Color(0xFF10B981),
                   ),
-                ),
-              ),
+                  onTap: () {
+                    setState(() {
+                      selectedStatus = status;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Priority',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          _getPriorityIcon(task.priority),
-                          size: 16,
-                          color: _getPriorityColor(task.priority),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          task.priority,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: _getPriorityColor(task.priority),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (task.expEndDate != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Due: ${_formatDate(task.expEndDate!)}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'open':
-        return const Color(0xFF10B981);
-      case 'completed':
-        return const Color(0xFF3B82F6);
-      case 'cancelled':
-        return const Color(0xFFEF4444);
-      case 'working':
-        return const Color(0xFFF59E0B);
-      default:
-        return Colors.grey;
+  Future<void> _selectDate(BuildContext context) async {
+    if (selectedDate != null) {
+      // If date is already selected, clear it
+      setState(() {
+        selectedDate = null;
+      });
+      return;
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF10B981),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
     }
   }
 
-  Color _getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return const Color(0xFFEF4444);
-      case 'medium':
-        return const Color(0xFFF59E0B);
-      case 'low':
-        return const Color(0xFF10B981);
-      default:
-        return Colors.grey;
-    }
+  void _navigateToTaskDetail(BuildContext context, Task task) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TaskDetailPage(task: task)),
+    ).then((_) {
+      // Refresh tasks when returning from detail page
+      context.read<TaskByEmployeeController>().fetchTasks();
+    });
   }
 
-  IconData _getPriorityIcon(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return Icons.keyboard_arrow_up;
-      case 'medium':
-        return Icons.remove;
-      case 'low':
-        return Icons.keyboard_arrow_down;
-      default:
-        return Icons.remove;
-    }
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
-    } catch (e) {
-      return dateString;
-    }
+  String _formatDatePicker(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year.toString().substring(2)}';
   }
 }

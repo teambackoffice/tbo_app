@@ -32,15 +32,12 @@ class TaskService {
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        print(url);
         final body = await response.stream.bytesToString();
-        print(body);
         return json.decode(body);
       } else {
         throw Exception("Failed to fetch task list: ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("❌ Error in getTaskListByEmployee: $e");
       rethrow;
     }
   }
