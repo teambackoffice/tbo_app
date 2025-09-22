@@ -176,7 +176,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                     },
                   ),
                   CRMDashboardPage._buildStatCard(
-                    title: "Deals\nClosed",
+                    title: "Deals\nConverted",
                     value: "3",
                     color: const Color(0xFF27AE60),
                     onTap: () {

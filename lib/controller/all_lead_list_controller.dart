@@ -11,11 +11,11 @@ class AllLeadListController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchallleadlist() async {
+  Future<void> fetchAllLeadList({String? status}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      allLeads = await _service.fetchallleadlist();
+      allLeads = await _service.fetchAllLeadList(status: status);
       _error = null;
     } catch (e) {
       _error = e.toString();

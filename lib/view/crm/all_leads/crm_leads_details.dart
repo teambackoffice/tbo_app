@@ -71,8 +71,8 @@ class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
     ),
   ];
 
-  bool _showMessages = false;
-  int _unreadCount = 1; // Count of unread admin messages
+  final bool _showMessages = false;
+  final int _unreadCount = 1; // Count of unread admin messages
 
   @override
   Widget build(BuildContext context) {
@@ -269,74 +269,74 @@ class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
 
                           const SizedBox(height: 24),
 
-                          // Admin Messages Section
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.message_outlined,
-                                    size: 18,
-                                    color: Colors.green[600],
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    "Admin Messages",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (_unreadCount > 0)
-                                    Container(
-                                      margin: const EdgeInsets.only(left: 8),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red[500],
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        '$_unreadCount',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _showMessages = !_showMessages;
-                                    if (_showMessages) {
-                                      _unreadCount =
-                                          0; // Mark as read when opened
-                                    }
-                                  });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[50],
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    _showMessages
-                                        ? Icons.expand_less
-                                        : Icons.expand_more,
-                                    color: Colors.green[600],
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          // // Admin Messages Section
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //   children: [
+                          //     Row(
+                          //       children: [
+                          //         Icon(
+                          //           Icons.message_outlined,
+                          //           size: 18,
+                          //           color: Colors.green[600],
+                          //         ),
+                          //         const SizedBox(width: 6),
+                          //         const Text(
+                          //           "Admin Messages",
+                          //           style: TextStyle(
+                          //             fontSize: 16,
+                          //             fontWeight: FontWeight.w600,
+                          //           ),
+                          //         ),
+                          //         if (_unreadCount > 0)
+                          //           Container(
+                          //             margin: const EdgeInsets.only(left: 8),
+                          //             padding: const EdgeInsets.symmetric(
+                          //               horizontal: 6,
+                          //               vertical: 2,
+                          //             ),
+                          //             decoration: BoxDecoration(
+                          //               color: Colors.red[500],
+                          //               borderRadius: BorderRadius.circular(10),
+                          //             ),
+                          //             child: Text(
+                          //               '$_unreadCount',
+                          //               style: const TextStyle(
+                          //                 fontSize: 12,
+                          //                 color: Colors.white,
+                          //                 fontWeight: FontWeight.w500,
+                          //               ),
+                          //             ),
+                          //           ),
+                          //       ],
+                          //     ),
+                          //     GestureDetector(
+                          //       onTap: () {
+                          //         setState(() {
+                          //           _showMessages = !_showMessages;
+                          //           if (_showMessages) {
+                          //             _unreadCount =
+                          //                 0; // Mark as read when opened
+                          //           }
+                          //         });
+                          //       },
+                          //       child: Container(
+                          //         padding: const EdgeInsets.all(4),
+                          //         decoration: BoxDecoration(
+                          //           color: Colors.green[50],
+                          //           borderRadius: BorderRadius.circular(6),
+                          //         ),
+                          //         child: Icon(
+                          //           _showMessages
+                          //               ? Icons.expand_less
+                          //               : Icons.expand_more,
+                          //           color: Colors.green[600],
+                          //           size: 20,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
 
                           // Messages List (Expandable)
                           if (_showMessages) ...[

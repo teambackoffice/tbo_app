@@ -89,7 +89,7 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
       Provider.of<AllLeadListController>(
         context,
         listen: false,
-      ).fetchallleadlist();
+      ).fetchAllLeadList();
     });
   }
 
@@ -475,7 +475,7 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      controller.fetchallleadlist();
+                      controller.fetchAllLeadList();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF2E7D8C),
@@ -494,7 +494,7 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await controller.fetchallleadlist();
+              await controller.fetchAllLeadList();
             },
             child: ListView.builder(
               controller: _scrollController,

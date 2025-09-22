@@ -8,9 +8,7 @@ import 'package:tbo_app/modal/all_lead_list_modal.dart';
 class AllLeadListService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  Future<AllLeadsModal> fetchallleadlist() async {
-    final String url = '${ApiConstants.baseUrl}lead_api.get_lead_list';
-
+  Future<AllLeadsModal> fetchAllLeadList({String? status}) async {
     try {
       final String? sid = await _secureStorage.read(key: 'sid');
 
@@ -18,24 +16,29 @@ class AllLeadListService {
         throw Exception('Authentication required. Please login again.');
       }
 
+      // Build URI with optional status param
+      final uri = Uri.parse('${ApiConstants.baseUrl}lead_api.get_lead_list')
+          .replace(
+            queryParameters: status != null && status.isNotEmpty
+                ? {'status': status}
+                : null,
+          );
+
       final response = await http.get(
-        Uri.parse(url),
+        uri,
         headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
       );
 
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-
-          final projectList = AllLeadsModal.fromJson(decoded);
-
-          return projectList;
+          return AllLeadsModal.fromJson(decoded);
         } catch (e) {
           throw Exception('Failed to parse response: $e');
         }
       } else {
         throw Exception(
-          'Failed to load projects. Code: ${response.statusCode}',
+          'Failed to load leads. Code: ${response.statusCode}, Body: ${response.body}',
         );
       }
     } catch (e) {

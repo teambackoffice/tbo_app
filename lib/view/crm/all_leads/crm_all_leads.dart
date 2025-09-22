@@ -18,7 +18,7 @@ class _CRMAllLeadsPageState extends State<CRMAllLeadsPage> {
       Provider.of<AllLeadListController>(
         context,
         listen: false,
-      ).fetchallleadlist();
+      ).fetchAllLeadList();
     });
   }
 
