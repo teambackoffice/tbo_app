@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 
-class DealsClosed extends StatefulWidget {
-  const DealsClosed({super.key});
+class LeadsConverted extends StatefulWidget {
+  const LeadsConverted({super.key});
 
   @override
-  State<DealsClosed> createState() => _DealsClosedState();
+  State<LeadsConverted> createState() => _LeadsConvertedState();
 }
 
-class _DealsClosedState extends State<DealsClosed> {
+class _LeadsConvertedState extends State<LeadsConverted>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +71,11 @@ class _DealsClosedState extends State<DealsClosed> {
             Consumer<AllLeadListController>(
               builder: (context, controller, child) {
                 final deals = controller.allLeads?.data ?? [];
+                if (controller.isLoading) {
+                  return const Expanded(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
                 return Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

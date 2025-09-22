@@ -9,7 +9,10 @@ class NewLeadsPage extends StatefulWidget {
   State<NewLeadsPage> createState() => _NewLeadsPageState();
 }
 
-class _NewLeadsPageState extends State<NewLeadsPage> {
+class _NewLeadsPageState extends State<NewLeadsPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   @override
   void initState() {
     super.initState();
@@ -64,6 +67,11 @@ class _NewLeadsPageState extends State<NewLeadsPage> {
               Consumer<AllLeadListController>(
                 builder: (context, controller, child) {
                   final leads = controller.allLeads?.data ?? [];
+                  if (controller.isLoading) {
+                    return const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
                   return Expanded(
                     child: ListView.separated(
                       itemCount: leads.length,

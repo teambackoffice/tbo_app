@@ -24,4 +24,12 @@ class AllLeadListController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// 🔥 Count leads by status
+  int getCountByStatus(String status) {
+    if (allLeads == null || allLeads!.data == null) return 0;
+    return allLeads!.data!
+        .where((lead) => lead.status?.toLowerCase() == status.toLowerCase())
+        .length;
+  }
 }

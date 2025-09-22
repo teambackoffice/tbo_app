@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ProposalSentPage extends StatelessWidget {
-  const ProposalSentPage({super.key});
+class LeadsClosed extends StatelessWidget {
+  const LeadsClosed({super.key});
 
   @override
   Widget build(BuildContext context) {

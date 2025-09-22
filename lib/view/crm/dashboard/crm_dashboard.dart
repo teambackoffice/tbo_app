@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/services/login_service.dart';
 import 'package:tbo_app/view/crm/dashboard/_create_new_lead/create_new_lead.dart';
 import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
@@ -14,7 +16,7 @@ class CRMDashboardPage extends StatefulWidget {
 
   static Widget _buildStatCard({
     required String title,
-    required String value,
+    required Widget valueWidget, // <-- change here
     required Color color,
     required VoidCallback onTap,
   }) {
@@ -50,14 +52,7 @@ class CRMDashboardPage extends StatefulWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 50,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            valueWidget, // <-- dynamic widget (loader or number)
           ],
         ),
       ),
@@ -72,6 +67,12 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Provider.of<AllLeadListController>(
+        context,
+        listen: false,
+      ).fetchAllLeadList();
+    });
     _loadUserInfo();
   }
 
@@ -129,66 +130,140 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
               const SizedBox(height: 40),
 
               // Stats Grid
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 1.0,
-                children: [
-                  CRMDashboardPage._buildStatCard(
-                    title: "New\nLeads",
-                    value: "12",
-                    color: const Color(0xFF1ABC9C),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NewLeadsPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  CRMDashboardPage._buildStatCard(
-                    title: "Leads\nContacted",
-                    value: "24",
-                    color: const Color(0xFF3B5998),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LeadsContactedPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  CRMDashboardPage._buildStatCard(
-                    title: "Proposals\nSent",
-                    value: "4",
-                    color: const Color(0xFFF39C12),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProposalSentPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  CRMDashboardPage._buildStatCard(
-                    title: "Deals\nConverted",
-                    value: "3",
-                    color: const Color(0xFF27AE60),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DealsClosed(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              Consumer<AllLeadListController>(
+                builder: (context, controller, child) {
+                  return GridView.count(
+                    shrinkWrap: true,
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 1.0,
+                    children: [
+                      CRMDashboardPage._buildStatCard(
+                        title: "New\nLeads",
+                        valueWidget: controller.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                controller.getCountByStatus("Open").toString(),
+                                style: const TextStyle(
+                                  fontSize: 50,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        color: const Color(0xFF1ABC9C),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NewLeadsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      CRMDashboardPage._buildStatCard(
+                        title: "Quotation \nSent",
+                        valueWidget: controller.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                controller
+                                    .getCountByStatus("Quotation")
+                                    .toString(),
+                                style: const TextStyle(
+                                  fontSize: 50,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        color: const Color(0xFF3B5998),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LeadsContactedPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      CRMDashboardPage._buildStatCard(
+                        title: "Leads\nClosed",
+                        valueWidget: controller.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                controller
+                                    .getCountByStatus("Closed")
+                                    .toString(),
+                                style: const TextStyle(
+                                  fontSize: 50,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        color: const Color(0xFFF39C12),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LeadsClosed(),
+                            ),
+                          );
+                        },
+                      ),
+                      CRMDashboardPage._buildStatCard(
+                        title: "Deals\nConverted",
+                        valueWidget: controller.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                controller
+                                    .getCountByStatus("Converted")
+                                    .toString(),
+                                style: const TextStyle(
+                                  fontSize: 50,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        color: const Color(0xFF27AE60),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LeadsConverted(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 30),
