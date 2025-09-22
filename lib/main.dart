@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
+import 'package:tbo_app/controller/create_new_lead_controller.dart';
 import 'package:tbo_app/controller/create_project_controller.dart';
 import 'package:tbo_app/controller/create_project_planning_controller.dart';
 import 'package:tbo_app/controller/create_timesheet_controller.dart';
@@ -76,6 +77,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<TaskByEmployeeController>(
           create: (_) => TaskByEmployeeController(),
+        ),
+        ChangeNotifierProvider<CreateNewLeadController>(
+          create: (_) => CreateNewLeadController(),
         ),
       ],
       child: MaterialApp(
