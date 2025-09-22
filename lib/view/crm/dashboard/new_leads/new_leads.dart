@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_lead_list_controller.dart';
 
-class NewLeadsPage extends StatelessWidget {
+class NewLeadsPage extends StatefulWidget {
   const NewLeadsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final leads = [
-      {"name": "Calicut Textiles", "location": "Calicut"},
-      {"name": "Hydrotech", "location": "KSA"},
-      {"name": "Cary Fresh Hypermarket", "location": "Kottakkal"},
-      {"name": "Xylem", "location": "Calicut"},
-    ];
+  State<NewLeadsPage> createState() => _NewLeadsPageState();
+}
 
+class _NewLeadsPageState extends State<NewLeadsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      Provider.of<AllLeadListController>(
+        context,
+        listen: false,
+      ).fetchAllLeadList(status: "Open");
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F7F3), // background color
       body: SafeArea(
@@ -50,73 +61,73 @@ class NewLeadsPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Leads List
-              Expanded(
-                child: ListView.separated(
-                  itemCount: leads.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final lead = leads[index];
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // "New" Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1ABC9C),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              "New",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+              Consumer<AllLeadListController>(
+                builder: (context, controller, child) {
+                  final leads = controller.allLeads?.data ?? [];
+                  return Expanded(
+                    child: ListView.separated(
+                      itemCount: leads.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final lead = leads[index];
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          const SizedBox(height: 8),
-                          // Company Name
-                          Text(
-                            lead["name"]!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Location
-                          Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                lead["location"]!,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey,
+                              // "New" Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1ABC9C),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  "New",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Company Name
+                              Text(
+                                lead.leadName!,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // Location
+                              Row(
+                                children: [
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    lead.customLeadSegment ?? "N/A",
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ],
           ),
