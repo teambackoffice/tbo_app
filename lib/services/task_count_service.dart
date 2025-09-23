@@ -20,37 +20,25 @@ class TaskCountService {
       throw Exception("Employee ID not found in secure storage");
     }
 
-    print("==== ATTEMPTING MULTIPLE API APPROACHES ====");
-
     // Approach 1: Try without status parameter
     try {
-      print("Trying approach 1: No status parameter");
       final result1 = await _tryApproach1(employeeId, sid);
       if (result1 != null) return result1;
-    } catch (e) {
-      print("Approach 1 failed: $e");
-    }
+    } catch (e) {}
 
     // Approach 2: Try with different status values
     try {
-      print("Trying approach 2: Individual status calls");
       final result2 = await _tryApproach2(employeeId, sid);
       if (result2 != null) return result2;
-    } catch (e) {
-      print("Approach 2 failed: $e");
-    }
+    } catch (e) {}
 
     // Approach 3: Try different endpoint if exists
     try {
-      print("Trying approach 3: Alternative endpoint");
       final result3 = await _tryApproach3(employeeId, sid);
       if (result3 != null) return result3;
-    } catch (e) {
-      print("Approach 3 failed: $e");
-    }
+    } catch (e) {}
 
     // If all approaches fail, return zero counts
-    print("All approaches failed, returning zero counts");
     return {'open': 0, 'working': 0, 'completed': 0};
   }
 
@@ -105,9 +93,7 @@ class TaskCountService {
             counts['completed'] = (counts['completed'] ?? 0) + (count as int);
           }
         }
-      } catch (e) {
-        print("Failed to fetch count for status $status: $e");
-      }
+      } catch (e) {}
     }
 
     if (counts['open']! > 0 ||
@@ -144,9 +130,7 @@ class TaskCountService {
           final counts = _extractTaskCounts(response);
           if (counts != null) return counts;
         }
-      } catch (e) {
-        print("Failed endpoint $endpoint: $e");
-      }
+      } catch (e) {}
     }
     return null;
   }
@@ -161,15 +145,8 @@ class TaskCountService {
     final request = http.Request('GET', url);
     request.headers.addAll(headers);
 
-    print("==== $label REQUEST ====");
-    print("URL: $url");
-
     final response = await request.send();
     final resBody = await response.stream.bytesToString();
-
-    print("==== $label RESPONSE ====");
-    print("Status Code: ${response.statusCode}");
-    print("Body: $resBody");
 
     if (response.statusCode == 200) {
       return jsonDecode(resBody);

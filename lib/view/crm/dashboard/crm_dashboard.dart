@@ -6,7 +6,6 @@ import 'package:tbo_app/view/crm/dashboard/_create_new_lead/create_new_lead.dart
 import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
 import 'package:tbo_app/view/crm/dashboard/leads_contacted/leads_contact.dart';
 import 'package:tbo_app/view/crm/dashboard/new_leads/new_leads.dart';
-import 'package:tbo_app/view/crm/dashboard/prposal_sent/proposal_sent.dart';
 
 class CRMDashboardPage extends StatefulWidget {
   const CRMDashboardPage({super.key});
@@ -135,8 +134,8 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                   return GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
                     childAspectRatio: 1.0,
                     children: [
                       CRMDashboardPage._buildStatCard(
@@ -199,37 +198,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                           );
                         },
                       ),
-                      CRMDashboardPage._buildStatCard(
-                        title: "Leads\nClosed",
-                        valueWidget: controller.isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                            : Text(
-                                controller
-                                    .getCountByStatus("Closed")
-                                    .toString(),
-                                style: const TextStyle(
-                                  fontSize: 50,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                        color: const Color(0xFFF39C12),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LeadsClosed(),
-                            ),
-                          );
-                        },
-                      ),
+
                       CRMDashboardPage._buildStatCard(
                         title: "Deals\nConverted",
                         valueWidget: controller.isLoading

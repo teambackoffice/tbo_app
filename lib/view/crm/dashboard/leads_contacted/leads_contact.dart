@@ -46,7 +46,15 @@ class _LeadsContactedPageState extends State<LeadsContactedPage> {
                         size: 16,
                         color: Colors.black,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          Provider.of<AllLeadListController>(
+                            context,
+                            listen: false,
+                          ).fetchAllLeadList();
+                        });
+                      },
                     ),
                   ),
                   const Spacer(),
@@ -67,6 +75,22 @@ class _LeadsContactedPageState extends State<LeadsContactedPage> {
                   if (controller.isLoading) {
                     return const Expanded(
                       child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (controller.error != null) {
+                    return Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [Text(' No Data Found')],
+                        ),
+                      ),
+                    );
+                  }
+                  if (leads.isEmpty) {
+                    return const Expanded(
+                      child: Center(child: Text('No quotations found')),
                     );
                   }
                   return Expanded(

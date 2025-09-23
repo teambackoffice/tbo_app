@@ -49,7 +49,15 @@ class _NewLeadsPageState extends State<NewLeadsPage>
                         size: 16,
                         color: Colors.black,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          Provider.of<AllLeadListController>(
+                            context,
+                            listen: false,
+                          ).fetchAllLeadList();
+                        });
+                      },
                     ),
                   ),
                   const Spacer(),

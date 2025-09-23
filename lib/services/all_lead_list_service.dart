@@ -32,7 +32,9 @@ class AllLeadListService {
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-          return AllLeadsModal.fromJson(decoded);
+
+          final model = AllLeadsModal.fromJson(decoded);
+          return model;
         } catch (e) {
           throw Exception('Failed to parse response: $e');
         }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_lead_list_controller.dart';
 
 class LeadsClosed extends StatelessWidget {
   const LeadsClosed({super.key});
@@ -29,7 +31,15 @@ class LeadsClosed extends StatelessWidget {
                         size: 16,
                         color: Colors.black,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          Provider.of<AllLeadListController>(
+                            context,
+                            listen: false,
+                          ).fetchAllLeadList();
+                        });
+                      },
                     ),
                   ),
                   const Expanded(
