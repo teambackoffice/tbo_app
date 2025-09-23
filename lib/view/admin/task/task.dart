@@ -8,9 +8,15 @@ class AdminTaskPage extends StatefulWidget {
   _AdminTaskPageState createState() => _AdminTaskPageState();
 }
 
-class _AdminTaskPageState extends State<AdminTaskPage> {
+class _AdminTaskPageState extends State<AdminTaskPage>
+    with TickerProviderStateMixin {
   String selectedFilter = 'All';
   String selectedDate = '';
+
+  // FAB Animation Controller
+  late AnimationController _fabAnimationController;
+  late Animation<double> _fabAnimation;
+  bool _isFabOpen = false;
 
   @override
   void initState() {
@@ -19,6 +25,32 @@ class _AdminTaskPageState extends State<AdminTaskPage> {
     final now = DateTime.now();
     selectedDate =
         '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year.toString().substring(2)}';
+
+    // Initialize FAB animation
+    _fabAnimationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _fabAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fabAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFab() {
+    setState(() {
+      _isFabOpen = !_isFabOpen;
+    });
+    if (_isFabOpen) {
+      _fabAnimationController.forward();
+    } else {
+      _fabAnimationController.reverse();
+    }
   }
 
   final List<String> filterOptions = ['All', 'Open', 'Progress', 'Completed'];
@@ -60,6 +92,54 @@ class _AdminTaskPageState extends State<AdminTaskPage> {
     }
   }
 
+  Widget _buildFabItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required double offset,
+  }) {
+    return AnimatedBuilder(
+      animation: _fabAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, offset * _fabAnimation.value),
+          child: Opacity(
+            opacity: _fabAnimation.value,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                FloatingActionButton(
+                  mini: true,
+                  heroTag: label,
+                  onPressed: onPressed,
+                  backgroundColor: Color(0xFF2D7D8C),
+                  elevation: 4,
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,21 +160,6 @@ class _AdminTaskPageState extends State<AdminTaskPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Add task functionality
-            },
-            child: Text(
-              'Add Task',
-              style: TextStyle(
-                color: Color(0xFF2D7D8C),
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -380,6 +445,89 @@ class _AdminTaskPageState extends State<AdminTaskPage> {
             ),
           ],
         ),
+      ),
+      // Speed Dial FAB
+      floatingActionButton: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          // Handover Requests FAB
+          if (_isFabOpen)
+            Positioned(
+              bottom: 140,
+              right: 0,
+              child: _buildFabItem(
+                icon: Icons.swap_horiz,
+                label: 'Handover Requests',
+                offset: -140,
+                onPressed: () {
+                  _toggleFab();
+                  // Navigate to handover requests page
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Navigating to Handover Requests'),
+                      backgroundColor: Color(0xFF2D7D8C),
+                    ),
+                  );
+                },
+              ),
+            ),
+          // Date Requests FAB
+          if (_isFabOpen)
+            Positioned(
+              bottom: 90,
+              right: 0,
+              child: _buildFabItem(
+                icon: Icons.date_range,
+                label: 'Date Requests',
+                offset: -90,
+                onPressed: () {
+                  _toggleFab();
+                  // Navigate to date requests page
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Navigating to Date Requests'),
+                      backgroundColor: Color(0xFF2D7D8C),
+                    ),
+                  );
+                },
+              ),
+            ),
+          // Add Task FAB
+          if (_isFabOpen)
+            Positioned(
+              bottom: 40,
+              right: 0,
+              child: _buildFabItem(
+                icon: Icons.add,
+                label: 'Add Task',
+                offset: -40,
+                onPressed: () {
+                  _toggleFab();
+                  // Add task functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Add Task pressed'),
+                      backgroundColor: Color(0xFF2D7D8C),
+                    ),
+                  );
+                },
+              ),
+            ),
+          // Main FAB
+          FloatingActionButton(
+            onPressed: _toggleFab,
+            backgroundColor: Color(0xFF2D7D8C),
+            elevation: 8,
+            child: AnimatedRotation(
+              turns: _isFabOpen ? 0.125 : 0.0, // 45 degree rotation
+              duration: Duration(milliseconds: 300),
+              child: Icon(
+                _isFabOpen ? Icons.close : Icons.menu,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -28,9 +28,7 @@ class EditTaskService {
 
       final request = http.Request(
         'POST',
-        Uri.parse(
-          '${ApiConstants.baseUrl}/tbo_smart.mobile_api.project_api.edit_task',
-        ),
+        Uri.parse('${ApiConstants.baseUrl}project_api.edit_task'),
       );
 
       final bodyData = {
@@ -44,23 +42,9 @@ class EditTaskService {
       request.body = json.encode(bodyData);
       request.headers.addAll(headers);
 
-      // 🔹 Print request info
-      print("---- Edit Task API Request ----");
-      print("URL: ${request.url}");
-      print("Headers: ${request.headers}");
-      print("Body: ${request.body}");
-      print("-------------------------------");
-
       final response = await request.send();
 
       final responseData = await response.stream.bytesToString();
-
-      // 🔹 Print response info
-      print("---- Edit Task API Response ----");
-      print("Status Code: ${response.statusCode}");
-      print("Reason Phrase: ${response.reasonPhrase}");
-      print("Response Body: $responseData");
-      print("--------------------------------");
 
       if (response.statusCode == 200) {
         return json.decode(responseData);
@@ -68,7 +52,6 @@ class EditTaskService {
         throw Exception("Failed to edit task: ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("❌ Exception in EditTaskService: $e");
       rethrow;
     }
   }
