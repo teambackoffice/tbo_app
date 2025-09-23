@@ -15,6 +15,7 @@ import 'package:tbo_app/controller/leads_details_controller.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
@@ -84,6 +85,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<CreateDateRequestController>(
           create: (_) => CreateDateRequestController(),
+        ),
+        ChangeNotifierProvider<TaskCountController>(
+          create: (_) => TaskCountController(),
         ),
       ],
       child: MaterialApp(

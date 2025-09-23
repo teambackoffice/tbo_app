@@ -1,13 +1,33 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 import 'package:tbo_app/view/employee/dashboard/high_task_details.dart';
 import 'package:tbo_app/view/employee/dashboard/medium_task_details.dart';
 import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   final Function(int)? onTabChange;
   const Homepage({super.key, this.onTabChange});
+
+  @override
+  State<Homepage> createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the task count data when the page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Provider.of<TaskCountController>(
+        context,
+        listen: false,
+      );
+      controller.fetchTaskSummary(status: "all"); // or whatever status you need
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +40,7 @@ class Homepage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Profile & Notification
+                // Profile & Notification
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -73,41 +93,21 @@ class Homepage extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Color(0xFF5A7B8C),
                       ),
-                      child: Stack(
-                        children: [
-                          Center(
-                            child: IconButton(
-                              onPressed: () {
-                                // Handle button press
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => NotificationsScreen(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.notifications_outlined),
-                              color: Colors.white,
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NotificationsScreen(),
                             ),
-                          ),
-                          // Positioned(
-                          //   right: 14,
-                          //   top: 14,
-                          //   child: Container(
-                          //     height: 10,
-                          //     width: 10,
-                          //     decoration: const BoxDecoration(
-                          //       shape: BoxShape.circle,
-                          //       color: Color(0xFFFF9500),
-                          //     ),
-                          //   ),
-                          // ),
-                        ],
+                          );
+                        },
+                        icon: const Icon(Icons.notifications_outlined),
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 32),
                 const Text(
                   "All your activities in\none place",
@@ -118,7 +118,6 @@ class Homepage extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,362 +152,387 @@ class Homepage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                /// Inline Task Containers
+                // Inline Task Cards (Static for now)
                 Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(15),
-                        height: 218,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF475569),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFE5E5),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "High",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                      child: _buildTaskCard(
+                        context,
+                        color: const Color(0xFF475569),
+                        priority: "High",
+                        title: "Champion\nCar Wash App",
+                        dueDate: "15-07-25",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HighTaskDetails(),
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              "Champion\nCar Wash App",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.access_time_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Time",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              "18 Hours",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Due Date",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  "15-07-25",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    // Handle button press
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const HighTaskDetails(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFFFFFFF),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_outward,
-                                      color: Colors.black,
-                                      size: 16,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(15),
-                        height: 218,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF129476),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3E0),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "Medium",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                      child: _buildTaskCard(
+                        context,
+                        color: const Color(0xFF129476),
+                        priority: "Medium",
+                        title: "Onshore\nWebsite",
+                        dueDate: "15-07-25",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MediumTaskDetails(),
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              "Onshore\nWebsite",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.access_time_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Time",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              "18 Hours",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Due Date",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  "15-07-25",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    // Handle button press
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const MediumTaskDetails(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFFFFFFF),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_outward,
-                                      color: Colors.black,
-                                      size: 16,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 32),
-                const Text(
-                  "Task Overview",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Task Overview",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    // Add refresh button for debugging
+                    IconButton(
+                      onPressed: () {
+                        final controller = Provider.of<TaskCountController>(
+                          context,
+                          listen: false,
+                        );
+                        controller.fetchTaskSummary(status: "all");
+                      },
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 
-                Container(
-                  height: 238,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        height: 140,
-                        width: 140,
-                        child: PieChart(
-                          PieChartData(
-                            centerSpaceRadius: 50,
-                            sectionsSpace: 4,
-                            sections: [
-                              PieChartSectionData(
-                                color: const Color(0xFFFF9500), // Orange
-                                value: 16, // Total tasks
-                                radius: 30,
-                                showTitle: false,
+                // Task Overview Pie Chart with Provider
+                Consumer<TaskCountController>(
+                  builder: (context, controller, _) {
+                    if (controller.isLoading) {
+                      return Container(
+                        height: 238,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    if (controller.errorMessage != null) {
+                      return Container(
+                        height: 238,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Error: ${controller.errorMessage}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
                               ),
-                              PieChartSectionData(
-                                color: const Color(0xFFF5DEB3), // Beige
-                                value: 4, // In progress
-                                radius: 30,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: const Color(0xFF4CAF50), // Green
-                                value: 2, // Completed
-                                radius: 30,
-                                showTitle: false,
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () {
+                                  controller.fetchTaskSummary(status: "all");
+                                },
+                                child: const Text("Retry"),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 80),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Indicator(
-                              color: Color(0xFFFF9500),
-                              text: "Total Task",
-                              value: "16",
-                            ),
-                            SizedBox(height: 16),
-                            Indicator(
-                              color: Color(0xFFF5DEB3),
-                              text: "In Progress",
-                              value: "4",
-                            ),
-                            SizedBox(height: 16),
-                            Indicator(
-                              color: Color(0xFF4CAF50),
-                              text: "Completed",
-                              value: "2",
+                      );
+                    }
+
+                    // Check if we have data
+                    final hasData =
+                        controller.taskSummaryData != null &&
+                        (controller.openTask > 0 ||
+                            controller.workingTask > 0 ||
+                            controller.completedTask > 0);
+
+                    if (!hasData) {
+                      return Container(
+                        height: 238,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
+                        child: const Center(
+                          child: Text(
+                            "No task data available",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      );
+                    }
 
-                const SizedBox(height: 100), // Space for bottom nav
+                    return Container(
+                      height: 238,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            height: 140,
+                            width: 140,
+                            child: PieChart(
+                              PieChartData(
+                                centerSpaceRadius: 50,
+                                sectionsSpace: 4,
+                                sections: _buildPieChartSections(controller),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 80),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Indicator(
+                                  color: const Color(0xFFFF9500),
+                                  text: "Open Task",
+                                  value: "${controller.openTask}",
+                                ),
+                                const SizedBox(height: 16),
+                                Indicator(
+                                  color: const Color(0xFFF5DEB3),
+                                  text: "Working Task",
+                                  value: "${controller.workingTask}",
+                                ),
+                                const SizedBox(height: 16),
+                                Indicator(
+                                  color: const Color(0xFF4CAF50),
+                                  text: "Completed Task",
+                                  value: "${controller.completedTask}",
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 100),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  List<PieChartSectionData> _buildPieChartSections(
+    TaskCountController controller,
+  ) {
+    List<PieChartSectionData> sections = [];
+
+    if (controller.openTask > 0) {
+      sections.add(
+        PieChartSectionData(
+          color: const Color(0xFFFF9500),
+          value: controller.openTask.toDouble(),
+          radius: 30,
+          showTitle: false,
+        ),
+      );
+    }
+
+    if (controller.workingTask > 0) {
+      sections.add(
+        PieChartSectionData(
+          color: const Color(0xFFF5DEB3),
+          value: controller.workingTask.toDouble(),
+          radius: 30,
+          showTitle: false,
+        ),
+      );
+    }
+
+    if (controller.completedTask > 0) {
+      sections.add(
+        PieChartSectionData(
+          color: const Color(0xFF4CAF50),
+          value: controller.completedTask.toDouble(),
+          radius: 30,
+          showTitle: false,
+        ),
+      );
+    }
+
+    // If no data, show a placeholder section
+    if (sections.isEmpty) {
+      sections.add(
+        PieChartSectionData(
+          color: Colors.grey.shade300,
+          value: 1,
+          radius: 30,
+          showTitle: false,
+        ),
+      );
+    }
+
+    return sections;
+  }
+
+  // Helper to build static task card
+  Widget _buildTaskCard(
+    BuildContext context, {
+    required Color color,
+    required String priority,
+    required String title,
+    required String dueDate,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      height: 218,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: priority == "High"
+                  ? const Color(0xFFFFE5E5)
+                  : const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              priority,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time_rounded,
+                color: Colors.white70,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                "Time",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "18 Hours",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                dueDate,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              InkWell(
+                onTap: onTap,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_outward,
+                    color: Colors.black,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -532,7 +556,6 @@ class Indicator extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top: Text
         Text(
           text,
           style: const TextStyle(
@@ -542,7 +565,6 @@ class Indicator extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        // Bottom: Color dot + Number
         Row(
           children: [
             Container(
