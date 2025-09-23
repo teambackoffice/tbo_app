@@ -20,29 +20,50 @@ class TaskCountService {
       throw Exception("Employee ID not found in secure storage");
     }
 
-    // Approach 1: Try without status parameter
+    print("🔑 SID: $sid");
+    print("👤 Employee ID: $employeeId");
+
+    // Approach 1
     try {
+      print("\n🚀 Trying Approach 1 (no status param)");
       final result1 = await _tryApproach1(employeeId, sid);
-      if (result1 != null) return result1;
-    } catch (e) {}
+      if (result1 != null) {
+        print("✅ Approach 1 Success: $result1");
+        return result1;
+      }
+    } catch (e) {
+      print("❌ Approach 1 failed: $e");
+    }
 
-    // Approach 2: Try with different status values
+    // Approach 2
     try {
+      print("\n🚀 Trying Approach 2 (status loop)");
       final result2 = await _tryApproach2(employeeId, sid);
-      if (result2 != null) return result2;
-    } catch (e) {}
+      if (result2 != null) {
+        print("✅ Approach 2 Success: $result2");
+        return result2;
+      }
+    } catch (e) {
+      print("❌ Approach 2 failed: $e");
+    }
 
-    // Approach 3: Try different endpoint if exists
+    // Approach 3
     try {
+      print("\n🚀 Trying Approach 3 (alt endpoints)");
       final result3 = await _tryApproach3(employeeId, sid);
-      if (result3 != null) return result3;
-    } catch (e) {}
+      if (result3 != null) {
+        print("✅ Approach 3 Success: $result3");
+        return result3;
+      }
+    } catch (e) {
+      print("❌ Approach 3 failed: $e");
+    }
 
-    // If all approaches fail, return zero counts
+    print("⚠️ All approaches failed, returning zero counts");
     return {'open': 0, 'working': 0, 'completed': 0};
   }
 
-  // Approach 1: No status parameter
+  // Approach 1
   Future<Map<String, dynamic>?> _tryApproach1(
     String employeeId,
     String sid,
@@ -55,7 +76,7 @@ class TaskCountService {
     return await _makeRequest(url, sid, "Approach 1");
   }
 
-  // Approach 2: Individual status calls
+  // Approach 2
   Future<Map<String, dynamic>?> _tryApproach2(
     String employeeId,
     String sid,
@@ -81,7 +102,8 @@ class TaskCountService {
         if (response != null && response['message'] != null) {
           final count = response['message']['count'] ?? 0;
 
-          // Map different status names to our categories
+          print("📊 Status $status → Count: $count");
+
           if (status.toLowerCase().contains('open') ||
               status.toLowerCase().contains('todo')) {
             counts['open'] = (counts['open'] ?? 0) + (count as int);
@@ -93,8 +115,12 @@ class TaskCountService {
             counts['completed'] = (counts['completed'] ?? 0) + (count as int);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        print("❌ Error for status $status: $e");
+      }
     }
+
+    print("📊 Final counts from Approach 2: $counts");
 
     if (counts['open']! > 0 ||
         counts['working']! > 0 ||
@@ -104,12 +130,11 @@ class TaskCountService {
     return null;
   }
 
-  // Approach 3: Try alternative endpoint
+  // Approach 3
   Future<Map<String, dynamic>?> _tryApproach3(
     String employeeId,
     String sid,
   ) async {
-    // Try different possible endpoint names
     final endpoints = [
       'project_api.get_task_counts',
       'project_api.get_employee_task_summary',
@@ -126,39 +151,52 @@ class TaskCountService {
 
         final response = await _makeRequest(url, sid, "Endpoint: $endpoint");
         if (response != null) {
-          // Try to extract task counts from various response formats
           final counts = _extractTaskCounts(response);
+          print("📊 Extracted counts from $endpoint: $counts");
           if (counts != null) return counts;
         }
-      } catch (e) {}
+      } catch (e) {
+        print("❌ Error for endpoint $endpoint: $e");
+      }
     }
     return null;
   }
 
+  // Core request method
   Future<Map<String, dynamic>?> _makeRequest(
     Uri url,
     String sid,
     String label,
   ) async {
-    final headers = {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'};
+    print("\n🌐 Request → $label");
+    print("🔗 URL: $url");
 
+    final headers = {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'};
     final request = http.Request('GET', url);
     request.headers.addAll(headers);
 
     final response = await request.send();
     final resBody = await response.stream.bytesToString();
 
+    print("📥 Response Status: ${response.statusCode}");
+    print("📥 Response Body: $resBody");
+
     if (response.statusCode == 200) {
-      return jsonDecode(resBody);
+      try {
+        return jsonDecode(resBody);
+      } catch (e) {
+        print("⚠️ JSON decode failed: $e");
+        return null;
+      }
     } else {
       throw Exception("Failed request: ${response.reasonPhrase}");
     }
   }
 
+  // Extract counts from different formats
   Map<String, dynamic>? _extractTaskCounts(Map<String, dynamic> response) {
-    // Try to find task counts in various response formats
+    print("🔍 Trying to extract counts from response: $response");
 
-    // Format 1: Direct counts
     if (response.containsKey('open') ||
         response.containsKey('working') ||
         response.containsKey('completed')) {
@@ -169,7 +207,6 @@ class TaskCountService {
       };
     }
 
-    // Format 2: Inside message
     if (response['message'] != null) {
       final message = response['message'];
       if (message is Map<String, dynamic>) {
@@ -183,7 +220,6 @@ class TaskCountService {
           };
         }
 
-        // Format 3: Task counts array or list
         if (message.containsKey('task_counts') ||
             message.containsKey('counts')) {
           final counts = message['task_counts'] ?? message['counts'];
@@ -211,6 +247,7 @@ class TaskCountService {
       }
     }
 
+    print("⚠️ No matching count format found in response");
     return null;
   }
 }

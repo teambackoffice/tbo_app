@@ -1,44 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_employees._controller.dart';
+import 'package:tbo_app/controller/employee_handover_controller.dart';
+import 'package:tbo_app/modal/all_employees.modal.dart';
 
-// Create Handover Page
 class CreateHandoverPage extends StatefulWidget {
-  const CreateHandoverPage({super.key});
+  final String taskId;
+  const CreateHandoverPage({super.key, required this.taskId});
 
   @override
-  _CreateHandoverPageState createState() => _CreateHandoverPageState();
+  State<CreateHandoverPage> createState() => _CreateHandoverPageState();
 }
 
 class _CreateHandoverPageState extends State<CreateHandoverPage> {
   final _formKey = GlobalKey<FormState>();
-  final _employeeIdController = TextEditingController();
-  final _taskIdController = TextEditingController();
-  final _reasonController = TextEditingController();
-  final _handoverEmployeeIdController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
 
-  String _handoverType = 'permanent';
+  final TextEditingController _employeeIdController = TextEditingController();
+  final TextEditingController _handoverEmployeeIdController =
+      TextEditingController();
+  final TextEditingController _taskIdController = TextEditingController();
+  final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  String _handoverType = "Temporary";
+  String? _selectedReason;
   DateTime? _fromDate;
   DateTime? _toDate;
-  bool _isLoading = false;
+
+  Message? _selectedEmployee;
 
   @override
-  void dispose() {
-    _employeeIdController.dispose();
-    _taskIdController.dispose();
-    _reasonController.dispose();
-    _handoverEmployeeIdController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadEmployeeId();
+    _taskIdController.text = widget.taskId;
   }
 
-  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _loadEmployeeId() async {
+    try {
+      final employeeId = await _storage.read(key: 'employee_id');
+      if (employeeId != null) {
+        setState(() {
+          _employeeIdController.text = employeeId;
+        });
+      }
+    } catch (e) {
+      print('Error loading employee ID: $e');
+    }
+  }
+
+  Future<void> _pickDate({required bool isStart}) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
     );
     if (picked != null) {
       setState(() {
-        if (isFromDate) {
+        if (isStart) {
           _fromDate = picked;
         } else {
           _toDate = picked;
@@ -47,271 +70,326 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
     }
   }
 
-  void _submitHandover() async {
+  Future<void> _submitHandover() async {
     if (_formKey.currentState!.validate()) {
-      if (_handoverType == 'temporary' &&
-          (_fromDate == null || _toDate == null)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Please select both From and To dates for temporary handover',
-            ),
-          ),
-        );
-        return;
+      // Validate dates for temporary handover
+      if (_handoverType == "Temporary") {
+        if (_fromDate == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please select start date")),
+          );
+          return;
+        }
+        if (_toDate == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please select end date")),
+          );
+          return;
+        }
+        if (_toDate!.isBefore(_fromDate!)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("End date must be after start date")),
+          );
+          return;
+        }
       }
 
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Simulate API call
-      await Future.delayed(Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Show success message
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Success'),
-            content: Text('Task handover created successfully!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop(); // Go back to home
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
+      final controller = Provider.of<TaskHandoverController>(
+        context,
+        listen: false,
       );
+
+      try {
+        await controller.createHandover(
+          fromEmployee: _employeeIdController.text,
+          toEmployee: _selectedEmployee!.name,
+          task: _taskIdController.text,
+          handoverReason:
+              _selectedReason!, // Use selected reason instead of text field
+          handoverNotes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : "No additional notes",
+          handoverType: _handoverType,
+          leaveStartDate: _handoverType == "Temporary"
+              ? _fromDate?.toIso8601String().split("T").first
+              : null,
+          leaveEndDate: _handoverType == "Temporary"
+              ? _toDate?.toIso8601String().split("T").first
+              : null,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Handover created successfully")),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final taskHandoverController = Provider.of<TaskHandoverController>(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text('Create Task Handover')),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: const Text("Create Task Handover"),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: ListView(
             children: [
-              Card(
-                elevation: 3,
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Handover Details',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                      SizedBox(height: 20),
+              // From Employee ID
+              TextFormField(
+                controller: _employeeIdController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'From Employee ID',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF5F5F5),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
 
-                      // Employee ID
-                      TextFormField(
-                        controller: _employeeIdController,
-                        decoration: InputDecoration(
-                          labelText: 'Employee ID',
-                          hintText: 'Enter your employee ID',
-                          prefixIcon: Icon(Icons.person),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter employee ID';
-                          }
-                          return null;
-                        },
+              // Handover To Employee
+              TextFormField(
+                controller: _handoverEmployeeIdController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Handover To Employee',
+                  hintText: 'Tap to select employee',
+                  prefixIcon: Icon(Icons.person_add),
+                  suffixIcon: Icon(Icons.arrow_drop_down),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) => value == null || value.isEmpty
+                    ? "Please select an employee"
+                    : null,
+                onTap: () async {
+                  final selectedEmployee = await showModalBottomSheet<Message>(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
                       ),
-                      SizedBox(height: 16),
+                    ),
+                    isScrollControlled: true,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    builder: (context) {
+                      return const EmployeeSelectionSheet();
+                    },
+                  );
 
-                      // Task ID
-                      TextFormField(
-                        controller: _taskIdController,
-                        decoration: InputDecoration(
-                          labelText: 'Task ID',
-                          hintText: 'Enter task ID to handover',
-                          prefixIcon: Icon(Icons.task),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter task ID';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
+                  if (selectedEmployee != null) {
+                    setState(() {
+                      _selectedEmployee = selectedEmployee;
+                      _handoverEmployeeIdController.text =
+                          selectedEmployee.employeeName;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
 
-                      // Handover To Employee ID
-                      TextFormField(
-                        controller: _handoverEmployeeIdController,
-                        decoration: InputDecoration(
-                          labelText: 'Handover To Employee ID',
-                          hintText: 'Enter recipient employee ID',
-                          prefixIcon: Icon(Icons.person_add),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter handover employee ID';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
+              // Task ID
+              TextFormField(
+                controller: _taskIdController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Task ID',
+                  prefixIcon: Icon(Icons.task),
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF5F5F5),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 16),
 
-                      // Reason
-                      TextFormField(
-                        controller: _reasonController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: 'Reason for Handover',
-                          hintText: 'Enter reason for task handover',
-                          prefixIcon: Icon(Icons.description),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter reason for handover';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-
-                      // Handover Type
-                      Text(
-                        'Handover Type',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: Text('Permanent'),
-                              value: 'permanent',
-                              groupValue: _handoverType,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _handoverType = value!;
-                                  _fromDate = null;
-                                  _toDate = null;
-                                });
-                              },
-                            ),
-                          ),
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: Text('Temporary'),
-                              value: 'temporary',
-                              groupValue: _handoverType,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _handoverType = value!;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Date Selection for Temporary Handover
-                      if (_handoverType == 'temporary') ...[
-                        SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectDate(context, true),
-                                child: Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.calendar_today),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        _fromDate != null
-                                            ? 'From: ${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year}'
-                                            : 'Select From Date',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectDate(context, false),
-                                child: Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.calendar_today),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        _toDate != null
-                                            ? 'To: ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}'
-                                            : 'Select To Date',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
+              // Handover Type Dropdown
+              DropdownButtonFormField<String>(
+                value: _handoverType,
+                decoration: const InputDecoration(
+                  labelText: "Handover Type",
+                  prefixIcon: Icon(Icons.swap_horiz),
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: "Temporary",
+                    child: Text("Temporary"),
                   ),
+                  DropdownMenuItem(
+                    value: "Permanent",
+                    child: Text("Permanent"),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _handoverType = val;
+                      // Clear dates when switching types
+                      _fromDate = null;
+                      _toDate = null;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Reason Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedReason,
+                decoration: const InputDecoration(
+                  labelText: 'Handover Reason',
+                  prefixIcon: Icon(Icons.info_outline),
+                  border: OutlineInputBorder(),
+                ),
+                hint: const Text('Select reason for handover'),
+                items: const [
+                  DropdownMenuItem(value: "Leave", child: Text("Leave")),
+                  DropdownMenuItem(
+                    value: "Sick Leave",
+                    child: Text("Sick Leave"),
+                  ),
+                  DropdownMenuItem(
+                    value: "Maternity Leave",
+                    child: Text("Maternity Leave"),
+                  ),
+                  DropdownMenuItem(
+                    value: "Personal Emergency",
+                    child: Text("Personal Emergency"),
+                  ),
+                  DropdownMenuItem(value: "Training", child: Text("Training")),
+                  DropdownMenuItem(
+                    value: "Project Change",
+                    child: Text("Project Change"),
+                  ),
+                  DropdownMenuItem(value: "Other", child: Text("Other")),
+                ],
+                validator: (value) =>
+                    value == null ? "Please select a reason" : null,
+                onChanged: (val) {
+                  setState(() {
+                    _selectedReason = val;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Notes
+              TextFormField(
+                controller: _notesController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Handover Notes (Optional)',
+                  hintText:
+                      'Add any additional notes or instructions for the handover...',
+                  prefixIcon: Icon(Icons.note_alt_outlined),
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 20),
+
+              // Date pickers - only show for temporary handover
+              if (_handoverType == "Temporary") ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _pickDate(isStart: true),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: "Start Date *",
+                            prefixIcon: const Icon(Icons.date_range),
+                            border: const OutlineInputBorder(),
+                            fillColor: _fromDate == null
+                                ? Colors.red.withOpacity(0.1)
+                                : null,
+                            filled: _fromDate == null,
+                          ),
+                          child: Text(
+                            _fromDate != null
+                                ? _fromDate!.toIso8601String().split("T").first
+                                : "Select start date",
+                            style: TextStyle(
+                              color: _fromDate == null
+                                  ? Colors.grey[600]
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _pickDate(isStart: false),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: "End Date *",
+                            prefixIcon: const Icon(Icons.date_range),
+                            border: const OutlineInputBorder(),
+                            fillColor: _toDate == null
+                                ? Colors.red.withOpacity(0.1)
+                                : null,
+                            filled: _toDate == null,
+                          ),
+                          child: Text(
+                            _toDate != null
+                                ? _toDate!.toIso8601String().split("T").first
+                                : "Select end date",
+                            style: TextStyle(
+                              color: _toDate == null ? Colors.grey[600] : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ] else
+                const SizedBox(height: 24),
 
               // Submit Button
               SizedBox(
-                width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitHandover,
+                  onPressed: taskHandoverController.isLoading
+                      ? null
+                      : _submitHandover,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          'Submit Handover',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                  child: taskHandoverController.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Submit Handover",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ),
@@ -321,31 +399,308 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _employeeIdController.dispose();
+    _handoverEmployeeIdController.dispose();
+    _taskIdController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
 }
 
-// Data Model
-class HandoverRequest {
-  final String id;
-  final String employeeId;
-  final String taskId;
-  final String handoverToId;
-  final String reason;
-  final String type;
-  final String status;
-  final DateTime? fromDate;
-  final DateTime? toDate;
-  final DateTime createdDate;
+class EmployeeSelectionSheet extends StatefulWidget {
+  const EmployeeSelectionSheet({super.key});
 
-  HandoverRequest({
-    required this.id,
-    required this.employeeId,
-    required this.taskId,
-    required this.handoverToId,
-    required this.reason,
-    required this.type,
-    required this.status,
-    this.fromDate,
-    this.toDate,
-    required this.createdDate,
-  });
+  @override
+  State<EmployeeSelectionSheet> createState() => _EmployeeSelectionSheetState();
+}
+
+class _EmployeeSelectionSheetState extends State<EmployeeSelectionSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Message> _filteredEmployees = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_filterEmployees);
+  }
+
+  void _filterEmployees() {
+    final controller = Provider.of<AllEmployeesController>(
+      context,
+      listen: false,
+    );
+    if (controller.allEmployees != null) {
+      setState(() {
+        _filteredEmployees = controller.allEmployees!.message.where((emp) {
+          return emp.employeeName.toLowerCase().contains(
+                _searchController.text.toLowerCase(),
+              ) ||
+              emp.designation.toLowerCase().contains(
+                _searchController.text.toLowerCase(),
+              ) ||
+              emp.department.toLowerCase().contains(
+                _searchController.text.toLowerCase(),
+              );
+        }).toList();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Provider.of<AllEmployeesController>(context);
+
+    if (controller.allEmployees == null && !controller.isLoading) {
+      Future.microtask(() => controller.fetchallemployees());
+    }
+
+    // Initialize filtered list
+    if (_filteredEmployees.isEmpty && controller.allEmployees != null) {
+      _filteredEmployees = controller.allEmployees!.message;
+    }
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            height: 5,
+            width: 40,
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Select Employee",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          if (controller.isLoading)
+            const Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text("Loading employees..."),
+                  ],
+                ),
+              ),
+            )
+          else if (controller.error != null)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Error: ${controller.error}",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => controller.fetchallemployees(),
+                      child: const Text("Retry"),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: "Search employees...",
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _filterEmployees();
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+              ),
+            ),
+
+            // Employee count
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "${_filteredEmployees.length} employee(s) found",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Employee list
+            Expanded(
+              child: _filteredEmployees.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_off,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No employees found",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Try adjusting your search",
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: _filteredEmployees.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1, indent: 72),
+                      itemBuilder: (context, index) {
+                        final emp = _filteredEmployees[index];
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
+                            backgroundImage: emp.imageUrl.isNotEmpty
+                                ? NetworkImage(emp.imageUrl)
+                                : null,
+                            child: emp.imageUrl.isEmpty
+                                ? Icon(
+                                    Icons.person,
+                                    color: Theme.of(context).primaryColor,
+                                  )
+                                : null,
+                          ),
+                          title: Text(
+                            emp.employeeName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 2),
+                              Text(
+                                emp.designation,
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                emp.department,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey[400],
+                          ),
+                          onTap: () {
+                            Navigator.pop(context, emp);
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+
+          // Safe area padding at bottom
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 }

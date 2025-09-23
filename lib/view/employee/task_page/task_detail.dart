@@ -1,5 +1,6 @@
-// Task Detail Page for status change
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_task_update_contoller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/task_page/handover_task.dart';
 import 'package:tbo_app/view/employee/task_page/task_date_request.dart';
@@ -220,26 +221,38 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               ),
             ),
             const Spacer(),
+
             // Update Status Button
             if (currentStatus != widget.task.status)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: ElevatedButton(
-                  onPressed: () => _updateTaskStatus(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              Consumer<EditTaskController>(
+                builder: (context, controller, _) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: ElevatedButton(
+                      onPressed: controller.isLoading
+                          ? null
+                          : () => _updateTaskStatus(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: controller.isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Update Status',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
-                  ),
-                  child: const Text(
-                    'Update Status',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
+                  );
+                },
               ),
 
             // Action Buttons Row (Handover and Date Request)
@@ -257,14 +270,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateHandoverPage(),
+                            builder: (context) =>
+                                CreateHandoverPage(taskId: widget.task.name),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFF6366F1,
-                        ), // Indigo color
+                        backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -300,7 +312,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF59E0B), // Amber color
+                        backgroundColor: const Color(0xFFF59E0B),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -325,97 +337,35 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
-  void _updateTaskStatus() {
-    // Here you would typically call an API to update the task status
-    // For now, we'll just show a success message and go back
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Task status updated to $currentStatus'),
-        backgroundColor: const Color(0xFF10B981),
-      ),
+  Future<void> _updateTaskStatus(BuildContext context) async {
+    final controller = context.read<EditTaskController>();
+
+    await controller.editTask(
+      taskId: widget.task.name,
+      project: widget.task.project, // ensure Task model has this field
+      subject: widget.task.subject,
+      status: currentStatus,
+      priority: widget.task.priority,
     );
 
-    Navigator.pop(context);
-  }
+    if (!mounted) return;
 
-  void _requestDateChange() {
-    // Show date picker dialog for date change request
-    showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFF59E0B),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    ).then((selectedDate) {
-      if (selectedDate != null) {
-        // Handle the selected date - you can navigate to a request form
-        // or show a confirmation dialog
-        _showDateRequestConfirmation(selectedDate);
-      }
-    });
-  }
-
-  void _showDateRequestConfirmation(DateTime selectedDate) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Date Change Request'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Task: ${widget.task.subject}'),
-              const SizedBox(height: 8),
-              Text(
-                'Requested Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-              ),
-              const SizedBox(height: 16),
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: 'Reason for date change',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Date change request submitted'),
-                    backgroundColor: Color(0xFFF59E0B),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-              ),
-              child: const Text('Submit Request'),
-            ),
-          ],
-        );
-      },
-    );
+    if (controller.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${controller.errorMessage}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Task status updated to $currentStatus"),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+      Navigator.pop(context, true); // return true so parent can refresh
+    }
   }
 
   Color _getPriorityColor(String priority) {
