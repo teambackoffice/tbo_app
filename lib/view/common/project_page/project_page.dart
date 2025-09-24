@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
 import 'package:tbo_app/modal/project_list_modal.dart';
+import 'package:tbo_app/view/common/project_page/date_rqst.dart';
 import 'package:tbo_app/view/common/project_page/handover_rqsts.dart';
 import 'package:tbo_app/view/common/project_page/project_details.dart';
 
@@ -225,10 +226,11 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                             onPressed: () {
                               _toggleFab();
                               // Navigate to date requests
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Opening Date Requests...'),
-                                  backgroundColor: Color(0xFF2D7D8C),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      EmployeeDateRequestScreen(),
                                 ),
                               );
                             },
