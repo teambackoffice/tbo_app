@@ -57,13 +57,11 @@ class _HomepageState extends State<Homepage> {
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             color: Color(0xFFE8F4F2),
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'
-                                '?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Color(0xFF5A7B8C),
+                            size: 32,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -496,6 +494,7 @@ class _HomepageState extends State<Homepage> {
         formattedDate = task.expEndDate!;
       }
     }
+    final project = task.projectName;
 
     return Container(
       padding: const EdgeInsets.all(15),
@@ -537,33 +536,16 @@ class _HomepageState extends State<Homepage> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(
-                Icons.access_time_rounded,
-                color: Colors.white70,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "Progress",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
           Text(
-            "${task.progress?.toInt() ?? 0}%",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            project ?? '',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(height: 8),
+
           const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
