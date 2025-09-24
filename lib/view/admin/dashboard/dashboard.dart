@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
+import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/admin/dashboard/notification/notification.dart';
@@ -31,7 +33,70 @@ class _AdminDashboardState extends State<AdminDashboard> {
         listen: false,
       ).fetchallemployees();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<GetProjectListController>(
+        context,
+        listen: false,
+      ).fetchprojectlist();
+    });
   }
+
+  // Function to get daily rotating projects
+  List<ProjectDetails> _getDailyProjects(List<ProjectDetails>? projects) {
+    if (projects == null || projects.isEmpty) return [];
+
+    // Use current day of year to rotate projects daily
+    final dayOfYear = DateTime.now()
+        .difference(DateTime(DateTime.now().year, 1, 1))
+        .inDays;
+    final startIndex = dayOfYear % projects.length;
+
+    List<ProjectDetails> dailyProjects = [];
+
+    // Get first project
+    dailyProjects.add(projects[startIndex]);
+
+    // Get second project (avoid duplicate)
+    if (projects.length > 1) {
+      final secondIndex = (startIndex + 1) % projects.length;
+      dailyProjects.add(projects[secondIndex]);
+    }
+
+    return dailyProjects.take(2).toList();
+  }
+
+  // Function to get project color based on priority
+  Color _getProjectColor(String? priority) {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return const Color(0xFF475569);
+      case 'medium':
+        return const Color(0xFF129476);
+      case 'low':
+        return const Color(0xFF1C7690);
+      default:
+        return const Color(0xFF129476);
+    }
+  }
+
+  // Function to calculate estimated hours for display
+  String _getEstimatedHours(ProjectDetails project) {
+    double totalHours = 0;
+    if (project.taskTemplates != null) {
+      for (var task in project.taskTemplates!) {
+        totalHours += task.estimatedHours ?? 0;
+      }
+    }
+    return totalHours > 0 ? '${totalHours.toInt()} Hours' : '-- Hours';
+  }
+
+  // Function to format date for display
+  String _formatDate(DateTime? date) {
+    if (date == null) return '--';
+    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year.toString().substring(2)}';
+  }
+
+  // Function to get mock assigned employees (since project API doesn't include this)
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +113,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   const CircleAvatar(
                     radius: 25,
-                    backgroundImage: NetworkImage(
-                      'https://media.istockphoto.com/id/1481165140/photo/portrait-of-biracial-young-woman-smiling-and-using-laptop-in-bright-contemporary-office.jpg?s=612x612&w=0&k=20&c=p4WaudLa74dVkawzcjLnEqDnIO5EE7IZaJzUqav8wfE=',
-                    ),
+                    backgroundColor: Color(0xFF1C7690),
+                    child: Icon(Icons.person, size: 30, color: Colors.white),
                   ),
                   const SizedBox(width: 15),
                   const Expanded(
@@ -175,201 +239,136 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
               const SizedBox(height: 15),
 
-              // Task Cards
-              _buildTaskCard(
-                title: 'Champion Car Wash App',
-                subtitle: 'TBOPROID1',
-                time: '18 Hours',
-                dueDate: '15-07-25',
-                assignedEmployees: [
-                  {
-                    "name": "Shameer",
-                    "image":
-                        "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
-                  },
-                  {
-                    "name": "Priya",
-                    "image":
-                        "https://media.istockphoto.com/id/1489414046/photo/portrait-of-an-attractive-empowered-multiethnic-woman-looking-at-camera-and-charmingly.jpg?s=612x612&w=0&k=20&c=p9-7xtXTjNUUDYJVJmZ2pka98lr2xiFCM1jFLqpgF6Q=",
-                  },
-                ],
-                color: const Color(0xFF475569),
-                priority: 'High',
+              // Dynamic Project Cards using Consumer
+              Consumer<GetProjectListController>(
+                builder: (context, controller, child) {
+                  if (controller.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF129476),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (controller.error != null) {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade600,
+                            size: 30,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Failed to load projects',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            controller.error!,
+                            style: TextStyle(color: Colors.red.shade600),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () => controller.fetchprojectlist(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF129476),
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final projects = controller.projectList?.data;
+                  if (projects == null || projects.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            color: Colors.grey.shade600,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'No Projects Available',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'There are currently no projects to display',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Get daily rotating projects
+                  final dailyProjects = _getDailyProjects(projects);
+
+                  return Column(
+                    children: [
+                      ...dailyProjects.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final project = entry.value;
+
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index < dailyProjects.length - 1 ? 15 : 0,
+                          ),
+                          child: _buildProjectCard(
+                            project: project,
+                            projectIndex: index,
+                          ),
+                        );
+                      }),
+                      if (dailyProjects.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'No active projects found for today',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
 
-              const SizedBox(height: 15),
-
-              _buildTaskCard(
-                title: 'Onshore Profile',
-                subtitle: 'TBOPROID2',
-                time: '18 Hours',
-                dueDate: '15-07-25',
-                assignedEmployees: [
-                  {
-                    "name": "Jasir",
-                    "image":
-                        "https://media.istockphoto.com/id/1490901345/photo/happy-male-entrepreneur-at-his-office-desk-looking-at-camera.jpg?s=612x612&w=0&k=20&c=YUcA7EJpGx9CS0SEVJyU0jH6yB9GaUKAOUp98YmBzi0=",
-                  },
-                ],
-                color: const Color(0xFF129476),
-                priority: 'High',
-              ),
-
-              // const SizedBox(height: 20),
-
-              // Add Project/Task Button
-              // SizedBox(
-              //   width: double.infinity,
-              //   height: 50,
-              //   child: ElevatedButton(
-              //     onPressed: () {
-              //       showDialog(
-              //         context: context,
-              //         barrierDismissible: true,
-              //         builder: (context) => _buildDialog(context),
-              //       );
-              //     },
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: const Color(0xFF1C7690),
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(25),
-              //       ),
-              //       elevation: 0,
-              //     ),
-              //     child: const Text(
-              //       'Add Project / Task',
-              //       style: TextStyle(
-              //         fontSize: 16,
-              //         fontWeight: FontWeight.w500,
-              //         color: Colors.white,
-              //       ),
-              //     ),
-              //   ),
-              // ),
               const SizedBox(height: 30),
 
-              // Team Members Section - Now using real API data
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     const Text(
-              //       'Team Members',
-              //       style: TextStyle(
-              //         fontSize: 20,
-              //         fontWeight: FontWeight.bold,
-              //         color: Colors.black,
-              //       ),
-              //     ),
-              //     TextButton(
-              //       onPressed: () {
-              //         Navigator.push(
-              //           context,
-              //           MaterialPageRoute(
-              //             builder: (context) => const TeamMembersPage(),
-              //           ),
-              //         );
-              //       },
-              //       child: const Text(
-              //         'View all',
-              //         style: TextStyle(color: Colors.grey, fontSize: 14),
-              //       ),
-              //     ),
-              //   ],
-              // ),
-              // const SizedBox(height: 10),
-
-              // Team Members List - Using Consumer to get real data
-              // Consumer<AllEmployeesController>(
-              //   builder: (context, controller, child) {
-              //     if (controller.isLoading) {
-              //       return const Center(
-              //         child: Padding(
-              //           padding: EdgeInsets.all(20),
-              //           child: CircularProgressIndicator(
-              //             color: Color(0xFF1C7690),
-              //           ),
-              //         ),
-              //       );
-              //     }
-
-              //     if (controller.error != null) {
-              //       return Card(
-              //         color: Colors.red.shade50,
-              //         child: Padding(
-              //           padding: const EdgeInsets.all(16),
-              //           child: Row(
-              //             children: [
-              //               const Icon(Icons.error, color: Colors.red),
-              //               const SizedBox(width: 10),
-              //               Expanded(
-              //                 child: Column(
-              //                   crossAxisAlignment: CrossAxisAlignment.start,
-              //                   children: [
-              //                     const Text(
-              //                       'Failed to load team members',
-              //                       style: TextStyle(
-              //                         fontWeight: FontWeight.bold,
-              //                         color: Colors.red,
-              //                       ),
-              //                     ),
-              //                     Text(
-              //                       controller.error!,
-              //                       style: const TextStyle(
-              //                         fontSize: 12,
-              //                         color: Colors.red,
-              //                       ),
-              //                     ),
-              //                   ],
-              //                 ),
-              //               ),
-              //               IconButton(
-              //                 icon: const Icon(
-              //                   Icons.refresh,
-              //                   color: Colors.red,
-              //                 ),
-              //                 onPressed: () => controller.fetchallemployees(),
-              //               ),
-              //             ],
-              //           ),
-              //         ),
-              //       );
-              //     }
-
-              //     if (controller.allEmployees?.message.isEmpty ?? true) {
-              //       return const Card(
-              //         child: Padding(
-              //           padding: EdgeInsets.all(16),
-              //           child: Center(
-              //             child: Text(
-              //               'No team members found',
-              //               style: TextStyle(fontSize: 16, color: Colors.grey),
-              //             ),
-              //           ),
-              //         ),
-              //       );
-              //     }
-
-              //     // Show limited number of employees on dashboard
-              //     final employees = controller.allEmployees!.message
-              //         .take(5)
-              //         .toList();
-
-              //     return Column(
-              //       children: employees.map((employee) {
-              //         return _buildTeamMember(
-              //           employee.employeeName.isNotEmpty
-              //               ? employee.employeeName
-              //               : employee.name,
-              //           employee.designation,
-              //           employee.imageUrl.isNotEmpty
-              //               ? employee.imageUrl
-              //               : employee.image,
-              //           employee.department,
-              //         );
-              //       }).toList(),
-              //     );
-              //   },
-              // ),
+              // Action Buttons Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -384,7 +383,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                     child: Container(
                       width: 100,
-                      height: 100, // extra height to fit text
+                      height: 100,
                       decoration: BoxDecoration(
                         color: const Color(0xFF1C7690),
                         borderRadius: BorderRadius.circular(16),
@@ -392,9 +391,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Image
                           Image.asset("assets/employees.png"),
-                          // Text
                           const Text(
                             "    Team\n Members",
                             style: TextStyle(
@@ -420,7 +417,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                     child: Container(
                       width: 100,
-                      height: 100, // extra height to fit text
+                      height: 100,
                       decoration: BoxDecoration(
                         color: const Color(0xFF1C7690),
                         borderRadius: BorderRadius.circular(16),
@@ -428,10 +425,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Image
                           Image.asset("assets/alltasks.png"),
                           const SizedBox(height: 5),
-                          // Text
                           const Text(
                             "   All\n Tasks",
                             style: TextStyle(
@@ -457,7 +452,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                     child: Container(
                       width: 100,
-                      height: 100, // extra height to fit text
+                      height: 100,
                       decoration: BoxDecoration(
                         color: const Color(0xFF1C7690),
                         borderRadius: BorderRadius.circular(16),
@@ -465,9 +460,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Image
                           Image.asset("assets/timesheet.png"),
-                          // Text
                           const Text(
                             " Time\n Sheet",
                             style: TextStyle(
@@ -489,15 +482,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildTaskCard({
-    required String title,
-    required String subtitle,
-    required String time,
-    required String dueDate,
-    required List<Map<String, String>> assignedEmployees,
-    required Color color,
-    required String priority,
+  Widget _buildProjectCard({
+    required ProjectDetails project,
+    required int projectIndex,
   }) {
+    final color = _getProjectColor(project.priority);
+    final estimatedHours = _getEstimatedHours(project);
+    final dueDate = _formatDate(project.expectedEndDate);
+    final startdate = _formatDate(project.expectedStartDate);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -519,7 +512,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  priority,
+                  project.priority?.toUpperCase() ?? 'MEDIUM',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -531,7 +524,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           const SizedBox(height: 15),
           Text(
-            title,
+            project.projectName ?? 'Untitled Project',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -540,7 +533,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           const SizedBox(height: 5),
           Text(
-            subtitle,
+            project.name ?? 'No project ID',
             style: const TextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: 20),
@@ -553,20 +546,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Row(
                       children: [
                         Icon(
-                          Icons.access_time,
+                          Icons.calendar_today,
                           size: 16,
                           color: Colors.white.withOpacity(0.8),
                         ),
                         const SizedBox(width: 5),
                         const Text(
-                          'Time',
+                          'Start Date',
                           style: TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                       ],
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      time,
+                      startdate,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -589,7 +582,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         ),
                         const SizedBox(width: 5),
                         const Text(
-                          'Due Date',
+                          'End Date',
                           style: TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                       ],
@@ -611,11 +604,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Assigned to',
+                      '',
                       style: TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                     const SizedBox(height: 5),
-                    _buildEmployeeAvatars(assignedEmployees),
                   ],
                 ),
               ),
