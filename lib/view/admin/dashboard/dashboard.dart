@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
+import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
@@ -19,14 +20,29 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   final _storage = const FlutterSecureStorage();
+  String? _fullName;
+  String? designation;
+  String? _imageUrl;
 
   Future<String?> _getSid() async {
     return await _storage.read(key: "sid");
   }
 
+  Future<void> _userdetails() async {
+    final name = await _storage.read(key: 'employee_full_name');
+    final designationValue = await _storage.read(key: 'designation');
+    final imageUrl = await _storage.read(key: 'image');
+    setState(() {
+      _fullName = name;
+      designation = designationValue;
+      _imageUrl = imageUrl;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _userdetails();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       Provider.of<AllEmployeesController>(
         context,
@@ -38,6 +54,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         context,
         listen: false,
       ).fetchprojectlist();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserDetailsController>().getUserDetails();
     });
   }
 
@@ -111,13 +130,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
               // Header Section
               Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 25,
-                    backgroundColor: Color(0xFF1C7690),
-                    child: Icon(Icons.person, size: 30, color: Colors.white),
+                    backgroundColor: const Color(0xFF1C7690),
+                    child: _imageUrl?.isEmpty ?? true
+                        ? const Icon(Icons.person)
+                        : Image.asset(
+                            _imageUrl!,
+                            width: 30,
+                            height: 30,
+                            color: Colors.white,
+                          ),
                   ),
                   const SizedBox(width: 15),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -131,7 +157,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               ),
                             ),
                             Text(
-                              'Admin !',
+                              '${_fullName ?? 'User'} !',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -141,7 +167,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ],
                         ),
                         Text(
-                          'Team Lead',
+                          designation ?? '',
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],

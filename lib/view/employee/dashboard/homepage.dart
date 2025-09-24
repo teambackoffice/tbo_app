@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/task_count_controller.dart';
+import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 import 'package:tbo_app/view/employee/dashboard/high_task_details.dart';
@@ -31,6 +32,9 @@ class _HomepageState extends State<Homepage> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskByEmployeeController>().fetchTasks();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserDetailsController>().getUserDetails();
     });
   }
 
