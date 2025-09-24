@@ -133,15 +133,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   CircleAvatar(
                     radius: 25,
                     backgroundColor: const Color(0xFF1C7690),
-                    child: _imageUrl?.isEmpty ?? true
+                    child: (_imageUrl == null || _imageUrl!.isEmpty)
                         ? const Icon(Icons.person)
-                        : Image.asset(
-                            _imageUrl!,
-                            width: 30,
-                            height: 30,
-                            color: Colors.white,
+                        : ClipOval(
+                            child: Image.network(
+                              _imageUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                   ),
+
                   const SizedBox(width: 15),
                   Expanded(
                     child: Column(

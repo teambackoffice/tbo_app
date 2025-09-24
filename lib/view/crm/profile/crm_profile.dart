@@ -16,6 +16,30 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
   final LoginService _loginService = LoginService();
   String? fullName;
 
+  final _storage = const FlutterSecureStorage();
+  String? _fullName;
+  String? designation;
+  String? _imageUrl;
+  String? _employeeId;
+  String? _email;
+  String? _phone;
+  Future<void> _userdetails() async {
+    final name = await _storage.read(key: 'employee_full_name');
+    final designationValue = await _storage.read(key: 'designation');
+    final imageUrl = await _storage.read(key: 'image');
+    final employeeId = await _storage.read(key: 'employee_original_id');
+    final email = await _storage.read(key: 'email');
+    final phone = await _storage.read(key: 'mobileNo');
+    setState(() {
+      _fullName = name;
+      designation = designationValue;
+      _imageUrl = imageUrl;
+      _employeeId = employeeId;
+      _email = email;
+      _phone = phone;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +80,7 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
                   ),
                   child: ClipOval(
                     child: Image.network(
-                      'https://cdn.prod.website-files.com/5fbb9b89508062592a9731b1/6448c1ce35d6ffe59e4d6f46_GettyImages-1399565382.jpg',
+                      _imageUrl ?? '',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(
@@ -92,7 +116,7 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "$fullName",
+                        _fullName ?? 'CRM',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -149,8 +173,8 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        "+91 8129904187",
+                      Text(
+                        _phone ?? '',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -173,8 +197,8 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        "danishh@gmail.com",
+                      Text(
+                        _email ?? '',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -197,8 +221,8 @@ class _CRMProfilePageState extends State<CRMProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        "TB044273336",
+                      Text(
+                        _employeeId ?? '',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

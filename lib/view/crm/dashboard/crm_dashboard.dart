@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/services/login_service.dart';
@@ -62,6 +63,20 @@ class CRMDashboardPage extends StatefulWidget {
 class _CRMDashboardPageState extends State<CRMDashboardPage> {
   final LoginService _loginService = LoginService();
   String? fullName;
+  final _storage = const FlutterSecureStorage();
+  String? _fullName;
+  String? designation;
+  String? _imageUrl;
+  Future<void> _userdetails() async {
+    final name = await _storage.read(key: 'employee_full_name');
+    final designationValue = await _storage.read(key: 'designation');
+    final imageUrl = await _storage.read(key: 'image');
+    setState(() {
+      _fullName = name;
+      designation = designationValue;
+      _imageUrl = imageUrl;
+    });
+  }
 
   @override
   void initState() {
@@ -73,6 +88,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
       ).fetchAllLeadList();
     });
     _loadUserInfo();
+    _userdetails();
   }
 
   Future<void> _loadUserInfo() async {
@@ -95,18 +111,24 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
               // Profile Section
               Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 25,
-                    backgroundImage: NetworkImage(
-                      "https://cdn.prod.website-files.com/5fbb9b89508062592a9731b1/6448c1ce35d6ffe59e4d6f46_GettyImages-1399565382.jpg", // Replace with actual image
-                    ),
+                    backgroundColor: const Color(0xFF1C7690),
+                    child: _imageUrl?.isEmpty ?? true
+                        ? Icon(Icons.person)
+                        : Image.asset(
+                            _imageUrl!,
+                            width: 30,
+                            height: 30,
+                            color: Colors.white,
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Hello $fullName !",
+                        "Hello ${_fullName ?? ''}!",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -115,7 +137,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        "BDE",
+                        designation ?? 'BDE',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
