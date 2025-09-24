@@ -176,35 +176,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
               const SizedBox(height: 30),
 
               // Search Bar
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color(0xFF129476).withOpacity(1),
-                  ),
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search here...',
-                    hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
-                    suffixIcon: Icon(Icons.search, color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 15,
-                    ),
-                  ),
-                ),
-              ),
-
+              // Container(
+              //   decoration: BoxDecoration(
+              //     border: Border.all(
+              //       color: const Color(0xFF129476).withOpacity(1),
+              //     ),
+              //     color: Colors.white,
+              //     borderRadius: BorderRadius.circular(10),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: Colors.black.withOpacity(0.05),
+              //         blurRadius: 10,
+              //         offset: const Offset(0, 2),
+              //       ),
+              //     ],
+              //   ),
+              //   child: const TextField(
+              //     decoration: InputDecoration(
+              //       hintText: 'Search here...',
+              //       hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+              //       suffixIcon: Icon(Icons.search, color: Colors.grey),
+              //       border: InputBorder.none,
+              //       contentPadding: EdgeInsets.symmetric(
+              //         horizontal: 20,
+              //         vertical: 15,
+              //       ),
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 20),
 
               // Ongoing Tasks Section
@@ -212,7 +211,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Ongoing Tasks',
+                    'Ongoing Projects',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

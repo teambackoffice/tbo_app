@@ -1,7 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/task_count_controller.dart';
+import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 import 'package:tbo_app/view/employee/dashboard/high_task_details.dart';
 import 'package:tbo_app/view/employee/dashboard/medium_task_details.dart';
@@ -26,6 +28,9 @@ class _HomepageState extends State<Homepage> {
         listen: false,
       );
       controller.fetchTaskSummary(status: "all"); // or whatever status you need
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TaskByEmployeeController>().fetchTasks();
     });
   }
 
@@ -153,44 +158,125 @@ class _HomepageState extends State<Homepage> {
                 ),
                 const SizedBox(height: 16),
                 // Inline Task Cards (Static for now)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTaskCard(
-                        context,
-                        color: const Color(0xFF475569),
-                        priority: "High",
-                        title: "Champion\nCar Wash App",
-                        dueDate: "15-07-25",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HighTaskDetails(),
+                Consumer<TaskByEmployeeController>(
+                  builder: (context, taskController, _) {
+                    if (taskController.isLoading) {
+                      return SizedBox(
+                        height: 218,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTaskCard(
-                        context,
-                        color: const Color(0xFF129476),
-                        priority: "Medium",
-                        title: "Onshore\nWebsite",
-                        dueDate: "15-07-25",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MediumTaskDetails(),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          ],
+                        ),
+                      );
+                    }
+
+                    if (taskController.errorMessage != null) {
+                      return Container(
+                        height: 218,
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Error loading tasks",
+                                style: TextStyle(color: Colors.red.shade700),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () => taskController.fetchTasks(),
+                                child: const Text("Retry"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Filter working tasks and get first 2
+                    final workingTasks =
+                        taskController.taskListResponse?.data
+                            .where(
+                              (task) => task.status.toLowerCase() == 'open',
+                            )
+                            .take(2)
+                            .toList() ??
+                        [];
+
+                    // If no working tasks, show open tasks
+                    final tasksToShow = workingTasks.isEmpty
+                        ? (taskController.taskListResponse?.data
+                                  .take(2)
+                                  .toList() ??
+                              [])
+                        : workingTasks;
+
+                    if (tasksToShow.isEmpty) {
+                      return Container(
+                        height: 218,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "No tasks available",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        // First task or placeholder
+                        Expanded(
+                          child: tasksToShow.isNotEmpty
+                              ? _buildDynamicTaskCard(
+                                  context,
+                                  task: tasksToShow[0],
+                                )
+                              : _buildPlaceholderCard(context, "No Task"),
+                        ),
+                        const SizedBox(width: 16),
+                        // Second task or placeholder
+                        Expanded(
+                          child: tasksToShow.length > 1
+                              ? _buildDynamicTaskCard(
+                                  context,
+                                  task: tasksToShow[1],
+                                )
+                              : _buildPlaceholderCard(context, "No Task"),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
                 Row(
@@ -370,6 +456,181 @@ class _HomepageState extends State<Homepage> {
                 const SizedBox(height: 100),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicTaskCard(BuildContext context, {required Task task}) {
+    // Determine card color based on priority
+    Color cardColor;
+    Color priorityBgColor;
+
+    switch (task.priority.toLowerCase()) {
+      case 'high':
+        cardColor = const Color(0xFF475569);
+        priorityBgColor = const Color(0xFFFFE5E5);
+        break;
+      case 'medium':
+        cardColor = const Color(0xFF475569);
+        priorityBgColor = const Color(0xFFFFF3E0);
+        break;
+      case 'low':
+        cardColor = const Color(0xFF129476);
+        priorityBgColor = const Color(0xFFE0E7FF);
+        break;
+      default:
+        cardColor = const Color(0xFF64748B);
+        priorityBgColor = const Color(0xFFF1F5F9);
+    }
+
+    // Format the expected end date
+    String formattedDate = "No Due Date";
+    if (task.expEndDate != null && task.expEndDate!.isNotEmpty) {
+      try {
+        final date = DateTime.parse(task.expEndDate!);
+        formattedDate =
+            "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year.toString().substring(2)}";
+      } catch (e) {
+        formattedDate = task.expEndDate!;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      height: 218,
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: priorityBgColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              task.priority,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            task.subject.length > 20
+                ? "${task.subject.substring(0, 20)}..."
+                : task.subject,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time_rounded,
+                color: Colors.white70,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                "Progress",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "${task.progress?.toInt() ?? 0}%",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                formattedDate,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  // Navigate to task details based on priority or create a generic task detail page
+                  if (task.priority.toLowerCase() == 'high') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HighTaskDetails(),
+                      ),
+                    );
+                  } else if (task.priority.toLowerCase() == 'medium') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MediumTaskDetails(),
+                      ),
+                    );
+                  }
+                  // You might want to create a generic TaskDetailsPage and pass the task data
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_outward,
+                    color: Colors.black,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderCard(BuildContext context, String text) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      height: 218,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
