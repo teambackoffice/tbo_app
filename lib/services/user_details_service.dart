@@ -32,17 +32,6 @@ class UserDetailsService {
         // ✅ Extract user object
         final user = userDetails.message.user;
 
-        print("✅ User Details Fetched Successfully:");
-        print("Employee Full Name: ${user.employeeFullName}");
-        print("Designation: ${user.designation}");
-        print("Image: ${user.image}");
-        print("Mobile No: ${user.mobileNo}");
-        print("Email: ${user.email}");
-        print("User ID: ${user.apiKey}");
-        print("Company: ${user.employeeId}");
-        print("Department: ${user.sid}");
-        // 👉 Add more fields here if available in your modal
-
         // ✅ Store specific values in secure storage
         await _secureStorage.write(
           key: 'employee_full_name',
@@ -51,8 +40,10 @@ class UserDetailsService {
         await _secureStorage.write(key: 'designation', value: user.designation);
         await _secureStorage.write(key: 'image', value: user.image);
         await _secureStorage.write(key: 'mobile', value: user.mobileNo);
-        await _secureStorage.write(key: 'employee_original_id', value: user.employeeId);
-
+        await _secureStorage.write(
+          key: 'employee_original_id',
+          value: user.employeeId,
+        );
 
         return userDetails;
       } else {
@@ -61,7 +52,6 @@ class UserDetailsService {
         );
       }
     } catch (e) {
-      print("⚠️ Error while fetching user details: $e");
       rethrow;
     }
   }

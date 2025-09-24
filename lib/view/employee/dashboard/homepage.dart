@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/task_count_controller.dart';
@@ -19,9 +20,26 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  final _storage = const FlutterSecureStorage();
+  String? _fullName;
+  String? designation;
+  String? _imageUrl;
+
+  Future<void> _userdetails() async {
+    final name = await _storage.read(key: 'employee_full_name');
+    final designationValue = await _storage.read(key: 'designation');
+    final imageUrl = await _storage.read(key: 'image');
+    setState(() {
+      _fullName = name;
+      designation = designationValue;
+      _imageUrl = imageUrl;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _userdetails();
     // Initialize the task count data when the page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = Provider.of<TaskCountController>(
@@ -69,11 +87,11 @@ class _HomepageState extends State<Homepage> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Hello Ahmad !",
+                              "Hello ${_fullName ?? ''} !",
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -82,7 +100,7 @@ class _HomepageState extends State<Homepage> {
                             ),
                             SizedBox(height: 2),
                             Text(
-                              "Web Designer",
+                              designation ?? '',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,

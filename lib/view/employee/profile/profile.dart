@@ -12,14 +12,18 @@ class ProfilePage extends StatelessWidget {
   Future<Map<String, String?>> _loadProfileData() async {
     final name = await storage.read(key: "username");
     final email = await storage.read(key: "email");
-    final phone = await storage.read(key: "phone");
-    final employeeId = await storage.read(key: "employeeId");
+    final phone = await storage.read(key: "mobileNo");
+    final employeeId = await storage.read(key: "employee_original_id");
+    final designation = await storage.read(key: "designation");
+    final imageUrl = await storage.read(key: "image");
 
     return {
       "name": name ?? "Unknown",
       "email": email ?? "Not available",
       "phone": phone ?? "Not available",
       "employeeId": employeeId ?? "N/A",
+      "designation": designation ?? "Not specified",
+      "imageUrl": imageUrl ?? "",
     };
   }
 
@@ -59,7 +63,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                       child: ClipOval(
                         child: Image.network(
-                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+                          profile["imageUrl"] ?? '',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
@@ -114,8 +118,9 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            "Web Designer", // you can also store this in secure storage
+                          Text(
+                            profile["designation"] ??
+                                "", // you can also store this in secure storage
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
