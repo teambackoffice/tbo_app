@@ -41,6 +41,9 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   shared_preferences: ^2.5.3
   intl: ^0.20.2
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.2
+  onesignal_flutter: ^5.3.4
 
 dev_dependencies:
   flutter_test:

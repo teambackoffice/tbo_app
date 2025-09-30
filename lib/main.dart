@@ -1,5 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/api/firebase_api.dart';
+import 'package:tbo_app/api/one_signal.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/create_new_lead_controller.dart';
@@ -13,6 +16,7 @@ import 'package:tbo_app/controller/employee_handover_controller.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/employee_task_update_contoller.dart';
 import 'package:tbo_app/controller/get_handover_controller.dart';
+import 'package:tbo_app/controller/get_notification_controller.dart';
 import 'package:tbo_app/controller/get_timesheet_controller.dart';
 import 'package:tbo_app/controller/lead_segment_controller.dart';
 import 'package:tbo_app/controller/leads_details_controller.dart';
@@ -23,12 +27,20 @@ import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
+import 'package:tbo_app/firebase_options.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 import 'package:tbo_app/view/login_page/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Initialize Firebase Messaging
+  final firebaseApi = FirebaseApi();
+  await firebaseApi.initNotification();
+  // ✅ Initialize OneSignal
+  await OneSignalApi.initOneSignal();
   runApp(const MyApp());
 }
 
@@ -109,8 +121,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<UserDetailsController>(
           create: (_) => UserDetailsController(),
         ),
+        ChangeNotifierProvider<NotificationProvider>(
+          create: (_) => NotificationProvider(),
+        ),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(

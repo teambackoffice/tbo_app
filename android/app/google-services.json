@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969223638649",
+    "project_id": "tbo-app-3535e",
+    "storage_bucket": "tbo-app-3535e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969223638649:android:907b9ff8034f6f93cacea8",
+        "android_client_info": {
+          "package_name": "com.example.tbo_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMxe-U0FdoO7JimFXoNIsO7tnIyanNPLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
