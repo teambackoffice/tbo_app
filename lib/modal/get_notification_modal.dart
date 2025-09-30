@@ -67,15 +67,15 @@ class MessageMessage {
 
 class Pagination {
   int currentPage;
-  int nextPage;
-  String prevPage;
+  dynamic nextPage;
+  dynamic prevPage;
   int totalPages;
   int totalRecords;
 
   Pagination({
     required this.currentPage,
-    required this.nextPage,
-    required this.prevPage,
+    this.nextPage,
+    this.prevPage,
     required this.totalPages,
     required this.totalRecords,
   });
@@ -99,7 +99,7 @@ class Pagination {
 
 class Title {
   DateTime dateTime;
-  ForUser forUser;
+  String forUser; // Changed from ForUser enum to String
   String documentName;
   DocumentType documentType;
   String emailContent;
@@ -116,7 +116,7 @@ class Title {
 
   factory Title.fromJson(Map<String, dynamic> json) => Title(
     dateTime: DateTime.parse(json["date_time"]),
-    forUser: forUserValues.map[json["for_user"]]!,
+    forUser: json["for_user"], // Direct string assignment
     documentName: json["document_name"],
     documentType: documentTypeValues.map[json["document_type"]]!,
     emailContent: json["email_content"],
@@ -125,7 +125,7 @@ class Title {
 
   Map<String, dynamic> toJson() => {
     "date_time": dateTime.toIso8601String(),
-    "for_user": forUserValues.reverse[forUser],
+    "for_user": forUser, // Direct string serialization
     "document_name": documentName,
     "document_type": documentTypeValues.reverse[documentType],
     "email_content": emailContent,
@@ -133,17 +133,17 @@ class Title {
   };
 }
 
+// Remove these lines completely:
+// enum ForUser { EMPLOY_GMAIL_COM }
+// final forUserValues = EnumValues({
+//   "employ@gmail.com": ForUser.EMPLOY_GMAIL_COM,
+// });
+
 enum DocumentType { EMPLOYEE_DATE_REQUEST, TASK }
 
 final documentTypeValues = EnumValues({
   "Employee Date Request": DocumentType.EMPLOYEE_DATE_REQUEST,
   "Task": DocumentType.TASK,
-});
-
-enum ForUser { EMPLOY_GMAIL_COM }
-
-final forUserValues = EnumValues({
-  "employ@gmail.com": ForUser.EMPLOY_GMAIL_COM,
 });
 
 class EnumValues<T> {

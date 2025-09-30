@@ -7,9 +7,9 @@ import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/modal/project_list_modal.dart';
 import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
-import 'package:tbo_app/view/admin/dashboard/notification/notification.dart';
 import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.dart';
 import 'package:tbo_app/view/admin/task/task.dart';
+import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -181,7 +181,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const NotificationsPage(),
+                          builder: (context) => const NotificationsScreen(),
                         ),
                       );
                     },
