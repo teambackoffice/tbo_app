@@ -26,15 +26,30 @@ class EmployeeAssignmentsService {
         baseUrl,
       ).replace(queryParameters: {'project': projectId});
 
+      print("📡 Request URL: $uri");
+      print("📦 Request Headers: {Cookie: sid=$sid}");
+
       final response = await http.get(
         uri,
         headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
       );
 
+      print("✅ Status Code: ${response.statusCode}");
+      print("📥 Raw Response Body: ${response.body}");
+
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-          return EmployeeAssignments.fromJson(decoded);
+          print("🔍 Decoded JSON: $decoded");
+
+          final employeeAssignments = EmployeeAssignments.fromJson(decoded);
+
+          // 🔥 Print details from your modal (adjust based on your model fields)
+          for (var emp in employeeAssignments.data) {
+            print("👤 Employee Assignment: ${emp.toJson()}");
+          }
+
+          return employeeAssignments;
         } catch (e) {
           throw Exception('Failed to parse response: $e');
         }

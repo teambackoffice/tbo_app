@@ -1,8 +1,7 @@
-// To parse this JSON data, do
-//
-//     final notificationModal = notificationModalFromJson(jsonString);
-
 import 'dart:convert';
+
+/// To parse JSON data:
+/// final notificationModal = NotificationModal.fromJson(jsonDecode(jsonString));
 
 NotificationModal notificationModalFromJson(String str) =>
     NotificationModal.fromJson(json.decode(str));
@@ -10,41 +9,49 @@ NotificationModal notificationModalFromJson(String str) =>
 String notificationModalToJson(NotificationModal data) =>
     json.encode(data.toJson());
 
+/// =================== Notification Modal ===================
 class NotificationModal {
-  NotificationModalMessage message;
+  final NotificationModalMessage message;
 
   NotificationModal({required this.message});
 
-  factory NotificationModal.fromJson(Map<String, dynamic> json) =>
-      NotificationModal(
-        message: NotificationModalMessage.fromJson(json["message"]),
-      );
+  /// Flattened notifications list for easy access
+  List<Title> get notifications => message.message.title;
 
-  Map<String, dynamic> toJson() => {"message": message.toJson()};
+  factory NotificationModal.fromJson(Map<String, dynamic> json) {
+    return NotificationModal(
+      message: NotificationModalMessage.fromJson(json['message'] ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'message': message.toJson()};
 }
 
+/// =================== Notification Modal Message ===================
 class NotificationModalMessage {
-  MessageMessage message;
-  bool success;
+  final MessageMessage message;
+  final bool success;
 
   NotificationModalMessage({required this.message, required this.success});
 
-  factory NotificationModalMessage.fromJson(Map<String, dynamic> json) =>
-      NotificationModalMessage(
-        message: MessageMessage.fromJson(json["message"]),
-        success: json["success"],
-      );
+  factory NotificationModalMessage.fromJson(Map<String, dynamic> json) {
+    return NotificationModalMessage(
+      message: MessageMessage.fromJson(json['message'] ?? {}),
+      success: json['success'] ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    "message": message.toJson(),
-    "success": success,
+    'message': message.toJson(),
+    'success': success,
   };
 }
 
+/// =================== Inner Message ===================
 class MessageMessage {
-  List<Title> title;
-  String msg;
-  Pagination pagination;
+  final List<Title> title;
+  final String msg;
+  final Pagination pagination;
 
   MessageMessage({
     required this.title,
@@ -52,25 +59,30 @@ class MessageMessage {
     required this.pagination,
   });
 
-  factory MessageMessage.fromJson(Map<String, dynamic> json) => MessageMessage(
-    title: List<Title>.from(json["Title"].map((x) => Title.fromJson(x))),
-    msg: json["msg"],
-    pagination: Pagination.fromJson(json["pagination"]),
-  );
+  factory MessageMessage.fromJson(Map<String, dynamic> json) {
+    return MessageMessage(
+      title: (json['Title'] as List<dynamic>? ?? [])
+          .map((x) => Title.fromJson(x))
+          .toList(),
+      msg: json['msg'] ?? '',
+      pagination: Pagination.fromJson(json['pagination'] ?? {}),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    "Title": List<dynamic>.from(title.map((x) => x.toJson())),
-    "msg": msg,
-    "pagination": pagination.toJson(),
+    'Title': title.map((x) => x.toJson()).toList(),
+    'msg': msg,
+    'pagination': pagination.toJson(),
   };
 }
 
+/// =================== Pagination ===================
 class Pagination {
-  int currentPage;
-  dynamic nextPage;
-  dynamic prevPage;
-  int totalPages;
-  int totalRecords;
+  final int currentPage;
+  final dynamic nextPage;
+  final dynamic prevPage;
+  final int totalPages;
+  final int totalRecords;
 
   Pagination({
     required this.currentPage,
@@ -80,30 +92,34 @@ class Pagination {
     required this.totalRecords,
   });
 
-  factory Pagination.fromJson(Map<String, dynamic> json) => Pagination(
-    currentPage: json["current_page"],
-    nextPage: json["next_page"],
-    prevPage: json["prev_page"],
-    totalPages: json["total_pages"],
-    totalRecords: json["total_records"],
-  );
+  factory Pagination.fromJson(Map<String, dynamic> json) {
+    return Pagination(
+      currentPage: json['current_page'] ?? 0,
+      nextPage: json['next_page'],
+      prevPage: json['prev_page'],
+      totalPages: json['total_pages'] ?? 0,
+      totalRecords: json['total_records'] ?? 0,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    "current_page": currentPage,
-    "next_page": nextPage,
-    "prev_page": prevPage,
-    "total_pages": totalPages,
-    "total_records": totalRecords,
+    'current_page': currentPage,
+    'next_page': nextPage,
+    'prev_page': prevPage,
+    'total_pages': totalPages,
+    'total_records': totalRecords,
   };
 }
 
+/// =================== Notification Item ===================
 class Title {
-  DateTime dateTime;
-  String forUser; // Changed from ForUser enum to String
-  String documentName;
-  DocumentType documentType;
-  String emailContent;
-  String profilePicture;
+  final DateTime dateTime;
+  final String forUser;
+  final String documentName;
+  final DocumentType documentType;
+  final String emailContent;
+  final String profilePicture;
+  bool isRead;
 
   Title({
     required this.dateTime,
@@ -112,43 +128,73 @@ class Title {
     required this.documentType,
     required this.emailContent,
     required this.profilePicture,
+    this.isRead = false,
   });
 
-  factory Title.fromJson(Map<String, dynamic> json) => Title(
-    dateTime: DateTime.parse(json["date_time"]),
-    forUser: json["for_user"], // Direct string assignment
-    documentName: json["document_name"],
-    documentType: documentTypeValues.map[json["document_type"]]!,
-    emailContent: json["email_content"],
-    profilePicture: json["profile_picture"],
-  );
+  factory Title.fromJson(Map<String, dynamic> json) {
+    return Title(
+      dateTime: json['date_time'] != null
+          ? DateTime.tryParse(json['date_time']) ?? DateTime.now()
+          : DateTime.now(),
+      forUser: json['for_user'] ?? '',
+      documentName: json['document_name'] ?? '',
+      documentType:
+          documentTypeValues.map[json['document_type']] ?? DocumentType.UNKNOWN,
+      emailContent: json['email_content'] ?? '',
+      profilePicture: json['profile_picture'] ?? '',
+      isRead: json['is_read'] ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    "date_time": dateTime.toIso8601String(),
-    "for_user": forUser, // Direct string serialization
-    "document_name": documentName,
-    "document_type": documentTypeValues.reverse[documentType],
-    "email_content": emailContent,
-    "profile_picture": profilePicture,
+    'date_time': dateTime.toIso8601String(),
+    'for_user': forUser,
+    'document_name': documentName,
+    'document_type': documentTypeValues.reverse[documentType],
+    'email_content': emailContent,
+    'profile_picture': profilePicture,
+    'is_read': isRead,
   };
+
+  Title copyWith({
+    DateTime? dateTime,
+    String? forUser,
+    String? documentName,
+    DocumentType? documentType,
+    String? emailContent,
+    String? profilePicture,
+    bool? isRead,
+  }) {
+    return Title(
+      dateTime: dateTime ?? this.dateTime,
+      forUser: forUser ?? this.forUser,
+      documentName: documentName ?? this.documentName,
+      documentType: documentType ?? this.documentType,
+      emailContent: emailContent ?? this.emailContent,
+      profilePicture: profilePicture ?? this.profilePicture,
+      isRead: isRead ?? this.isRead,
+    );
+  }
 }
 
-// Remove these lines completely:
-// enum ForUser { EMPLOY_GMAIL_COM }
-// final forUserValues = EnumValues({
-//   "employ@gmail.com": ForUser.EMPLOY_GMAIL_COM,
-// });
-
-enum DocumentType { EMPLOYEE_DATE_REQUEST, TASK }
+/// =================== Document Type Enum ===================
+enum DocumentType {
+  EMPLOYEE_DATE_REQUEST,
+  TASK,
+  PUSH_NOTIFICATION_SETTINGS,
+  UNKNOWN, // fallback for unknown types
+}
 
 final documentTypeValues = EnumValues({
   "Employee Date Request": DocumentType.EMPLOYEE_DATE_REQUEST,
   "Task": DocumentType.TASK,
+  "Push Notification Settings": DocumentType.PUSH_NOTIFICATION_SETTINGS,
 });
 
+/// =================== EnumValues Helper ===================
 class EnumValues<T> {
-  Map<String, T> map;
-  late Map<T, String> reverseMap;
+  final Map<String, T> map;
+  late final Map<T, String> reverseMap;
 
   EnumValues(this.map);
 

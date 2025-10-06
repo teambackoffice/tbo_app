@@ -1,4 +1,4 @@
-package com.example.tbo_app
+package com.tbo_smart
 
 import io.flutter.embedding.android.FlutterActivity
 

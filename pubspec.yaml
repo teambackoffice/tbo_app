@@ -44,10 +44,18 @@ dependencies:
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.2
   onesignal_flutter: ^5.3.4
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/TBO Smart_Logo.png"
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

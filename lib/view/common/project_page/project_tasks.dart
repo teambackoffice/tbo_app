@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/employee_assignments_controller.dart';
+import 'package:tbo_app/controller/login_controller.dart';
 import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
 import 'package:tbo_app/modal/employee_assignment_modal.dart';
+import 'package:tbo_app/services/post_notification_service.dart';
 
 class ProjectTasks extends StatefulWidget {
   final String? projectId;
@@ -32,8 +35,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
       builder: (BuildContext context) {
         return AddTaskDialog(
           onTaskAdded: (String project, String task, String employee) {
-            // TODO: Implement API call to add new task
-            // For now, refresh the data
             Provider.of<EmployeeAssignmentsController>(
               context,
               listen: false,
@@ -48,6 +49,16 @@ class _ProjectTasksState extends State<ProjectTasks> {
     BuildContext context,
     TaskAssignment taskAssignment,
   ) {
+    // Pre-load employees if not already loaded
+    final allEmployeesController = Provider.of<AllEmployeesController>(
+      context,
+      listen: false,
+    );
+
+    if (allEmployeesController.allEmployees == null) {
+      allEmployeesController.fetchallemployees();
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -77,13 +88,15 @@ class _ProjectTasksState extends State<ProjectTasks> {
     );
   }
 
+  // Add this import at the top of your file
+
+  // Modified _assignEmployeeToTask method
   void _assignEmployeeToTask(
     String taskId,
     String employeeId,
     String employeeName,
   ) async {
     try {
-      // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -104,45 +117,79 @@ class _ProjectTasksState extends State<ProjectTasks> {
         ),
       );
 
-      // Get the assignment controller to find the assignment ID
       final assignmentController = Provider.of<EmployeeAssignmentsController>(
         context,
         listen: false,
       );
 
-      // Find the assignment that contains this task
       String? assignmentId;
+      TaskAssignment? currentTask;
+
       for (var assignment in assignmentController.allLeads?.data ?? []) {
         for (var task in assignment.taskAssignments) {
           if (task.task == taskId) {
             assignmentId = assignment.assignmentId;
+            currentTask = task;
             break;
           }
         }
         if (assignmentId != null) break;
       }
 
-      if (assignmentId == null) {
+      if (assignmentId == null || currentTask == null) {
         throw Exception('Assignment not found for task');
       }
 
-      // Create the task assignment payload
       final taskAssignments = [
         {"task_id": taskId, "employee_id": employeeId},
       ];
 
-      // Call the API using TaskEmployeeAssignController
       final taskAssignController = TaskEmployeeAssignController();
 
       await taskAssignController.updateAssignmentEmployees(
         assignmentId: assignmentId,
         taskAssignments: taskAssignments,
-        subTaskAssignments: [], // Empty for now, add if you have subtasks
+        subTaskAssignments: [],
       );
 
-      // Check for errors
       if (taskAssignController.error != null) {
         throw Exception(taskAssignController.error);
+      }
+
+      // Get employee email from secure storage
+      final storage = FlutterSecureStorage();
+      String? employeeEmail = await storage.read(key: "email");
+
+      if (employeeEmail == null || employeeEmail.isEmpty) {
+        print('Warning: Employee email not found, skipping notification');
+      } else {
+        // Get current user's name for notification
+        final loginController = Provider.of<LoginController>(
+          context,
+          listen: false,
+        );
+
+        String assignerName = 'Admin';
+
+        // Send notification to the employee
+        print('Attempting to send notification...');
+        print('Employee ID: $employeeId');
+        print('Employee Email: $employeeEmail');
+        print('Task: ${currentTask.taskSubject}');
+
+        final notificationSent =
+            await PostNotificationService.sendTaskAssignmentNotification(
+              employeeEmail: "employ@gmail.com",
+              taskSubject: currentTask.taskSubject,
+              taskId: taskId,
+              assignerName: assignerName,
+            );
+
+        if (!notificationSent) {
+          print('Warning: Notification failed to send, but task was assigned');
+        } else {
+          print('Notification sent successfully!');
+        }
       }
 
       // Refresh the task list
@@ -151,7 +198,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
         listen: false,
       ).feetchemployeeassignments(projectId: widget.projectId!);
 
-      // Show success message
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -161,7 +207,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
         ),
       );
     } catch (e) {
-      // Hide loading and show error
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -246,7 +291,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
           final assignments =
               employeeAssignmentsController.allLeads?.data ?? [];
 
-          // Flatten all task assignments from all assignments
           final List<TaskAssignment> allTasks = [];
           for (var assignment in assignments) {
             allTasks.addAll(assignment.taskAssignments);
@@ -276,8 +320,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
                 return TaskCard(
                   taskAssignment: allTasks[index],
                   onDelete: () {
-                    // TODO: Implement API call to delete task
-                    // For now, show a confirmation dialog
                     _showDeleteConfirmation(context, allTasks[index]);
                   },
                   onAssignEmployee: () {
@@ -309,8 +351,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // TODO: Implement actual delete API call
-                // For now, just refresh the data
                 Provider.of<EmployeeAssignmentsController>(
                   context,
                   listen: false,
@@ -554,7 +594,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Close button
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(16),
@@ -580,14 +619,11 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                 ],
               ),
             ),
-
-            // Form content
             Padding(
               padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Project field
                   Text(
                     'Project',
                     style: TextStyle(
@@ -615,10 +651,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
-
                   SizedBox(height: 24),
-
-                  // Task field
                   Text(
                     'Task',
                     style: TextStyle(
@@ -646,10 +679,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
-
                   SizedBox(height: 24),
-
-                  // Employee field
                   Text(
                     'Employee',
                     style: TextStyle(
@@ -677,10 +707,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
-
                   SizedBox(height: 32),
-
-                  // Add Employee button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -728,7 +755,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   }
 }
 
-// Employee Assignment Dialog
 class EmployeeAssignmentDialog extends StatefulWidget {
   final String taskId;
   final String taskSubject;
@@ -798,7 +824,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
         ),
         child: Column(
           children: [
-            // Header
             Container(
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -853,8 +878,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                 ],
               ),
             ),
-
-            // Search Bar
             Padding(
               padding: EdgeInsets.all(16),
               child: Container(
@@ -887,8 +910,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                 ),
               ),
             ),
-
-            // Employee List
             Expanded(
               child: Consumer<AllEmployeesController>(
                 builder: (context, controller, child) {
@@ -955,7 +976,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                     );
                   }
 
-                  // Initialize filtered list if empty
                   if (filteredEmployees.isEmpty &&
                       searchController.text.isEmpty) {
                     filteredEmployees = controller.allEmployees!.message;
@@ -1016,7 +1036,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                           ),
                           child: Row(
                             children: [
-                              // Employee Avatar
                               CircleAvatar(
                                 radius: 24,
                                 backgroundColor: Color(0xFF1C7690),
@@ -1038,8 +1057,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                                     : null,
                               ),
                               SizedBox(width: 12),
-
-                              // Employee Details
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1072,8 +1089,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                                   ],
                                 ),
                               ),
-
-                              // Selection Indicator
                               if (isSelected)
                                 Container(
                                   width: 24,
@@ -1097,8 +1112,6 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                 },
               ),
             ),
-
-            // Action Buttons
             Container(
               padding: EdgeInsets.all(16),
               child: Row(

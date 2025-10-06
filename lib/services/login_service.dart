@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:tbo_app/api/one_signal.dart'; // ✅ Import OneSignal service
 import 'package:tbo_app/config/api_constants.dart';
 
 class LoginService {
@@ -14,16 +16,13 @@ class LoginService {
     required String password,
   }) async {
     try {
-      var uri = Uri.parse(
-        "$loginUrl?usr=$username&pwd=$password",
-      ); // API expects query params
+      var uri = Uri.parse("$loginUrl?usr=$username&pwd=$password");
 
       var request = http.Request('POST', uri);
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
         final body = await response.stream.bytesToString();
-
         final data = json.decode(body);
 
         // Extract sid from cookie
@@ -52,10 +51,31 @@ class LoginService {
             );
           }
 
-          // email
+          // email - Link to OneSignal
           final email = data["message"]?["email"];
           if (email != null) {
             await _storage.write(key: "email", value: email);
+
+            // ✅ Link user to OneSignal
+            try {
+              await OneSignal.login(email);
+              print('✅ OneSignal: User linked with email: $email');
+
+              // ✅ Add tags for targeted notifications
+              final tags = <String, String>{
+                'email': email,
+                'username': username,
+              };
+
+              if (roleProfileName != null) {
+                tags['role'] = roleProfileName.toLowerCase();
+              }
+
+              await OneSignalService().sendTags(tags);
+              print('✅ OneSignal: Tags added - $tags');
+            } catch (e) {
+              print('⚠️ OneSignal error: $e');
+            }
           }
 
           // full_name
@@ -63,10 +83,22 @@ class LoginService {
           if (fullName != null) {
             await _storage.write(key: "full_name", value: fullName);
           }
+
+          // employee_id (for Employee role)
           if (roleProfileName == "Employee") {
             final employeeName = data["message"]?["employee"]?["name"];
             if (employeeName != null) {
               await _storage.write(key: "employee_id", value: employeeName);
+
+              // ✅ Add employee_id tag
+              try {
+                await OneSignalService().sendTags({
+                  'employee_id': employeeName,
+                });
+                print('✅ OneSignal: Employee ID tag added: $employeeName');
+              } catch (e) {
+                print('⚠️ OneSignal tag error: $e');
+              }
             }
           }
         }
@@ -89,8 +121,8 @@ class LoginService {
   Future<String?> getStoredRoleProfileName() async =>
       await _storage.read(key: "role_profile_name");
   Future<String?> getStoredEmail() async => await _storage.read(key: "email");
-
-  // ✅ NEW: get stored full_name
+  Future<String?> getStoredEmployeeId() async =>
+      await _storage.read(key: "employee_id");
   Future<String?> getStoredFullName() async =>
       await _storage.read(key: "full_name");
 
@@ -98,7 +130,7 @@ class LoginService {
     required String sid,
     required String username,
     String? email,
-    String? fullName, // optional
+    String? fullName,
   }) async {
     await _storage.write(key: "sid", value: sid);
     await _storage.write(key: "username", value: username);
@@ -111,6 +143,14 @@ class LoginService {
   }
 
   Future<void> logout() async {
+    // ✅ Remove OneSignal user before clearing storage
+    try {
+      await OneSignalService().removeExternalUserId();
+      print('✅ OneSignal: User unlinked on logout');
+    } catch (e) {
+      print('⚠️ OneSignal logout error: $e');
+    }
+
     await _storage.deleteAll();
   }
 }

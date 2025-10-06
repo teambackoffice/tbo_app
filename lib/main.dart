@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/api/firebase_api.dart';
-import 'package:tbo_app/api/one_signal.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/create_new_lead_controller.dart';
@@ -33,15 +33,28 @@ import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 import 'package:tbo_app/view/login_page/login_page.dart';
 
+// ✅ Global navigator key for navigation from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Initialize Firebase Messaging
   final firebaseApi = FirebaseApi();
   await firebaseApi.initNotification();
-  // ✅ Initialize OneSignal
-  await OneSignalApi.initOneSignal();
+
+  // ✅ Initialize OneSignal (single initialization)
+  // await OneSignalService().initialize();
+
   runApp(const MyApp());
+  // Enable verbose logging for debugging (remove in production)
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  // Initialize with your OneSignal App ID
+  OneSignal.initialize("6a1f3d55-06a2-4260-81fd-95f4f41ab003");
+  // Use this method to prompt for push notifications.
+  // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
+  OneSignal.Notifications.requestPermission(false);
 }
 
 class MyApp extends StatelessWidget {
@@ -69,7 +82,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<AllLeadsDetailsController>(
           create: (_) => AllLeadsDetailsController(),
         ),
-
         ChangeNotifierProvider<AllEmployeesController>(
           create: (_) => AllEmployeesController(),
         ),
@@ -128,7 +140,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
+        title: 'TBO App',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
@@ -166,7 +178,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
   }
 
-  // Method to get the appropriate widget based on role
   Widget _getHomePageBasedOnRole(String? role) {
     if (role == null) {
       return const LoginPage();
@@ -190,24 +201,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading while checking stored session
     if (_isInitializing) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Color(0xFFFAF9F6),
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF1C7690)),
-        ),
+        body: Center(child: Image.asset("assets/TBO Smart_Logo.png")),
       );
     }
 
     return Consumer<LoginController>(
       builder: (context, authController, child) {
-        // ✅ If user is logged in, navigate based on role
         if (authController.isLoggedIn) {
           return _getHomePageBasedOnRole(authController.currentRole);
         }
-
-        // ✅ If not logged in, show login page
         return const LoginPage();
       },
     );
