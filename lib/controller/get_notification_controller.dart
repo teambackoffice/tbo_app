@@ -30,9 +30,6 @@ class NotificationProvider extends ChangeNotifier {
     try {
       _notificationModal = await _service.fetchNotifications(userId: userId);
 
-      // Set OneSignal external user ID
-      await OneSignalService().setExternalUserId(userId);
-
       print(
         "✅ Loaded ${_notificationModal?.message.message.title.length ?? 0} notifications",
       );

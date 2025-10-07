@@ -31,6 +31,7 @@ class Message {
   String name;
   String employeeName;
   String department;
+  String userId;
   String designation;
   String image;
   String imageUrl;
@@ -40,6 +41,7 @@ class Message {
     required this.employeeName,
     required this.department,
     required this.designation,
+    required this.userId,
     required this.image,
     required this.imageUrl,
   });
@@ -49,6 +51,7 @@ class Message {
     employeeName: json["employee_name"],
     department: json["department"],
     designation: json["designation"],
+    userId: json["user_id"],
     image: json["image"],
     imageUrl: json["image_url"],
   );
@@ -58,6 +61,7 @@ class Message {
     "employee_name": employeeName,
     "department": department,
     "designation": designation,
+    "user_id": userId,
     "image": image,
     "image_url": imageUrl,
   };

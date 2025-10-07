@@ -7,8 +7,6 @@ import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
-import 'package:tbo_app/view/employee/dashboard/high_task_details.dart';
-import 'package:tbo_app/view/employee/dashboard/medium_task_details.dart';
 import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
 class Homepage extends StatefulWidget {
@@ -578,39 +576,6 @@ class _HomepageState extends State<Homepage> {
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  // Navigate to task details based on priority or create a generic task detail page
-                  if (task.priority.toLowerCase() == 'high') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HighTaskDetails(),
-                      ),
-                    );
-                  } else if (task.priority.toLowerCase() == 'medium') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MediumTaskDetails(),
-                      ),
-                    );
-                  }
-                  // You might want to create a generic TaskDetailsPage and pass the task data
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_outward,
-                    color: Colors.black,
-                    size: 16,
-                  ),
                 ),
               ),
             ],

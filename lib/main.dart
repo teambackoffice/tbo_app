@@ -44,17 +44,55 @@ void main() async {
   final firebaseApi = FirebaseApi();
   await firebaseApi.initNotification();
 
-  // ✅ Initialize OneSignal (single initialization)
-  // await OneSignalService().initialize();
+  // ✅ Initialize OneSignal BEFORE runApp
+  initOneSignal();
 
   runApp(const MyApp());
+}
+
+// ✅ Separate OneSignal initialization function
+void initOneSignal() {
   // Enable verbose logging for debugging (remove in production)
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+
   // Initialize with your OneSignal App ID
   OneSignal.initialize("6a1f3d55-06a2-4260-81fd-95f4f41ab003");
-  // Use this method to prompt for push notifications.
-  // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-  OneSignal.Notifications.requestPermission(false);
+
+  // Request notification permission
+  OneSignal.Notifications.requestPermission(true);
+
+  // ✅ Setup notification handlers
+  setupNotificationHandlers();
+}
+
+// ✅ Setup notification event handlers
+void setupNotificationHandlers() {
+  // Notification received while app is in foreground
+  OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+    // Display the notification
+    event.notification.display();
+  });
+
+  // Notification clicked/opened
+  OneSignal.Notifications.addClickListener((event) {
+    final data = event.notification.additionalData;
+    if (data != null && data['taskId'] != null) {
+      // TODO: Navigate to task detail screen
+
+      // Example navigation (implement your actual navigation logic)
+      // navigatorKey.currentState?.push(
+      //   MaterialPageRoute(
+      //     builder: (context) => TaskDetailScreen(taskId: data['taskId']),
+      //   ),
+      // );
+    }
+  });
+
+  // Push subscription state changes
+  OneSignal.User.pushSubscription.addObserver((state) {});
+
+  // Permission state changes
+  OneSignal.Notifications.addPermissionObserver((state) {});
 }
 
 class MyApp extends StatelessWidget {

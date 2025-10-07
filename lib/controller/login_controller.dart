@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:tbo_app/services/login_service.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
@@ -11,8 +12,10 @@ class LoginController with ChangeNotifier {
   bool isLoggedIn = false;
   String? errorMessage;
   String? currentRole;
+  String? userName; // ✅ Added for notification purposes
+  String? userEmail; // ✅ Added for OneSignal
 
-  // Updated login method that returns result instead of navigating
+  /// Login method
   Future<Map<String, dynamic>?> login(String username, String password) async {
     isLoading = true;
     errorMessage = null;
@@ -28,13 +31,23 @@ class LoginController with ChangeNotifier {
     if (result != null && result["data"]?["message"]?["success_key"] == 1) {
       isLoggedIn = true;
 
-      // Get the role profile name from storage
+      // Get stored session data
       currentRole = await _loginService.getStoredRoleProfileName();
+      userName = await _loginService.getStoredFullName();
+      userEmail = await _loginService.getStoredEmail();
+
+      // ✅ Log OneSignal player ID for debugging
+      final playerId = OneSignal.User.pushSubscription.id;
 
       notifyListeners();
 
       // Return success with role information
-      return {"success": true, "role": currentRole};
+      return {
+        "success": true,
+        "role": currentRole,
+        "email": userEmail,
+        "name": userName,
+      };
     } else {
       errorMessage = result?["error"] ?? "Login failed";
       notifyListeners();
@@ -44,15 +57,27 @@ class LoginController with ChangeNotifier {
     }
   }
 
+  /// Load stored session on app start
   Future<void> loadStoredSession() async {
     final sid = await _loginService.getStoredSid();
     if ((sid ?? '').isNotEmpty) {
       isLoggedIn = true;
       currentRole = await _loginService.getStoredRoleProfileName();
+      userName = await _loginService.getStoredFullName();
+      userEmail = await _loginService.getStoredEmail();
+
+      // ✅ Re-login to OneSignal if session exists
+      if (userEmail != null && userEmail!.isNotEmpty) {
+        try {
+          await OneSignal.login(userEmail!);
+        } catch (e) {}
+      }
+
+      notifyListeners();
     }
-    notifyListeners();
   }
 
+  /// Get initial page based on role
   Future<Widget?> getInitialPage() async {
     final sid = await _loginService.getStoredSid();
     if ((sid ?? '').isEmpty) {
@@ -64,28 +89,54 @@ class LoginController with ChangeNotifier {
       return null;
     }
 
+    return _getPageForRole(role);
+  }
+
+  /// Get widget for specific role
+  Widget? _getPageForRole(String role) {
     switch (role.toLowerCase()) {
-      case 'Admin':
+      case 'admin':
       case 'administrator':
-        return const AdminBottomNavigation(); // Replace with your admin page
-      case 'CRM':
+        return const AdminBottomNavigation();
+      case 'crm':
       case 'supervisor':
-        return const CRMBottomNavigation(); // Replace with your manager page
-      case 'Employee':
+        return const CRMBottomNavigation();
+      case 'employee':
       case 'user':
       case 'staff':
-        return const EmployeeBottomNavigation(); // Replace with your employee page
+        return const EmployeeBottomNavigation();
       default:
         return null;
     }
   }
 
+  /// Logout user
   Future<void> logout() async {
     await _loginService.logout();
     isLoggedIn = false;
     currentRole = null;
+    userName = null;
+    userEmail = null;
+    errorMessage = null;
+
     notifyListeners();
   }
 
+  /// Clear session (alias for logout)
   Future<void> clearSession() async => logout();
+
+  /// Check if user has specific role
+  bool hasRole(String role) {
+    return currentRole?.toLowerCase() == role.toLowerCase();
+  }
+
+  /// Check if user is admin
+  bool get isAdmin => hasRole('admin') || hasRole('administrator');
+
+  /// Check if user is CRM
+  bool get isCRM => hasRole('crm') || hasRole('supervisor');
+
+  /// Check if user is employee
+  bool get isEmployee =>
+      hasRole('employee') || hasRole('user') || hasRole('staff');
 }

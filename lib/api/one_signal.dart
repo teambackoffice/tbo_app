@@ -1,212 +1,247 @@
-// lib/api/one_signal.dart
-import 'package:flutter/material.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:tbo_app/main.dart';
+import 'dart:convert';
 
-// ✅ TODO: Import your actual page widgets here
-// Example:
-// import 'package:tbo_app/view/tasks/task_detail_page.dart';
-// import 'package:tbo_app/view/projects/project_detail_page.dart';
-// import 'package:tbo_app/view/notifications/notification_list_page.dart';
+import 'package:http/http.dart' as http;
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class OneSignalService {
-  static final OneSignalService _instance = OneSignalService._internal();
-  factory OneSignalService() => _instance;
-  OneSignalService._internal();
-
+  // ✅ Your OneSignal App credentials
   static const String appId = "6a1f3d55-06a2-4260-81fd-95f4f41ab003";
+  static const String restApiKey =
+      "os_v2_app_nipt2vigujbgbap5sx2pigvqanwideo76a2uupniuezdlomuxqt4zl353yozehjua5jocgdve36ceusldohpxqxtkhjjvobdr45ic4q"; // Get from OneSignal dashboard
 
-  Future<void> initialize() async {
-    debugPrint('🔔 Initializing OneSignal...');
+  // ============================================
+  // USER MANAGEMENT
+  // ============================================
 
-    // Enable verbose logging for debugging
-    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-
-    // Initialize OneSignal
-    OneSignal.initialize(appId);
-
-    // Request notification permissions
-    await OneSignal.Notifications.requestPermission(true);
-
-    // Set up notification click handler
-    OneSignal.Notifications.addClickListener(_handleNotificationOpened);
-
-    // Set up foreground notification handler
-    OneSignal.Notifications.addForegroundWillDisplayListener(
-      _handleNotificationReceived,
-    );
-
-    debugPrint('✅ OneSignal initialized successfully');
+  /// Login user with external ID (email)
+  Future<void> loginUser(String email) async {
+    try {
+      await OneSignal.login(email);
+      print('✅ OneSignal: User logged in - $email');
+    } catch (e) {
+      print('⚠️ OneSignal login error: $e');
+      rethrow;
+    }
   }
 
-  // Set external user ID (called after login)
-  Future<void> setExternalUserId(String userId) async {
-    await OneSignal.login(userId);
-    debugPrint('✅ OneSignal user linked: $userId');
+  /// Logout current user
+  Future<void> logoutUser() async {
+    try {
+      await OneSignal.logout();
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  // Remove external user ID (called on logout)
+  /// Remove external user ID (legacy method - use logout instead)
   Future<void> removeExternalUserId() async {
-    await OneSignal.logout();
-    debugPrint('✅ OneSignal user unlinked');
+    await logoutUser();
   }
 
-  // Get OneSignal player/subscription ID
+  // ============================================
+  // USER PROPERTIES
+  // ============================================
+
+  /// Set user email
+  Future<void> setUserEmail(String email) async {
+    try {
+      await OneSignal.User.addEmail(email);
+    } catch (e) {}
+  }
+
+  /// Add tags for user segmentation
+  Future<void> sendTags(Map<String, String> tags) async {
+    try {
+      await OneSignal.User.addTags(tags);
+    } catch (e) {}
+  }
+
+  /// Remove specific tags
+  Future<void> removeTags(List<String> tagKeys) async {
+    try {
+      await OneSignal.User.removeTags(tagKeys);
+    } catch (e) {}
+  }
+
+  // ============================================
+  // SUBSCRIPTION MANAGEMENT
+  // ============================================
+
+  /// Get current player/subscription ID
   String? getPlayerId() {
     return OneSignal.User.pushSubscription.id;
   }
 
-  // Handle notification tap (when user clicks notification)
-  void _handleNotificationOpened(OSNotificationClickEvent event) {
-    debugPrint('📱 Notification clicked!');
-    debugPrint('   ID: ${event.notification.notificationId}');
-    debugPrint('   Title: ${event.notification.title}');
-    debugPrint('   Body: ${event.notification.body}');
-    debugPrint('   Data: ${event.notification.additionalData}');
-
-    // Navigate based on notification data
-    _navigateBasedOnNotification(event.notification);
+  /// Get push token
+  String? getPushToken() {
+    return OneSignal.User.pushSubscription.token;
   }
 
-  // Handle notification received in foreground
-  void _handleNotificationReceived(OSNotificationWillDisplayEvent event) {
-    debugPrint('📬 Notification received in foreground');
-    debugPrint('   Title: ${event.notification.title}');
-    debugPrint('   Body: ${event.notification.body}');
-
-    // Display the notification
-    event.notification.display();
-
-    // To prevent showing notification, uncomment:
-    // event.preventDefault();
+  /// Check if user is subscribed
+  bool isSubscribed() {
+    return OneSignal.User.pushSubscription.optedIn!;
   }
 
-  // Navigate to screens based on notification data
-  void _navigateBasedOnNotification(OSNotification notification) {
-    final context = navigatorKey.currentContext;
-    if (context == null) {
-      debugPrint('❌ Navigation context is null');
-      return;
-    }
+  /// Opt user into push notifications
+  Future<void> optIn() async {
+    await OneSignal.User.pushSubscription.optIn();
+  }
 
-    final additionalData = notification.additionalData;
-    if (additionalData == null || additionalData.isEmpty) {
-      debugPrint('⚠️ No additional data in notification');
-      return;
-    }
+  /// Opt user out of push notifications
+  Future<void> optOut() async {
+    await OneSignal.User.pushSubscription.optOut();
+  }
 
-    // Extract navigation data
-    final type = additionalData['type'] as String?;
-    final id = additionalData['id'] as String?;
+  // ============================================
+  // SEND NOTIFICATIONS (via REST API)
+  // ============================================
 
-    debugPrint('🧭 Navigating to: type=$type, id=$id');
+  /// Send notification to specific user by email
+  Future<bool> sendNotificationToEmail({
+    required String email,
+    required String title,
+    required String message,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://onesignal.com/api/v1/notifications'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Basic $restApiKey',
+        },
+        body: jsonEncode({
+          'app_id': appId,
+          'include_aliases': {
+            'external_id': [email],
+          },
+          'target_channel': 'push',
+          'headings': {'en': title},
+          'contents': {'en': message},
+          'data': data ?? {},
+        }),
+      );
 
-    // ✅ TODO: Uncomment and customize based on your app's pages
-    switch (type) {
-      case 'task':
-        debugPrint('→ Navigate to task: $id');
-        // Uncomment when you have the page:
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => TaskDetailPage(taskId: id ?? ''),
-        //   ),
-        // );
-
-        // Temporary: Show dialog for testing
-        _showTestDialog(context, 'Task', id);
-        break;
-
-      case 'project':
-        debugPrint('→ Navigate to project: $id');
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => ProjectDetailPage(projectId: id ?? ''),
-        //   ),
-        // );
-
-        _showTestDialog(context, 'Project', id);
-        break;
-
-      case 'lead':
-        debugPrint('→ Navigate to lead: $id');
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => LeadDetailPage(leadId: id ?? ''),
-        //   ),
-        // );
-
-        _showTestDialog(context, 'Lead', id);
-        break;
-
-      case 'notification':
-        debugPrint('→ Navigate to notifications');
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => NotificationListPage(),
-        //   ),
-        // );
-
-        _showTestDialog(context, 'Notification', null);
-        break;
-
-      case 'timesheet':
-        debugPrint('→ Navigate to timesheet');
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => TimesheetPage(),
-        //   ),
-        // );
-
-        _showTestDialog(context, 'Timesheet', null);
-        break;
-
-      default:
-        debugPrint('⚠️ Unknown notification type: $type');
-        break;
+      if (response.statusCode == 200) {
+        print('✅ OneSignal notification sent to $email');
+        return true;
+      } else {
+        print('⚠️ OneSignal notification failed: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('⚠️ OneSignal send notification error: $e');
+      return false;
     }
   }
 
-  // Temporary test dialog (remove when you add real navigation)
-  void _showTestDialog(BuildContext context, String type, String? id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('🔔 Notification Tapped'),
-        content: Text(
-          'Type: $type\n${id != null ? 'ID: $id' : ''}',
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+  /// Send notification to specific user by Player ID
+  Future<bool> sendNotificationToPlayerId({
+    required String playerId,
+    required String title,
+    required String message,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://onesignal.com/api/v1/notifications'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Basic $restApiKey',
+        },
+        body: jsonEncode({
+          'app_id': appId,
+          'include_subscription_ids': [playerId],
+          'headings': {'en': title},
+          'contents': {'en': message},
+          'data': data ?? {},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Send notification to users with specific tags
+  Future<bool> sendNotificationToTags({
+    required List<Map<String, dynamic>> filters,
+    required String title,
+    required String message,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://onesignal.com/api/v1/notifications'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Basic $restApiKey',
+        },
+        body: jsonEncode({
+          'app_id': appId,
+          'filters': filters,
+          'headings': {'en': title},
+          'contents': {'en': message},
+          'data': data ?? {},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Send task assignment notification
+  Future<bool> sendTaskAssignmentNotification({
+    required String employeeEmail,
+    required String taskSubject,
+    required String taskId,
+    required String assignerName,
+  }) async {
+    return await sendNotificationToEmail(
+      email: employeeEmail,
+      title: 'New Task Assigned',
+      message: '$assignerName assigned you: $taskSubject',
+      data: {
+        'type': 'task_assignment',
+        'taskId': taskId,
+        'taskSubject': taskSubject,
+        'assignerName': assignerName,
+      },
     );
   }
 
-  // Subscribe to push notifications
-  Future<void> subscribeToPush() async {
-    await OneSignal.User.pushSubscription.optIn();
-    debugPrint('✅ Subscribed to push notifications');
+  // ============================================
+  // IN-APP MESSAGING
+  // ============================================
+
+  /// Add trigger for in-app messages
+  Future<void> addTrigger(String key, String value) async {
+    await OneSignal.InAppMessages.addTrigger(key, value);
   }
 
-  // Unsubscribe from push notifications
-  Future<void> unsubscribeFromPush() async {
-    await OneSignal.User.pushSubscription.optOut();
-    debugPrint('✅ Unsubscribed from push notifications');
+  /// Remove trigger
+  Future<void> removeTrigger(String key) async {
+    await OneSignal.InAppMessages.removeTrigger(key);
   }
 
-  // Add tags for user targeting
-  Future<void> sendTags(Map<String, String> tags) async {
-    OneSignal.User.addTags(tags);
-    debugPrint('✅ Tags added: $tags');
+  /// Pause in-app messages
+  void pauseInAppMessages() {
+    OneSignal.InAppMessages.paused(true);
   }
 
-  // Remove tags
-  Future<void> removeTags(List<String> keys) async {
-    OneSignal.User.removeTags(keys);
-    debugPrint('✅ Tags removed: $keys');
+  /// Resume in-app messages
+  void resumeInAppMessages() {
+    OneSignal.InAppMessages.paused(false);
   }
 }
