@@ -30,12 +30,9 @@ class NotificationProvider extends ChangeNotifier {
     try {
       _notificationModal = await _service.fetchNotifications(userId: userId);
 
-      print(
-        "✅ Loaded ${_notificationModal?.message.message.title.length ?? 0} notifications",
-      );
+      print('✅ OneSignal: In-app messages resumed');
     } catch (e) {
       _errorMessage = e.toString();
-      print("❌ Error: $_errorMessage");
     } finally {
       _isLoading = false;
       notifyListeners();

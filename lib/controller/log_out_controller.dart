@@ -35,7 +35,6 @@ class LogOutController extends ChangeNotifier {
 
         // ✅ Clear secure storage after successful logout
         await _loginService.logout();
-        print('✅ Logout complete - Storage cleared');
 
         _isLoading = false;
         notifyListeners();
@@ -58,7 +57,6 @@ class LogOutController extends ChangeNotifier {
     try {
       await _loginService.logout();
       _logoutMessage = "Logged out locally";
-      print('✅ Quick logout complete');
     } catch (e) {
       _errorMessage = "Quick logout error: ${e.toString()}";
     }
