@@ -28,7 +28,9 @@ class GetTimesheetService {
         headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 204) {
         try {
           final decoded = jsonDecode(response.body);
           return TimesheetModal.fromJson(decoded);

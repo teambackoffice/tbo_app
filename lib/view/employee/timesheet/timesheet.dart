@@ -14,9 +14,8 @@ class EmployeeSchedulePage extends StatefulWidget {
 }
 
 class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
-  String selectedFilter =
-      'All'; // Current filter: All, Approved, Rejected, Send to Approval
-  DateTime? selectedDate; // Selected date filter
+  String selectedFilter = 'All';
+  DateTime? selectedDate;
   GetTimesheetController? _controller;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String? _employeeId;
@@ -30,7 +29,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
 
   Future<void> _loadEmployeeIdAndTimesheets() async {
     try {
-      // Get employee ID from secure storage
       final employeeId = await _secureStorage.read(key: 'employee_id');
 
       setState(() {
@@ -38,7 +36,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
         _isLoadingEmployeeId = false;
       });
 
-      // Load timesheets with employee ID
       if (mounted) {
         _loadTimesheets();
       }
@@ -47,7 +44,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
         _isLoadingEmployeeId = false;
       });
 
-      // Show error if employee ID cannot be retrieved
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -65,13 +61,11 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     _controller?.fetchtimesheet(employee: _employeeId);
   }
 
-  // Get filtered employees based on selected filter and date
   List<Datum> get filteredEmployees {
     if (_controller?.allLeads?.data == null) return [];
 
     List<Datum> filtered = _controller!.allLeads!.data;
 
-    // Filter by status
     if (selectedFilter != 'All') {
       if (selectedFilter == 'Approved') {
         filtered = filtered
@@ -92,7 +86,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
       }
     }
 
-    // Filter by date if selected
     if (selectedDate != null) {
       filtered = filtered.where((emp) {
         return emp.startDate.day == selectedDate!.day &&
@@ -176,6 +169,13 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
   }
 
+  void _navigateToCreateTimesheet() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateNewTimesheet()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,7 +197,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
         builder: (context, controller, child) {
           _controller = controller;
 
-          // Show loading while getting employee ID
           if (_isLoadingEmployeeId) {
             return Center(
               child: Column(
@@ -214,7 +213,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
             );
           }
 
-          // Show error if no employee ID found
           if (_employeeId == null) {
             return Center(
               child: Column(
@@ -243,7 +241,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      // You can add navigation to login page here
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     style: ElevatedButton.styleFrom(
@@ -261,7 +258,14 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
             return Center(child: CircularProgressIndicator(color: Colors.teal));
           }
 
-          if (controller.error != null) {
+          // Check if there's no data (status 204 or empty response)
+          bool hasNoTimesheets =
+              controller.allLeads == null ||
+              controller.allLeads?.data == null ||
+              controller.allLeads!.data.isEmpty;
+
+          // Show error only if it's not a 204 status or empty response
+          if (controller.error != null && !hasNoTimesheets) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -290,6 +294,60 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       foregroundColor: Colors.white,
                     ),
                     child: Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // If no timesheets exist, show empty state with create button
+          if (hasNoTimesheets) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.assignment_outlined,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    'No timesheets yet',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Create your first timesheet to get started',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  ),
+                  SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: _navigateToCreateTimesheet,
+                    icon: Icon(Icons.add, size: 20),
+                    label: Text(
+                      'Create Timesheet',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF1C7690),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      elevation: 2,
+                    ),
                   ),
                 ],
               ),
@@ -377,14 +435,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: TextButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CreateNewTimesheet(),
-                                ),
-                              );
-                            },
+                            onPressed: _navigateToCreateTimesheet,
                             icon: Icon(
                               Icons.add,
                               color: Colors.white,
@@ -479,7 +530,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                           if (index < filteredEmployees.length) {
                             return _buildEmployeeCard(filteredEmployees[index]);
                           } else {
-                            // Pagination at the end of the list
                             return Container(
                               padding: EdgeInsets.symmetric(vertical: 20),
                               child: Row(
@@ -585,7 +635,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        employee.employee, // Employee ID
+                        employee.employee,
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
@@ -660,9 +710,8 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ViewDetails(
-                          timesheetData: employee, // Pass the timesheet data
-                        ),
+                        builder: (context) =>
+                            ViewDetails(timesheetData: employee),
                       ),
                     );
                   },
