@@ -351,7 +351,7 @@ class LeadDetailPage extends StatelessWidget {
                           // Update lead status to "Quoted" or "Converted"
                           await controller.updateLeadStatus(
                             lead.leadId ?? "",
-                            "Qualified", // Change this to your desired status
+                            "Quotation", // Change this to your desired status
                           );
 
                           if (dialogContext.mounted) {
