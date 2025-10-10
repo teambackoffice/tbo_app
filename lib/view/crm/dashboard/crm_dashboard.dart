@@ -5,8 +5,8 @@ import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/services/login_service.dart';
 import 'package:tbo_app/view/crm/dashboard/_create_new_lead/create_new_lead.dart';
 import 'package:tbo_app/view/crm/dashboard/deals_closed/deals_closed.dart';
-import 'package:tbo_app/view/crm/dashboard/leads_contacted/leads_contact.dart';
 import 'package:tbo_app/view/crm/dashboard/new_leads/new_leads.dart';
+import 'package:tbo_app/view/crm/dashboard/original_proposal/leads_contact.dart';
 
 class CRMDashboardPage extends StatefulWidget {
   const CRMDashboardPage({super.key});
@@ -215,7 +215,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const LeadsContactedPage(),
+                              builder: (context) => const ProposalSentPage(),
                             ),
                           );
                         },

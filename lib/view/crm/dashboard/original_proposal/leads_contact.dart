@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
+import 'package:tbo_app/view/crm/dashboard/original_proposal/details.page.dart';
 
-class LeadsContactedPage extends StatefulWidget {
-  const LeadsContactedPage({super.key});
+class ProposalSentPage extends StatefulWidget {
+  const ProposalSentPage({super.key});
 
   @override
-  State<LeadsContactedPage> createState() => _LeadsContactedPageState();
+  State<ProposalSentPage> createState() => _ProposalSentPageState();
 }
 
-class _LeadsContactedPageState extends State<LeadsContactedPage> {
+class _ProposalSentPageState extends State<ProposalSentPage> {
   @override
   void initState() {
     super.initState();
@@ -99,58 +100,69 @@ class _LeadsContactedPageState extends State<LeadsContactedPage> {
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final lead = leads[index];
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // "New" Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1ABC9C),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Text(
-                                  "New",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProposalSentDetails(lead: lead),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // "New" Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
                                   ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              // Company Name
-                              Text(
-                                lead.leadName!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // Location
-                              Row(
-                                children: [
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    lead.customLeadSegment ?? "N/A",
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1ABC9C),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    "New",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                                const SizedBox(height: 8),
+                                // Company Name
+                                Text(
+                                  lead.leadName!,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                // Location
+                                Row(
+                                  children: [
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      lead.customLeadSegment ?? "N/A",
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
