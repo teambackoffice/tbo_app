@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/all_lead_list_controller.dart';
+import 'package:tbo_app/controller/edit_lead_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
 
 class LeadDetailPage extends StatelessWidget {
@@ -114,8 +117,8 @@ class LeadDetailPage extends StatelessWidget {
                       ),
                       _buildInfoRow(
                         Icons.source_outlined,
-                        "Source",
-                        lead.source ?? "N/A",
+                        "Lead Id",
+                        lead.leadId ?? "N/A",
                       ),
                       _buildInfoRow(
                         Icons.campaign_outlined,
@@ -262,81 +265,140 @@ class LeadDetailPage extends StatelessWidget {
   }
 
   void _showQuotationDialog(BuildContext context) {
+    final controller = Provider.of<EditLeadController>(context, listen: false);
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1ABC9C).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.check_circle_outline,
-                  color: Color(0xFF1ABC9C),
-                  size: 28,
-                ),
+      builder: (BuildContext dialogContext) {
+        return Consumer<EditLeadController>(
+          builder: (context, controller, child) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                "Send Quotation",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1ABC9C).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_outline,
+                      color: Color(0xFF1ABC9C),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    "Send Quotation",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Are you sure you want to send a quotation to ${lead.leadName ?? 'this lead'}?",
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9F7F3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDialogInfoRow("Company", lead.companyName ?? "N/A"),
-                    const SizedBox(height: 8),
-                    _buildDialogInfoRow("Email", lead.emailId ?? "N/A"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Are you sure you want to send a quotation to ${lead.leadName ?? 'this lead'}?",
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F7F3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDialogInfoRow(
+                          "Company",
+                          lead.companyName ?? "N/A",
+                        ),
+                        const SizedBox(height: 8),
+                        _buildDialogInfoRow("Email", lead.emailId ?? "N/A"),
+                      ],
+                    ),
+                  ),
+                  if (controller.isLoading) ...[
+                    const SizedBox(height: 16),
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF1ABC9C),
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // TODO: Implement quotation sending logic
-                _showSuccessSnackbar(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1ABC9C),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              actions: [
+                TextButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : () => Navigator.pop(dialogContext),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
-              ),
-              child: const Text("Send"),
-            ),
-          ],
+                ElevatedButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : () async {
+                          // Update lead status to "Quoted" or "Converted"
+                          await controller.updateLeadStatus(
+                            lead.leadId ?? "",
+                            "Qualified", // Change this to your desired status
+                          );
+
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+
+                          if (controller.message != null) {
+                            // _showSnackbar(
+                            //   context,
+                            //   controller.message!.contains("✅")
+                            //       ? "Quotation sent successfully!"
+                            //       : "Failed to send quotation",
+                            //   controller.message!.contains("✅"),
+                            // );
+                          }
+
+                          // Update local lead status if successful
+                          if (controller.message!.contains("✅")) {
+                            lead.status = "Qualified";
+                          }
+                          Navigator.pop(context); // Close the dialog
+                          Provider.of<AllLeadListController>(
+                            context,
+                            listen: false,
+                          ).fetchAllLeadList(status: "Open");
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1ABC9C),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: controller.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text("Send"),
+                ),
+              ],
+            );
+          },
         );
       },
     );
