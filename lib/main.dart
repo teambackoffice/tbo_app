@@ -246,7 +246,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (_isInitializing) {
       return Scaffold(
         backgroundColor: Color(0xFFFAF9F6),
-        body: Center(child: Image.asset("assets/TBO Smart_Logo.png")),
+        body: Center(child: Image.asset("assets/TBO Smart_Logo_New.jpg")),
       );
     }
 
