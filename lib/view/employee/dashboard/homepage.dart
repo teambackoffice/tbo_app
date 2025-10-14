@@ -7,6 +7,7 @@ import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
+import 'package:tbo_app/view/employee/dashboard/date_request_page.dart';
 import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
 class Homepage extends StatefulWidget {
@@ -296,7 +297,118 @@ class _HomepageState extends State<Homepage> {
                     );
                   },
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Date Requests",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Date Requests Summary Card
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DateRequestsPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF129476), Color(0xFF0D7A5F)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF129476).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.calendar_today_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Date Extension Requests',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You have date requests to review',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Text(
+                              'Tap to view date requests',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward,
+                                color: Color(0xFF129476),
+                                size: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -440,7 +552,7 @@ class _HomepageState extends State<Homepage> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 80),
+                          const SizedBox(width: 50),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,7 +728,7 @@ class _HomepageState extends State<Homepage> {
         PieChartSectionData(
           color: const Color(0xFFFF9500),
           value: controller.openTask.toDouble(),
-          radius: 30,
+          radius: 20,
           showTitle: false,
         ),
       );
@@ -627,7 +739,7 @@ class _HomepageState extends State<Homepage> {
         PieChartSectionData(
           color: const Color(0xFFF5DEB3),
           value: controller.workingTask.toDouble(),
-          radius: 30,
+          radius: 20,
           showTitle: false,
         ),
       );
@@ -638,7 +750,7 @@ class _HomepageState extends State<Homepage> {
         PieChartSectionData(
           color: const Color(0xFF4CAF50),
           value: controller.completedTask.toDouble(),
-          radius: 30,
+          radius: 20,
           showTitle: false,
         ),
       );
@@ -650,7 +762,7 @@ class _HomepageState extends State<Homepage> {
         PieChartSectionData(
           color: Colors.grey.shade300,
           value: 1,
-          radius: 30,
+          radius: 20,
           showTitle: false,
         ),
       );
