@@ -525,37 +525,9 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       )
                     : ListView.builder(
                         padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        itemCount: filteredEmployees.length + 1,
+                        itemCount: filteredEmployees.length,
                         itemBuilder: (context, index) {
-                          if (index < filteredEmployees.length) {
-                            return _buildEmployeeCard(filteredEmployees[index]);
-                          } else {
-                            return Container(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Showing 1-${filteredEmployees.length}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  Icon(
-                                    Icons.chevron_left,
-                                    color: Colors.grey[400],
-                                  ),
-                                  SizedBox(width: 10),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.grey[400],
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
+                          return _buildEmployeeCard(filteredEmployees[index]);
                         },
                       ),
               ),
