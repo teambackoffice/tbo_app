@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -14,6 +15,7 @@ import 'package:tbo_app/controller/edit_lead_controller.dart';
 import 'package:tbo_app/controller/employee_assignments_controller.dart';
 import 'package:tbo_app/controller/employee_get_date_controller.dart';
 import 'package:tbo_app/controller/employee_handover_controller.dart';
+import 'package:tbo_app/controller/employee_task_date_request.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/employee_task_update_contoller.dart';
 import 'package:tbo_app/controller/get_handover_controller.dart';
@@ -48,7 +50,12 @@ void main() async {
   // ✅ Initialize OneSignal BEFORE runApp
   initOneSignal();
 
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+      enabled: true, // Set to false to disable
+      builder: (context) => const MyApp(),
+    ),
+  );
 }
 
 // ✅ Separate OneSignal initialization function
@@ -177,6 +184,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EditLeadController>(
           create: (_) => EditLeadController(),
+        ),
+        ChangeNotifierProvider<EmployeeTaskDateRequestController>(
+          create: (_) => EmployeeTaskDateRequestController(),
         ),
       ],
       child: MaterialApp(
