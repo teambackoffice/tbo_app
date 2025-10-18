@@ -17,7 +17,6 @@ class EmployeeTaskDateRequestService {
       // Read sid from secure storage
       String? sid = await _storage.read(key: 'sid');
       if (sid == null) {
-        print('❌ SID not found in secure storage');
         return null;
       }
 
@@ -36,11 +35,9 @@ class EmployeeTaskDateRequestService {
         String responseBody = await response.stream.bytesToString();
         return employeeDateRequestModalClassFromJson(responseBody);
       } else {
-        print('❌ API Error: ${response.reasonPhrase}');
         return null;
       }
     } catch (e) {
-      print('⚠️ Exception in fetchDateRequests: $e');
       return null;
     }
   }

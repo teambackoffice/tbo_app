@@ -1,8 +1,10 @@
 // lib/view/employee/dashboard/date_requests/date_requests_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_date_request.dart';
+import 'package:tbo_app/controller/employee_taskdate_sumbit_controller.dart';
 import 'package:tbo_app/modal/employee_task_date_request.dart';
 
 class DateRequestsPage extends StatefulWidget {
@@ -482,7 +484,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                     },
                     icon: const Icon(Icons.check_circle, size: 20),
                     label: const Text(
-                      'Approv',
+                      'Approve',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -643,17 +645,48 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              // TODO: Implement API call to approve request
-              // Use request.name (which is the document ID)
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Request approved successfully'),
-                  backgroundColor: Color(0xFF4CAF50),
-                ),
+              final controller = Provider.of<SubmitDateRequestController>(
+                context,
+                listen: false,
               );
-              await _loadDateRequests(); // Reload data
+
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+
+              await controller.submitDateRequest(requestId: request.name);
+
+              // Hide loading indicator
+              Navigator.pop(context);
+
+              if (controller.response != null &&
+                  controller.response!['message']?['success'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Request approved successfully'),
+                    backgroundColor: Color(0xFF4CAF50),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      controller.response?['error'] ?? 'Something went wrong',
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+
+              // ✅ Reload data after submission
+              await _loadDateRequests();
+              Navigator.pop(context);
             },
+
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF129476),
               shape: RoundedRectangleBorder(
@@ -852,20 +885,53 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // TODO: Implement API call to change dates and approve
-                // Use request.name (which is the document ID)
-                // Send selectedStartDate and selectedEndDate
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Dates updated: ${_formatDate(selectedStartDate.toIso8601String())} - ${_formatDate(selectedEndDate.toIso8601String())}',
-                    ),
-                    backgroundColor: const Color(0xFF4CAF50),
-                  ),
+                final controller = Provider.of<SubmitDateRequestController>(
+                  context,
+                  listen: false,
                 );
-                await _loadDateRequests(); // Reload data
+
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) =>
+                      const Center(child: CircularProgressIndicator()),
+                );
+
+                await controller.submitDateRequest(
+                  requestId: request.name,
+                  requestedEndDate: DateFormat(
+                    'yyyy-MM-dd',
+                  ).format(selectedEndDate),
+                );
+
+                // Hide loading indicator
+                Navigator.pop(context);
+
+                if (controller.response != null &&
+                    controller.response!['message']?['success'] == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Request Submitted successfully'),
+                      backgroundColor: Color(0xFF4CAF50),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        controller.response?['error'] ?? 'Something went wrong',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+
+                // ✅ Reload data after submission
+                await _loadDateRequests();
+                Navigator.pop(context);
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF129476),
                 shape: RoundedRectangleBorder(

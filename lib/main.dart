@@ -18,6 +18,7 @@ import 'package:tbo_app/controller/employee_handover_controller.dart';
 import 'package:tbo_app/controller/employee_task_date_request.dart';
 import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/employee_task_update_contoller.dart';
+import 'package:tbo_app/controller/employee_taskdate_sumbit_controller.dart';
 import 'package:tbo_app/controller/get_handover_controller.dart';
 import 'package:tbo_app/controller/get_notification_controller.dart';
 import 'package:tbo_app/controller/get_timesheet_controller.dart';
@@ -187,6 +188,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EmployeeTaskDateRequestController>(
           create: (_) => EmployeeTaskDateRequestController(),
+        ),
+        ChangeNotifierProvider<SubmitDateRequestController>(
+          create: (_) => SubmitDateRequestController(),
         ),
       ],
       child: MaterialApp(

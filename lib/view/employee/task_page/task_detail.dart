@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_update_contoller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/task_page/handover_task.dart';
-import 'package:tbo_app/view/employee/task_page/task_date_request.dart';
 
 class TaskDetailPage extends StatefulWidget {
   final Task task;
@@ -294,41 +293,41 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   ),
                 ),
 
-                // Date Request Button
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 4,
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                CreateDateRequest(taskId: widget.task.name),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF59E0B),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Date Request',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // // Date Request Button
+                // Expanded(
+                //   child: Container(
+                //     padding: const EdgeInsets.symmetric(
+                //       vertical: 8,
+                //       horizontal: 4,
+                //     ),
+                //     child: ElevatedButton(
+                //       onPressed: () {
+                //         Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (context) =>
+                //                 CreateDateRequest(taskId: widget.task.name),
+                //           ),
+                //         );
+                //       },
+                //       style: ElevatedButton.styleFrom(
+                //         backgroundColor: const Color(0xFFF59E0B),
+                //         foregroundColor: Colors.white,
+                //         padding: const EdgeInsets.symmetric(vertical: 16),
+                //         shape: RoundedRectangleBorder(
+                //           borderRadius: BorderRadius.circular(12),
+                //         ),
+                //       ),
+                //       child: const Text(
+                //         'Date Request',
+                //         style: TextStyle(
+                //           fontSize: 14,
+                //           fontWeight: FontWeight.w600,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ],
