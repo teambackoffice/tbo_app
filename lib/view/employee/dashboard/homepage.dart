@@ -23,15 +23,18 @@ class _HomepageState extends State<Homepage> {
   String? _fullName;
   String? designation;
   String? _imageUrl;
+  String? employeeId;
 
   Future<void> _userdetails() async {
     final name = await _storage.read(key: 'employee_full_name');
     final designationValue = await _storage.read(key: 'designation');
     final imageUrl = await _storage.read(key: 'image');
+    final empId = await _storage.read(key: 'employee_id');
     setState(() {
       _fullName = name;
       designation = designationValue;
       _imageUrl = imageUrl;
+      employeeId = empId;
     });
   }
 
@@ -320,7 +323,8 @@ class _HomepageState extends State<Homepage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DateRequestsPage(),
+                        builder: (context) =>
+                            DateRequestsPage(employeeId: employeeId!),
                       ),
                     );
                   },

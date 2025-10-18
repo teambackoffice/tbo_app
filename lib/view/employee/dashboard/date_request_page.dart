@@ -1,73 +1,43 @@
 // lib/view/employee/dashboard/date_requests/date_requests_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_task_date_request.dart';
+import 'package:tbo_app/modal/employee_task_date_request.dart';
 
 class DateRequestsPage extends StatefulWidget {
-  const DateRequestsPage({super.key});
+  final String employeeId;
+
+  const DateRequestsPage({super.key, required this.employeeId});
 
   @override
   State<DateRequestsPage> createState() => _DateRequestsPageState();
 }
 
 class _DateRequestsPageState extends State<DateRequestsPage> {
-  String selectedTab = 'Pending'; // Pending, Approved, Rejected
+  String selectedTab = 'Pending';
 
-  // Dummy data
-  final List<Map<String, dynamic>> dummyRequests = [
-    {
-      'id': '1',
-      'employeeName': 'John Doe',
-      'taskName': 'Update Dashboard UI',
-      'currentDate': '2025-10-15',
-      'requestedDate': '2025-10-20',
-      'reason': 'Need more time to complete testing',
-      'requestType': 'Extension',
-      'status': 'pending',
-      'requestDate': '2025-10-14',
-    },
-    {
-      'id': '2',
-      'employeeName': 'Sarah Smith',
-      'taskName': 'API Integration',
-      'currentDate': '2025-10-18',
-      'requestedDate': '2025-10-22',
-      'reason': 'Facing technical issues with third-party service',
-      'requestType': 'Extension',
-      'status': 'pending',
-      'requestDate': '2025-10-14',
-    },
-    {
-      'id': '3',
-      'employeeName': 'Mike Johnson',
-      'taskName': 'Database Migration',
-      'currentDate': '2025-10-16',
-      'requestedDate': '2025-10-19',
-      'reason': 'Additional requirements received from client',
-      'requestType': 'Extension',
-      'status': 'approved',
-      'requestDate': '2025-10-13',
-    },
-    {
-      'id': '4',
-      'employeeName': 'Emily Davis',
-      'taskName': 'User Authentication',
-      'currentDate': '2025-10-20',
-      'requestedDate': '2025-10-25',
-      'reason': 'Waiting for security review',
-      'requestType': 'Extension',
-      'status': 'rejected',
-      'requestDate': '2025-10-12',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDateRequests();
+    });
+  }
 
-  List<Map<String, dynamic>> get filteredRequests {
-    return dummyRequests
-        .where(
-          (request) =>
-              request['status'].toString().toLowerCase() ==
-              selectedTab.toLowerCase(),
-        )
-        .toList();
+  Future<void> _loadDateRequests() async {
+    final controller = Provider.of<EmployeeTaskDateRequestController>(
+      context,
+      listen: false,
+    );
+    await controller.getEmployeeDateRequests(employeeId: widget.employeeId);
+  }
+
+  List<DateRequestData> _getFilteredRequests(List<DateRequestData> requests) {
+    return requests.where((request) {
+      final status = request.status?.toLowerCase() ?? '';
+      return status == selectedTab.toLowerCase();
+    }).toList();
   }
 
   @override
@@ -94,77 +64,144 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // Tabs
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Row(
-              children: [
-                _buildTab('Pending'),
-                const SizedBox(width: 12),
-                _buildTab('Approved'),
-                const SizedBox(width: 12),
-                _buildTab('Rejected'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+      body: Consumer<EmployeeTaskDateRequestController>(
+        builder: (context, controller, child) {
+          if (controller.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF129476)),
+            );
+          }
 
-          // Request List
-          Expanded(
-            child: filteredRequests.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No $selectedTab Requests',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'All caught up!',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: filteredRequests.length,
-                    itemBuilder: (context, index) {
-                      final request = filteredRequests[index];
-                      return _buildRequestCard(request);
-                    },
+          if (controller.dateRequestData == null ||
+              !controller.dateRequestData!.message.success) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey.shade400,
                   ),
-          ),
-        ],
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load requests',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    controller.dateRequestData?.message.message ??
+                        'Please try again',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _loadDateRequests,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF129476),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final allRequests = controller.dateRequestData!.message.data;
+          final filteredRequests = _getFilteredRequests(allRequests);
+
+          return Column(
+            children: [
+              // Tabs
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    _buildTab('Pending', allRequests),
+                    const SizedBox(width: 12),
+                    _buildTab('Approved', allRequests),
+                    const SizedBox(width: 12),
+                    _buildTab('Rejected', allRequests),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Request List
+              Expanded(
+                child: filteredRequests.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No $selectedTab Requests',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'All caught up!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadDateRequests,
+                        color: const Color(0xFF129476),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          itemCount: filteredRequests.length,
+                          itemBuilder: (context, index) {
+                            final request = filteredRequests[index];
+                            return _buildRequestCard(request);
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTab(String title) {
+  Widget _buildTab(String title, List<DateRequestData> allRequests) {
     final isSelected = selectedTab == title;
-    final count = dummyRequests
-        .where(
-          (r) => r['status'].toString().toLowerCase() == title.toLowerCase(),
-        )
-        .length;
+    final count = allRequests.where((r) {
+      final status = r.status?.toLowerCase() ?? '';
+      return status == title.toLowerCase();
+    }).length;
 
     return Expanded(
       child: GestureDetector(
@@ -215,8 +252,15 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
     );
   }
 
-  Widget _buildRequestCard(Map<String, dynamic> request) {
-    final status = request['status'].toString().toLowerCase();
+  Widget _buildRequestCard(DateRequestData request) {
+    final status = request.status?.toLowerCase() ?? '';
+    final employeeName = request.assignmentName ?? 'Unknown';
+    final taskName = request.taskSubject ?? 'Unknown Task';
+
+    final requestedStartDate = request.requestedStartDate ?? '';
+    final requestedEndDate = request.requestedEndDate ?? '';
+    final reason = request.reason ?? 'No reason provided';
+    final requestDate = request.requestDate ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -241,13 +285,15 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFE8F4F2),
+                  color: Color(0xFFE8F4F2),
                 ),
                 child: Center(
                   child: Text(
-                    request['employeeName'].toString()[0].toUpperCase(),
+                    employeeName.isNotEmpty
+                        ? employeeName[0].toUpperCase()
+                        : 'U',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -262,7 +308,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      request['employeeName'],
+                      employeeName,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -271,7 +317,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Requested on ${_formatDate(request['requestDate'])}',
+                      'Requested on ${_formatDate(requestDate)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -280,70 +326,14 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                   ],
                 ),
               ),
-              if (status == 'pending')
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Pending',
-                    style: TextStyle(
-                      color: Color(0xFFFF9500),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              else if (status == 'approved')
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Approved',
-                    style: TextStyle(
-                      color: Color(0xFF4CAF50),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Rejected',
-                    style: TextStyle(
-                      color: Color(0xFFF44336),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              _buildStatusBadge(status),
             ],
           ),
           const SizedBox(height: 16),
 
           // Task Name
           Text(
-            'Task: ${request['taskName']}',
+            'Task: $taskName',
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -352,68 +342,86 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
           ),
           const SizedBox(height: 12),
 
-          // Date Info
+          // Requested Date Info
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
+              color: const Color(0xFFE8F4F2),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF129476).withOpacity(0.3),
+                width: 1,
+              ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Current Date',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(request['currentDate']),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Requested Dates',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF129476),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const Icon(
-                  Icons.arrow_forward,
-                  color: Color(0xFF129476),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Requested Date',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
-                        ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Start Date',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatDate(requestedStartDate),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF129476),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(request['requestedDate']),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF129476),
-                        ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward,
+                      color: Color(0xFF129476),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'End Date',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatDate(requestedEndDate),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF129476),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -431,7 +439,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            request['reason'],
+            reason,
             style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
 
@@ -474,7 +482,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                     },
                     icon: const Icon(Icons.check_circle, size: 20),
                     label: const Text(
-                      'Submit',
+                      'Approv',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -499,7 +507,60 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
     );
   }
 
+  Widget _buildStatusBadge(String status) {
+    if (status == 'pending') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text(
+          'Pending',
+          style: TextStyle(
+            color: Color(0xFFFF9500),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else if (status == 'approved') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F5E9),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text(
+          'Approved',
+          style: TextStyle(
+            color: Color(0xFF4CAF50),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEBEE),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text(
+          'Rejected',
+          style: TextStyle(
+            color: Color(0xFFF44336),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+  }
+
   String _formatDate(String dateStr) {
+    if (dateStr.isEmpty) return 'N/A';
     try {
       final date = DateTime.parse(dateStr);
       return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
@@ -508,21 +569,21 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
     }
   }
 
-  void _showDirectSubmitDialog(Map<String, dynamic> request) {
+  void _showDirectSubmitDialog(DateRequestData request) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
-          'Submit Request',
+          'Approve Request',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Are you sure you want to approve this request with the requested date?',
+            const Text(
+              'Are you sure you want to approve this request with the requested dates?',
             ),
             const SizedBox(height: 16),
             Container(
@@ -535,7 +596,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Employee: ${request['employeeName']}',
+                    'Employee: ${request.assignmentName ?? 'Unknown'}',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -543,7 +604,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Task: ${request['taskName']}',
+                    'Task: ${request.taskSubject ?? 'Unknown Task'}',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                   const SizedBox(height: 8),
@@ -555,12 +616,14 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                         color: Color(0xFF129476),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        _formatDate(request['requestedDate']),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF129476),
+                      Expanded(
+                        child: Text(
+                          '${_formatDate(request.requestedStartDate ?? '')} - ${_formatDate(request.requestedEndDate ?? '')}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF129476),
+                          ),
                         ),
                       ),
                     ],
@@ -579,17 +642,17 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              // TODO: Implement API call to approve request
+              // Use request.name (which is the document ID)
               Navigator.pop(context);
-              setState(() {
-                request['status'] = 'approved';
-              });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Request approved successfully'),
                   backgroundColor: Color(0xFF4CAF50),
                 ),
               );
+              await _loadDateRequests(); // Reload data
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF129476),
@@ -604,8 +667,11 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
     );
   }
 
-  void _showChangeDateDialog(Map<String, dynamic> request) {
-    DateTime selectedDate = DateTime.parse(request['requestedDate']);
+  void _showChangeDateDialog(DateRequestData request) {
+    DateTime selectedStartDate =
+        DateTime.tryParse(request.requestedStartDate ?? '') ?? DateTime.now();
+    DateTime selectedEndDate =
+        DateTime.tryParse(request.requestedEndDate ?? '') ?? DateTime.now();
 
     showDialog(
       context: context,
@@ -615,92 +681,166 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: const Text(
-            'Change Date',
+            'Change Dates & Approve',
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Employee: ${request['employeeName']}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Employee: ${request.assignmentName ?? 'Unknown'}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Task: ${request['taskName']}',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Select New Date:',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 8),
+                Text(
+                  'Task: ${request.taskSubject ?? 'Unknown Task'}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                 ),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
-                            primary: Color(0xFF129476),
-                            onPrimary: Colors.white,
-                            onSurface: Colors.black,
+                const SizedBox(height: 20),
+                Text(
+                  'Select New Start Date:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedStartDate,
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Color(0xFF129476),
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        selectedStartDate = picked;
+                        // If end date is before start date, adjust it
+                        if (selectedEndDate.isBefore(selectedStartDate)) {
+                          selectedEndDate = selectedStartDate;
+                        }
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFFF8F8F8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          color: Color(0xFF129476),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _formatDate(selectedStartDate.toIso8601String()),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
                           ),
                         ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (picked != null) {
-                    setDialogState(() {
-                      selectedDate = picked;
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                    color: const Color(0xFFF8F8F8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFF129476),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _formatDate(selectedDate.toIso8601String()),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  'Select New End Date:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedEndDate,
+                      firstDate: selectedStartDate,
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Color(0xFF129476),
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        selectedEndDate = picked;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFFF8F8F8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          color: Color(0xFF129476),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _formatDate(selectedEndDate.toIso8601String()),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -711,22 +851,20 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                // TODO: Implement API call to change dates and approve
+                // Use request.name (which is the document ID)
+                // Send selectedStartDate and selectedEndDate
                 Navigator.pop(context);
-                setState(() {
-                  request['requestedDate'] = selectedDate
-                      .toIso8601String()
-                      .split('T')[0];
-                  request['status'] = 'approved';
-                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Date changed to ${_formatDate(selectedDate.toIso8601String())} and submitted successfully',
+                      'Dates updated: ${_formatDate(selectedStartDate.toIso8601String())} - ${_formatDate(selectedEndDate.toIso8601String())}',
                     ),
                     backgroundColor: const Color(0xFF4CAF50),
                   ),
                 );
+                await _loadDateRequests(); // Reload data
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF129476),
@@ -734,7 +872,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Submit'),
+              child: const Text('Approve'),
             ),
           ],
         ),
