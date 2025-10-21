@@ -40,27 +40,35 @@ class _EmployeeBottomNavigationState extends State<EmployeeBottomNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        height: 70.h, // responsive height
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8.r,
-              offset: Offset(0, -2.h),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(0, 'assets/home.png', 'Dashboard', 24.w, 24.h),
-            _buildNavItem(1, 'assets/task.png', 'My Task', 24.w, 24.h),
-            _buildNavItem(2, 'assets/cloak_icon.png', 'Timesheet', 24.w, 24.h),
-            _buildNavItem(3, 'assets/user.png', 'Profile', 18.w, 24.h),
-          ],
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          height: 70.h, // responsive height
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8.r,
+                offset: Offset(0, -2.h),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavItem(0, 'assets/home.png', 'Dashboard', 24.w, 24.h),
+              _buildNavItem(1, 'assets/task.png', 'My Task', 24.w, 24.h),
+              _buildNavItem(
+                2,
+                'assets/cloak_icon.png',
+                'Timesheet',
+                24.w,
+                24.h,
+              ),
+              _buildNavItem(3, 'assets/user.png', 'Profile', 18.w, 24.h),
+            ],
+          ),
         ),
       ),
     );
