@@ -63,9 +63,9 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: SingleChildScrollView(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
