@@ -3,8 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_get_date_controller.dart';
 import 'package:tbo_app/modal/employee_get_date_modal.dart';
 
-class EmployeeDateRequestScreen extends StatelessWidget {
+class EmployeeDateRequestScreen extends StatefulWidget {
   const EmployeeDateRequestScreen({super.key});
+
+  @override
+  State<EmployeeDateRequestScreen> createState() =>
+      _EmployeeDateRequestScreenState();
+}
+
+class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final controller = Provider.of<EmployeeDateRequestController>(
+      context,
+      listen: false,
+    );
+    controller.getEmployeeDateRequest();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +482,7 @@ class EmployeeDateRequestScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            datum.reason.name,
+                            datum.reason ?? 'No reason provided',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[700],

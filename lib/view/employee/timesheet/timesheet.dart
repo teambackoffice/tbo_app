@@ -71,10 +71,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
         filtered = filtered
             .where((emp) => emp.status.toLowerCase() == 'approved')
             .toList();
-      } else if (selectedFilter == 'Rejected') {
-        filtered = filtered
-            .where((emp) => emp.status.toLowerCase() == 'rejected')
-            .toList();
       } else if (selectedFilter == 'Send to Approval') {
         filtered = filtered
             .where(
@@ -141,8 +137,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     switch (status.toLowerCase()) {
       case 'approved':
         return 'Approved';
-      case 'rejected':
-        return 'Rejected';
+
       case 'draft':
       case 'pending':
         return 'Send to Approval';
@@ -155,8 +150,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     switch (status.toLowerCase()) {
       case 'approved':
         return Colors.green;
-      case 'rejected':
-        return Colors.red;
+
       case 'draft':
       case 'pending':
         return Color(0xFFF3F3F3);
@@ -465,7 +459,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       children: [
                         _buildFilterChip('All'),
                         _buildFilterChip('Approved'),
-                        _buildFilterChip('Rejected'),
                         _buildFilterChip('Send to Approval'),
                       ],
                     ),

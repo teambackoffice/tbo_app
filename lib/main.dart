@@ -1,6 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/api/firebase_api.dart';
@@ -109,100 +110,107 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<LoginController>(
-          create: (_) => LoginController(),
-        ),
-        ChangeNotifierProvider<LogOutController>(
-          create: (_) => LogOutController(),
-        ),
-        ChangeNotifierProvider<GetProjectListController>(
-          create: (_) => GetProjectListController(),
-        ),
-        ChangeNotifierProvider<TaskListController>(
-          create: (_) => TaskListController(),
-        ),
-        ChangeNotifierProvider<AllLeadListController>(
-          create: (_) => AllLeadListController(),
-        ),
-        ChangeNotifierProvider<AllLeadsDetailsController>(
-          create: (_) => AllLeadsDetailsController(),
-        ),
-        ChangeNotifierProvider<AllEmployeesController>(
-          create: (_) => AllEmployeesController(),
-        ),
-        ChangeNotifierProvider<CreateProjectController>(
-          create: (_) => CreateProjectController(),
-        ),
-        ChangeNotifierProvider<LeadSegmentController>(
-          create: (_) => LeadSegmentController(),
-        ),
-        ChangeNotifierProvider<ProjectPlanningController>(
-          create: (_) => ProjectPlanningController(),
-        ),
-        ChangeNotifierProvider<GetTimesheetController>(
-          create: (_) => GetTimesheetController(),
-        ),
-        ChangeNotifierProvider<EmployeeAssignmentsController>(
-          create: (_) => EmployeeAssignmentsController(),
-        ),
-        ChangeNotifierProvider<TaskEmployeeAssignController>(
-          create: (_) => TaskEmployeeAssignController(),
-        ),
-        ChangeNotifierProvider<CreateTimesheetController>(
-          create: (_) => CreateTimesheetController(),
-        ),
-        ChangeNotifierProvider<TaskByEmployeeController>(
-          create: (_) => TaskByEmployeeController(),
-        ),
-        ChangeNotifierProvider<CreateNewLeadController>(
-          create: (_) => CreateNewLeadController(),
-        ),
-        ChangeNotifierProvider<CreateDateRequestController>(
-          create: (_) => CreateDateRequestController(),
-        ),
-        ChangeNotifierProvider<TaskCountController>(
-          create: (_) => TaskCountController(),
-        ),
-        ChangeNotifierProvider<TaskHandoverController>(
-          create: (_) => TaskHandoverController(),
-        ),
-        ChangeNotifierProvider<EditTaskController>(
-          create: (_) => EditTaskController(),
-        ),
-        ChangeNotifierProvider<EmployeeHandoverController>(
-          create: (_) => EmployeeHandoverController(),
-        ),
-        ChangeNotifierProvider<EmployeeDateRequestController>(
-          create: (_) => EmployeeDateRequestController(),
-        ),
-        ChangeNotifierProvider<UserDetailsController>(
-          create: (_) => UserDetailsController(),
-        ),
-        ChangeNotifierProvider<NotificationProvider>(
-          create: (_) => NotificationProvider(),
-        ),
-        ChangeNotifierProvider<EditLeadController>(
-          create: (_) => EditLeadController(),
-        ),
-        ChangeNotifierProvider<EmployeeTaskDateRequestController>(
-          create: (_) => EmployeeTaskDateRequestController(),
-        ),
-        ChangeNotifierProvider<SubmitDateRequestController>(
-          create: (_) => SubmitDateRequestController(),
-        ),
-      ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        title: 'TBO App',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const AuthWrapper(),
-      ),
+    return ScreenUtilInit(
+      designSize: const Size(395, 852),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<LoginController>(
+              create: (_) => LoginController(),
+            ),
+            ChangeNotifierProvider<LogOutController>(
+              create: (_) => LogOutController(),
+            ),
+            ChangeNotifierProvider<GetProjectListController>(
+              create: (_) => GetProjectListController(),
+            ),
+            ChangeNotifierProvider<TaskListController>(
+              create: (_) => TaskListController(),
+            ),
+            ChangeNotifierProvider<AllLeadListController>(
+              create: (_) => AllLeadListController(),
+            ),
+            ChangeNotifierProvider<AllLeadsDetailsController>(
+              create: (_) => AllLeadsDetailsController(),
+            ),
+            ChangeNotifierProvider<AllEmployeesController>(
+              create: (_) => AllEmployeesController(),
+            ),
+            ChangeNotifierProvider<CreateProjectController>(
+              create: (_) => CreateProjectController(),
+            ),
+            ChangeNotifierProvider<LeadSegmentController>(
+              create: (_) => LeadSegmentController(),
+            ),
+            ChangeNotifierProvider<ProjectPlanningController>(
+              create: (_) => ProjectPlanningController(),
+            ),
+            ChangeNotifierProvider<GetTimesheetController>(
+              create: (_) => GetTimesheetController(),
+            ),
+            ChangeNotifierProvider<EmployeeAssignmentsController>(
+              create: (_) => EmployeeAssignmentsController(),
+            ),
+            ChangeNotifierProvider<TaskEmployeeAssignController>(
+              create: (_) => TaskEmployeeAssignController(),
+            ),
+            ChangeNotifierProvider<CreateTimesheetController>(
+              create: (_) => CreateTimesheetController(),
+            ),
+            ChangeNotifierProvider<TaskByEmployeeController>(
+              create: (_) => TaskByEmployeeController(),
+            ),
+            ChangeNotifierProvider<CreateNewLeadController>(
+              create: (_) => CreateNewLeadController(),
+            ),
+            ChangeNotifierProvider<CreateDateRequestController>(
+              create: (_) => CreateDateRequestController(),
+            ),
+            ChangeNotifierProvider<TaskCountController>(
+              create: (_) => TaskCountController(),
+            ),
+            ChangeNotifierProvider<TaskHandoverController>(
+              create: (_) => TaskHandoverController(),
+            ),
+            ChangeNotifierProvider<EditTaskController>(
+              create: (_) => EditTaskController(),
+            ),
+            ChangeNotifierProvider<EmployeeHandoverController>(
+              create: (_) => EmployeeHandoverController(),
+            ),
+            ChangeNotifierProvider<EmployeeDateRequestController>(
+              create: (_) => EmployeeDateRequestController(),
+            ),
+            ChangeNotifierProvider<UserDetailsController>(
+              create: (_) => UserDetailsController(),
+            ),
+            ChangeNotifierProvider<NotificationProvider>(
+              create: (_) => NotificationProvider(),
+            ),
+            ChangeNotifierProvider<EditLeadController>(
+              create: (_) => EditLeadController(),
+            ),
+            ChangeNotifierProvider<EmployeeTaskDateRequestController>(
+              create: (_) => EmployeeTaskDateRequestController(),
+            ),
+            ChangeNotifierProvider<SubmitDateRequestController>(
+              create: (_) => SubmitDateRequestController(),
+            ),
+          ],
+          child: MaterialApp(
+            navigatorKey: navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: 'TBO App',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+            home: const AuthWrapper(),
+          ),
+        );
+      },
     );
   }
 }

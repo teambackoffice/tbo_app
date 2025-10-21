@@ -26,14 +26,13 @@ class EmployeeDateRequestService {
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
-        final String responseBody = await response.stream.bytesToString();
+        final responseBody = await response.stream.bytesToString();
+
         return employeeDateRequestModalFromJson(responseBody);
       } else {
-        print("Error: ${response.reasonPhrase}");
         return null;
       }
     } catch (e) {
-      print("Exception: $e");
       return null;
     }
   }

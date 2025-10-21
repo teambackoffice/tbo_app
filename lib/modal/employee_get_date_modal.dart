@@ -45,7 +45,7 @@ class Datum {
   String? taskSubject;
   DateTime requestedStartDate;
   DateTime requestedEndDate;
-  Reason reason;
+  String reason;
 
   Datum({
     required this.name,
@@ -54,7 +54,7 @@ class Datum {
     required this.requestDate,
     required this.status,
     required this.task,
-    required this.taskSubject,
+    this.taskSubject,
     required this.requestedStartDate,
     required this.requestedEndDate,
     required this.reason,
@@ -65,12 +65,12 @@ class Datum {
     employee: json["employee"],
     employeeName: json["employee_name"],
     requestDate: DateTime.parse(json["request_date"]),
-    status: statusValues.map[json["status"]]!,
+    status: statusValues.map[json["status"]] ?? Status.PENDING,
     task: json["task"],
     taskSubject: json["task_subject"],
     requestedStartDate: DateTime.parse(json["requested_start_date"]),
     requestedEndDate: DateTime.parse(json["requested_end_date"]),
-    reason: reasonValues.map[json["reason"]]!,
+    reason: json["reason"] ?? "",
   );
 
   Map<String, dynamic> toJson() => {
@@ -86,28 +86,16 @@ class Datum {
         "${requestedStartDate.year.toString().padLeft(4, '0')}-${requestedStartDate.month.toString().padLeft(2, '0')}-${requestedStartDate.day.toString().padLeft(2, '0')}",
     "requested_end_date":
         "${requestedEndDate.year.toString().padLeft(4, '0')}-${requestedEndDate.month.toString().padLeft(2, '0')}-${requestedEndDate.day.toString().padLeft(2, '0')}",
-    "reason": reasonValues.reverse[reason],
+    "reason": reason,
   };
 }
 
-enum Reason {
-  AUTO_CREATED_FOR_TASK_ASSIGNMENT_CONFIRMATION,
-  SICK,
-  SICKKK,
-  TEST,
-}
+enum Status { APPROVED, PENDING }
 
-final reasonValues = EnumValues({
-  "Auto-created for task assignment confirmation":
-      Reason.AUTO_CREATED_FOR_TASK_ASSIGNMENT_CONFIRMATION,
-  "sick": Reason.SICK,
-  "sickkk": Reason.SICKKK,
-  "Test": Reason.TEST,
+final statusValues = EnumValues({
+  "Approved": Status.APPROVED,
+  "Pending": Status.PENDING,
 });
-
-enum Status { PENDING }
-
-final statusValues = EnumValues({"Pending": Status.PENDING});
 
 class EnumValues<T> {
   Map<String, T> map;

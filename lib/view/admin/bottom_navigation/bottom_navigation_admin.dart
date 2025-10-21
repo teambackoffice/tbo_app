@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tbo_app/view/admin/dashboard/dashboard.dart';
 import 'package:tbo_app/view/admin/leads/leads.dart';
 import 'package:tbo_app/view/admin/profile/profile.dart';
@@ -39,9 +40,8 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-        ), // Adjust this value to control spacing
+        height: 60.h, // responsive height if using ScreenUtil
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -52,20 +52,14 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
             ),
           ],
         ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 70,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment
-                  .spaceEvenly, // Change to spaceAround for closer spacing
-              children: [
-                _buildNavItem(0, 'assets/home.png', 'Dashboard', 24, 24),
-                _buildNavItem(1, 'assets/projects.png', 'Projects', 24, 24),
-                _buildNavItem(2, 'assets/leads.png', 'Leads', 24, 24),
-                _buildNavItem(3, 'assets/user.png', 'Profile', 18, 24),
-              ],
-            ),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(0, 'assets/home.png', 'Dashboard', 24.w, 24.h),
+            _buildNavItem(1, 'assets/projects.png', 'Projects', 24.w, 24.h),
+            _buildNavItem(2, 'assets/leads.png', 'Leads', 24.w, 24.h),
+            _buildNavItem(3, 'assets/user.png', 'Profile', 18.w, 24.h),
+          ],
         ),
       ),
     );

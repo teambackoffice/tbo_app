@@ -295,7 +295,7 @@ class _CommonProjectPageState extends State<CommonProjectPage>
         centerTitle: true,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(4.0),
         child: Column(
           children: [
             // Filter Row

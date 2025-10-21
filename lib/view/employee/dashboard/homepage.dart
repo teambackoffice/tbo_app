@@ -425,16 +425,16 @@ class _HomepageState extends State<Homepage> {
                       ),
                     ),
                     // Add refresh button for debugging
-                    IconButton(
-                      onPressed: () {
-                        final controller = Provider.of<TaskCountController>(
-                          context,
-                          listen: false,
-                        );
-                        controller.fetchTaskSummary(status: "all");
-                      },
-                      icon: const Icon(Icons.refresh),
-                    ),
+                    // IconButton(
+                    //   onPressed: () {
+                    //     final controller = Provider.of<TaskCountController>(
+                    //       context,
+                    //       listen: false,
+                    //     );
+                    //     controller.fetchTaskSummary(status: "all");
+                    //   },
+                    //   icon: const Icon(Icons.refresh),
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -905,7 +905,7 @@ class Indicator extends StatelessWidget {
         Text(
           text,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),
