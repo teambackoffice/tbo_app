@@ -22,7 +22,6 @@ class TaskByEmployeeController with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Get employee ID from secure storage
       final employeeId = await _secureStorage.read(key: 'employee_id');
 
       if (employeeId == null) {
@@ -34,12 +33,9 @@ class TaskByEmployeeController with ChangeNotifier {
       );
 
       if (response != null) {
-        // The API returns nested structure: {"message": {"success_key": 1, "message": "Task List", "data": [...]}}
-        final messageData = response['message'];
-        if (messageData != null) {
-          _taskListResponse = TaskListResponse.fromJson(messageData);
-        }
-      }
+        // ✅ Pass the whole response to the model, not just 'message'
+        _taskListResponse = TaskListResponse.fromJson(response);
+      } else {}
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

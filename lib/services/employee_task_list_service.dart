@@ -23,7 +23,7 @@ class TaskService {
       };
 
       final url = Uri.parse(
-        "${ApiConstants.baseUrl}project_api.get_task_list_by_project_and_employee?custom_assigned_employee=$employeeId",
+        "${ApiConstants.baseUrl}project_api.get_task_list?custom_assigned_employee=$employeeId",
       );
 
       final request = http.Request('GET', url);
@@ -31,9 +31,11 @@ class TaskService {
 
       final response = await request.send();
 
+      final body = await response.stream.bytesToString();
+
       if (response.statusCode == 200) {
-        final body = await response.stream.bytesToString();
-        return json.decode(body);
+        final decoded = json.decode(body);
+        return decoded;
       } else {
         throw Exception("Failed to fetch task list: ${response.reasonPhrase}");
       }

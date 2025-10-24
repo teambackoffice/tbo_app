@@ -34,7 +34,6 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
   TimeOfDay? _fromTime;
   TimeOfDay? _toTime;
 
-  // Controllers for project and task data
   GetProjectListController? _projectController;
   TaskByEmployeeController? _taskController;
   List<ProjectDetails> _projects = [];
@@ -42,12 +41,21 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
   bool _isLoadingProjects = false;
   bool _isLoadingTasks = false;
 
+  final List<String> _activityTypes = [
+    "Development",
+    "Production",
+    "Meeting with Lead",
+    "Meeting with Client",
+    "Planning",
+    "Communication",
+    "Testing",
+  ];
+
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
 
-    // Initialize controllers and load data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _projectController = Provider.of<GetProjectListController>(
         context,
@@ -89,16 +97,20 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load projects: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load projects: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoadingProjects = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingProjects = false;
+        });
+      }
     }
   }
 
@@ -111,22 +123,47 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
     try {
       await _taskController!.fetchTasks();
-      if (_taskController!.taskListResponse?.data != null) {
+
+      // Check if the response is successful and has data
+      if (_taskController!.taskListResponse != null &&
+          _taskController!.taskListResponse!.success) {
         setState(() {
           _tasks = _taskController!.taskListResponse!.data;
         });
+
+        print('Tasks loaded successfully: ${_tasks.length} tasks');
+      } else {
+        // Handle error from API
+        final errorMsg =
+            _taskController!.errorMessage ??
+            _taskController!.taskListResponse?.message ??
+            'Unknown error';
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load tasks: $errorMsg'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load tasks: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('Error loading tasks: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load tasks: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoadingTasks = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingTasks = false;
+        });
+      }
     }
   }
 
@@ -209,14 +246,40 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
   }
 
   void _saveTimesheet() {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedDate == null || _fromTime == null || _toTime == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Please select date and time')));
-        return;
-      }
+    // Validate all required fields
+    bool hasErrors = false;
 
+    if (_activityTypeController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select an activity type')));
+      hasErrors = true;
+    }
+
+    if (_projectIdController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a project')));
+      hasErrors = true;
+    }
+
+    if (_taskIdController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a task')));
+      hasErrors = true;
+    }
+
+    if (_selectedDate == null || _fromTime == null || _toTime == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select date and time')));
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    if (_formKey.currentState!.validate()) {
       final entry = TimesheetEntry(
         activityType: _activityTypeController.text,
         projectName: _projectNameController.text,
@@ -230,6 +293,92 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
       );
 
       Navigator.pop(context, entry);
+    }
+  }
+
+  // Searchable Activity Type Dialog
+  Future<void> _showActivityTypeSearch() async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => _SearchableDialog(
+        title: 'Select Activity Type',
+        items: _activityTypes,
+        displayText: (item) => item,
+        currentValue: _activityTypeController.text,
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _activityTypeController.text = selected;
+      });
+    }
+  }
+
+  // Searchable Project Dialog
+  Future<void> _showProjectSearch() async {
+    if (_isLoadingProjects) return;
+
+    if (_projects.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No projects available')));
+      return;
+    }
+
+    final selected = await showDialog<ProjectDetails>(
+      context: context,
+      builder: (context) => _SearchableDialog<ProjectDetails>(
+        title: 'Select Project',
+        items: _projects,
+        displayText: (project) =>
+            project.projectName ?? project.name ?? 'Unnamed Project',
+        currentValue: _projectIdController.text,
+        compareValue: (project) => project.name ?? '',
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _projectIdController.text = selected.name ?? '';
+        _projectNameController.text =
+            selected.projectName ?? selected.name ?? '';
+      });
+    }
+  }
+
+  // Searchable Task Dialog
+  Future<void> _showTaskSearch() async {
+    if (_isLoadingTasks) return;
+
+    if (_tasks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No tasks available. Tasks are loaded based on your assignments.',
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final selected = await showDialog<Task>(
+      context: context,
+      builder: (context) => _SearchableDialog<Task>(
+        title: 'Select Task',
+        items: _tasks,
+        displayText: (task) => task.subject,
+        currentValue: _taskIdController.text,
+        compareValue: (task) => task.name,
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _taskIdController.text = selected.name;
+        _taskNameController.text = selected.subject;
+      });
     }
   }
 
@@ -284,7 +433,6 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
   Widget _buildTimeSelector(String label, bool isFromTime) {
     final time = isFromTime ? _fromTime : _toTime;
-    final controller = isFromTime ? _fromTimeController : _toTimeController;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,102 +478,18 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
     );
   }
 
-  Widget _buildProjectDropdown() {
+  Widget _buildSearchableField(
+    String label,
+    TextEditingController controller,
+    VoidCallback onTap,
+    bool isLoading, {
+    bool showError = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Project',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          width: double.infinity, // Ensure full width
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFF2E7D7B), width: 1),
-          ),
-          child: _isLoadingProjects
-              ? Container(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text('Loading projects...'),
-                      ), // Add Expanded
-                    ],
-                  ),
-                )
-              : DropdownButtonFormField<String>(
-                  isExpanded: true, // This is crucial
-                  value: _projectIdController.text.isEmpty
-                      ? null
-                      : _projectIdController.text,
-                  items: _projects.map((project) {
-                    return DropdownMenuItem<String>(
-                      value: project.name,
-                      child: Text(
-                        project.projectName ??
-                            project.name ??
-                            'Unnamed Project',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      final selectedProject = _projects.firstWhere(
-                        (project) => project.name == value,
-                      );
-                      setState(() {
-                        _projectIdController.text = selectedProject.name ?? '';
-                        _projectNameController.text =
-                            selectedProject.projectName ??
-                            selectedProject.name ??
-                            '';
-                      });
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Select Project',
-                    hintStyle: TextStyle(color: Colors.grey[500]),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12, // Reduce padding
-                      vertical: 16,
-                    ),
-                    isDense: true, // Add this to reduce height
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a project';
-                    }
-                    return null;
-                  },
-                ),
-        ),
-        SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildTaskDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Task',
+          label,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -436,63 +500,46 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFF2E7D7B), width: 1),
+            border: Border.all(
+              color: showError && controller.text.isEmpty
+                  ? Colors.red
+                  : Color(0xFF2E7D7B),
+              width: 1,
+            ),
           ),
-          child: _isLoadingTasks
-              ? Container(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+          child: InkWell(
+            onTap: isLoading ? null : onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      controller.text.isEmpty
+                          ? 'Select $label'
+                          : controller.text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: controller.text.isEmpty
+                            ? Colors.grey[500]
+                            : Colors.black87,
                       ),
-                      SizedBox(width: 12),
-                      Text('Loading tasks...'),
-                    ],
-                  ),
-                )
-              : DropdownButtonFormField<String>(
-                  value: _taskIdController.text.isEmpty
-                      ? null
-                      : _taskIdController.text,
-                  items: _tasks.map((task) {
-                    return DropdownMenuItem<String>(
-                      value: task.name, // Using 'name' as the task ID
-                      child: Text(
-                        task.subject, // Using 'subject' as display name
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      final selectedTask = _tasks.firstWhere(
-                        (task) => task.name == value,
-                      );
-                      setState(() {
-                        _taskIdController.text = selectedTask.name;
-                        _taskNameController.text = selectedTask.subject;
-                      });
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Select Task',
-                    hintStyle: TextStyle(color: Colors.grey[500]),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a task';
-                    }
-                    return null;
-                  },
-                ),
+                  if (isLoading)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    Icon(Icons.search, color: Colors.grey[600]),
+                ],
+              ),
+            ),
+          ),
         ),
         SizedBox(height: 16),
       ],
@@ -502,7 +549,6 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
   Widget _buildInputField(
     String label,
     TextEditingController controller, {
-    bool isDropdown = false,
     bool isReadOnly = false,
     int maxLines = 1,
   }) {
@@ -523,76 +569,25 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Color(0xFF2E7D7B), width: 1),
           ),
-          child: isDropdown
-              ? DropdownButtonFormField<String>(
-                  value: controller.text.isEmpty ? null : controller.text,
-                  items: const [
-                    DropdownMenuItem(
-                      value: "Development",
-                      child: Text("Development"),
-                    ),
-                    DropdownMenuItem(
-                      value: "Production",
-                      child: Text("Production"),
-                    ),
-                    DropdownMenuItem(
-                      value: "Meeting with Lead",
-                      child: Text("Meeting with Lead"),
-                    ),
-                    DropdownMenuItem(
-                      value: "Meeting with Client",
-                      child: Text("Meeting with Client"),
-                    ),
-                    DropdownMenuItem(
-                      value: "Planning",
-                      child: Text("Planning"),
-                    ),
-                    DropdownMenuItem(
-                      value: "Communication",
-                      child: Text("Communication"),
-                    ),
-                    DropdownMenuItem(value: "Testing", child: Text("Testing")),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      controller.text = value ?? '';
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: label,
-                    hintStyle: TextStyle(color: Colors.grey[500]),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                  validator: (value) {
+          child: TextFormField(
+            controller: controller,
+            readOnly: isReadOnly,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: label,
+              hintStyle: TextStyle(color: Colors.grey[500]),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+            ),
+            validator: maxLines == 1
+                ? (value) {
                     if (value == null || value.isEmpty) {
                       return 'This field is required';
                     }
                     return null;
-                  },
-                )
-              : TextFormField(
-                  controller: controller,
-                  readOnly: isReadOnly,
-                  maxLines: maxLines,
-                  decoration: InputDecoration(
-                    hintText: label,
-                    hintStyle: TextStyle(color: Colors.grey[500]),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                  ),
-                  validator: maxLines == 1
-                      ? (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field is required';
-                          }
-                          return null;
-                        }
-                      : null,
-                ),
+                  }
+                : null,
+          ),
         ),
         SizedBox(height: 16),
       ],
@@ -606,13 +601,11 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
       body: SafeArea(
         child: Consumer2<GetProjectListController, TaskByEmployeeController>(
           builder: (context, projectController, taskController, child) {
-            // Update controller references
             _projectController ??= projectController;
             _taskController ??= taskController;
 
             return Column(
               children: [
-                // Header
                 Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Row(
@@ -622,20 +615,24 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                         child: Icon(Icons.arrow_back_ios, size: 20),
                       ),
                       SizedBox(width: 16),
-                      Text(
-                        widget.isEdit ? 'Edit Timesheet' : 'Add Timesheet',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          widget.isEdit ? 'Edit Timesheet' : 'Add Timesheet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-
-                      // Refresh buttons for projects and tasks
+                      // Refresh button for tasks
+                      IconButton(
+                        icon: Icon(Icons.refresh, color: Color(0xFF2E7D7B)),
+                        onPressed: _isLoadingTasks ? null : _loadTasks,
+                        tooltip: 'Refresh Tasks',
+                      ),
                     ],
                   ),
                 ),
-
-                // Form
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: 16),
@@ -643,18 +640,25 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          _buildInputField(
+                          _buildSearchableField(
                             'Activity Type',
                             _activityTypeController,
-                            isDropdown: true,
+                            _showActivityTypeSearch,
+                            false,
                           ),
-
-                          _buildProjectDropdown(),
-
-                          _buildTaskDropdown(),
-
+                          _buildSearchableField(
+                            'Project',
+                            _projectNameController,
+                            _showProjectSearch,
+                            _isLoadingProjects,
+                          ),
+                          _buildSearchableField(
+                            'Task',
+                            _taskNameController,
+                            _showTaskSearch,
+                            _isLoadingTasks,
+                          ),
                           _buildDateSelector(),
-
                           Row(
                             children: [
                               Expanded(
@@ -666,27 +670,22 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
                               ),
                             ],
                           ),
-
                           _buildInputField(
                             'Total Hours',
                             _totalHoursController,
                             isReadOnly: true,
                           ),
-
                           _buildInputField(
                             'Description',
                             _descriptionController,
                             maxLines: 4,
                           ),
-
                           SizedBox(height: 24),
                         ],
                       ),
                     ),
                   ),
                 ),
-
-                // Bottom buttons
                 Padding(
                   padding: EdgeInsets.all(16.0),
                   child: widget.isEdit
@@ -776,6 +775,144 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
     _toTimeController.dispose();
     _totalHoursController.dispose();
     _descriptionController.dispose();
+    super.dispose();
+  }
+}
+
+// Searchable Dialog Widget
+class _SearchableDialog<T> extends StatefulWidget {
+  final String title;
+  final List<T> items;
+  final String Function(T) displayText;
+  final String currentValue;
+  final String Function(T)? compareValue;
+
+  const _SearchableDialog({
+    required this.title,
+    required this.items,
+    required this.displayText,
+    required this.currentValue,
+    this.compareValue,
+  });
+
+  @override
+  State<_SearchableDialog<T>> createState() => _SearchableDialogState<T>();
+}
+
+class _SearchableDialogState<T> extends State<_SearchableDialog<T>> {
+  final TextEditingController _searchController = TextEditingController();
+  List<T> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+    _searchController.addListener(_filterItems);
+  }
+
+  void _filterItems() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredItems = widget.items.where((item) {
+        final text = widget.displayText(item).toLowerCase();
+        return text.contains(query);
+      }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              widget.title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Expanded(
+              child: _filteredItems.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No items found',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        final displayText = widget.displayText(item);
+                        final compareValue = widget.compareValue != null
+                            ? widget.compareValue!(item)
+                            : displayText;
+                        final isSelected = compareValue == widget.currentValue;
+
+                        return ListTile(
+                          title: Text(displayText),
+                          trailing: isSelected
+                              ? Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF2E7D7B),
+                                )
+                              : null,
+                          onTap: () => Navigator.pop(context, item),
+                        );
+                      },
+                    ),
+            ),
+            SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[300],
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
     super.dispose();
   }
 }

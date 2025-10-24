@@ -257,19 +257,6 @@ class _ProjectTasksState extends State<ProjectTasks> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _showAddTaskDialog,
-            child: Text(
-              'Add Task',
-              style: TextStyle(
-                color: Color(0xFF1C7690),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
       ),
       body: Consumer<EmployeeAssignmentsController>(
         builder: (context, employeeAssignmentsController, child) {
@@ -287,9 +274,11 @@ class _ProjectTasksState extends State<ProjectTasks> {
                   Icon(Icons.error_outline, size: 48, color: Colors.red),
                   SizedBox(height: 16),
                   Text(
-                    'Error: ${employeeAssignmentsController.error}',
+                    'No Task Added',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 172, 24, 13),
+                    ),
                   ),
                   SizedBox(height: 16),
                   ElevatedButton(

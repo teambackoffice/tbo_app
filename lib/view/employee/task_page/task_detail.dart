@@ -86,7 +86,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.task.projectName,
+                    widget.task.project,
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.black87,

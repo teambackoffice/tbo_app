@@ -32,12 +32,20 @@ class EmployeeTaskDateRequestService {
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
+        print("url: $_baseUrl");
+        print('Employee Task Date Requests fetched successfully.');
+        print('Response Status Code: ${response.statusCode}');
+
         String responseBody = await response.stream.bytesToString();
         return employeeDateRequestModalClassFromJson(responseBody);
       } else {
+        print(
+          'Failed to fetch Employee Task Date Requests: ${response.statusCode}',
+        );
         return null;
       }
     } catch (e) {
+      print('Error fetching Employee Task Date Requests: $e');
       return null;
     }
   }

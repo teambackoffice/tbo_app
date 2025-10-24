@@ -630,7 +630,7 @@ class _HomepageState extends State<Homepage> {
         formattedDate = task.expEndDate!;
       }
     }
-    final project = task.projectName;
+    final project = task.project;
 
     return Container(
       padding: const EdgeInsets.all(15),

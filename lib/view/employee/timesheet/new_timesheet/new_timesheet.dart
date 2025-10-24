@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/create_timesheet_controller.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_sheet.dart';
@@ -432,7 +433,13 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
                                                         ),
                                                       ),
                                                       Text(
-                                                        entry.fromTime,
+                                                        DateFormat(
+                                                          'dd MMM yyyy, hh:mm a',
+                                                        ).format(
+                                                          DateTime.parse(
+                                                            entry.fromTime,
+                                                          ),
+                                                        ),
                                                         style: TextStyle(
                                                           fontSize: 14,
                                                           fontWeight:
@@ -457,7 +464,13 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
                                                         ),
                                                       ),
                                                       Text(
-                                                        entry.toTime,
+                                                        DateFormat(
+                                                          'dd MMM yyyy, hh:mm a',
+                                                        ).format(
+                                                          DateTime.parse(
+                                                            entry.toTime,
+                                                          ),
+                                                        ),
                                                         style: TextStyle(
                                                           fontSize: 14,
                                                           fontWeight:

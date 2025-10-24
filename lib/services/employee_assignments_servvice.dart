@@ -59,6 +59,7 @@ class EmployeeAssignmentsService {
         );
       }
     } catch (e) {
+      print("❌ Error: $e");
       throw Exception('Network error: $e');
     }
   }

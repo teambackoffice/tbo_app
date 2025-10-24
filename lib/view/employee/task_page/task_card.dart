@@ -53,7 +53,7 @@ class ApiTaskCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        task.projectName,
+                        task.project,
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black87,
