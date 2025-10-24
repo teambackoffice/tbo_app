@@ -14,15 +14,6 @@ class PostNotificationService {
     String? assignerName,
   }) async {
     try {
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('🔔 SENDING NOTIFICATION');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📋 Employee Email: $employeeEmail');
-      print('📝 Task: $taskSubject');
-      print('🆔 Task ID: $taskId');
-      print('👤 Assigner: $assignerName');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
       final requestBody = {
         'app_id': _oneSignalAppId,
         'include_external_user_ids': [employeeEmail],
@@ -40,9 +31,6 @@ class PostNotificationService {
         // Removed android_channel_id - it will use the default channel
       };
 
-      print('📤 Request Body:');
-      print(jsonEncode(requestBody));
-
       final response = await http.post(
         Uri.parse('https://onesignal.com/api/v1/notifications'),
         headers: {
@@ -52,33 +40,16 @@ class PostNotificationService {
         body: jsonEncode(requestBody),
       );
 
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📥 RESPONSE');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
-        print('✅ SUCCESS! Recipients: ${responseData["recipients"]}');
-
-        if (responseData['recipients'] == 0) {
-          print('⚠️ WARNING: 0 recipients found!');
-          print('Employee "$employeeEmail" is not registered with OneSignal');
-          print(
-            'Make sure the employee has logged in and OneSignal.login() was called',
-          );
-        }
+        if (responseData['recipients'] == 0) {}
 
         return true;
       } else {
-        print('❌ FAILED: Status ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ EXCEPTION: $e');
       return false;
     }
   }

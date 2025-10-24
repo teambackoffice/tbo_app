@@ -14,15 +14,10 @@ class SubmitDateRequestService {
     const url = '${ApiConstants.baseUrl}date_request_api.submit_date_request';
 
     try {
-      print('🔹 Starting date request submission...');
-      print('📤 API URL: $url');
-
       // ✅ Read SID from secure storage
       final sid = await _secureStorage.read(key: 'sid');
-      print('🔑 Retrieved SID: $sid');
 
       if (sid == null) {
-        print('⚠️ SID not found in secure storage');
         return {'error': 'Session expired. Please log in again.'};
       }
 

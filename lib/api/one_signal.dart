@@ -17,9 +17,7 @@ class OneSignalService {
   Future<void> loginUser(String email) async {
     try {
       await OneSignal.login(email);
-      print('✅ OneSignal: User logged in - $email');
     } catch (e) {
-      print('⚠️ OneSignal login error: $e');
       rethrow;
     }
   }
@@ -123,14 +121,11 @@ class OneSignalService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ OneSignal notification sent to $email');
         return true;
       } else {
-        print('⚠️ OneSignal notification failed: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('⚠️ OneSignal send notification error: $e');
       return false;
     }
   }

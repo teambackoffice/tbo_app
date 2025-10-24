@@ -57,7 +57,6 @@ class CreateProjectService {
 
       http.StreamedResponse response = await request.send();
 
-      // 🖨️ Print response details
       String responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {

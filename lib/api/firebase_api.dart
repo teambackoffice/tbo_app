@@ -22,25 +22,19 @@ class FirebaseApi {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('User granted permission');
-
         // iOS APNs token (only for iOS)
         if (Platform.isIOS) {
           final apnsToken = await firebaseMessaging.getAPNSToken();
           if (apnsToken != null) {
-            print("APNs Token: $apnsToken");
           } else {
-            print("Waiting for APNs token...");
             // Sometimes APNs token takes time, retry after delay
             await Future.delayed(const Duration(seconds: 3));
             final retryToken = await firebaseMessaging.getAPNSToken();
-            print("APNs Token (retry): $retryToken");
           }
         }
 
         // Get FCM token
         _fcmToken = await firebaseMessaging.getToken();
-        print("FCM Token: $_fcmToken");
 
         // TODO: Send token to your backend server
         if (_fcmToken != null) {
@@ -49,7 +43,6 @@ class FirebaseApi {
 
         // Listen for token refresh
         firebaseMessaging.onTokenRefresh.listen((newToken) {
-          print("Refreshed FCM Token: $newToken");
           _fcmToken = newToken;
           _sendTokenToServer(newToken);
         });
@@ -67,13 +60,8 @@ class FirebaseApi {
         });
       } else if (settings.authorizationStatus ==
           AuthorizationStatus.provisional) {
-        print('User granted provisional permission');
-      } else {
-        print('User declined or has not accepted permission');
-      }
-    } catch (e) {
-      print("Error initializing notifications: $e");
-    }
+      } else {}
+    } catch (e) {}
   }
 
   Future<void> _sendTokenToServer(String token) async {
@@ -84,15 +72,10 @@ class FirebaseApi {
       //   Uri.parse('YOUR_API_URL/save-fcm-token'),
       //   body: {'fcm_token': token, 'user_id': userId},
       // );
-      print("Token should be sent to server: $token");
-    } catch (e) {
-      print("Error sending token to server: $e");
-    }
+    } catch (e) {}
   }
 
   void _handleMessageClick(RemoteMessage message) {
-    print("Notification clicked: ${message.data}");
-
     final context = navigatorKey.currentState?.overlay?.context;
     if (context != null) {
       if (message.data.containsKey('sales_return')) {

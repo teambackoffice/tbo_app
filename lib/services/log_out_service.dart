@@ -12,10 +12,7 @@ class LogOutService {
       // ✅ Remove OneSignal user BEFORE API logout
       try {
         await OneSignalService().removeExternalUserId();
-        print('✅ OneSignal: User unlinked');
-      } catch (e) {
-        print('⚠️ OneSignal error during logout: $e');
-      }
+      } catch (e) {}
 
       // Build URL
       var url = Uri.parse("$baseUrl?usr=$username");
@@ -28,7 +25,6 @@ class LogOutService {
 
       // Handle response
       if (response.statusCode == 200) {
-        print('✅ Logout API success');
         String body = await response.stream.bytesToString();
 
         var decoded = jsonDecode(body);

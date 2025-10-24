@@ -30,11 +30,9 @@ class EmployeeHandoverService {
         final responseString = await response.stream.bytesToString();
         return employeeHandOverModalFromJson(responseString);
       } else {
-        print('Error: ${response.reasonPhrase}');
         return null;
       }
     } catch (e) {
-      print('Exception: $e');
       return null;
     }
   }

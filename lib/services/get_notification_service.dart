@@ -30,17 +30,11 @@ class NotificationService {
 
     if (response.statusCode == 200) {
       final String responseString = await response.stream.bytesToString();
-      print(uri);
-      print("✅ Raw Response: $responseString");
 
       final data = jsonDecode(responseString);
 
       // ✅ Parse the entire response as NotificationModal
       NotificationModal notificationModal = NotificationModal.fromJson(data);
-
-      print(
-        "🔔 Total notifications: ${notificationModal.message.message.title.length}",
-      );
 
       return notificationModal;
     } else if (response.statusCode == 401) {

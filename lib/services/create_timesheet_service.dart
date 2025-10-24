@@ -31,13 +31,7 @@ class CreateTimesheetService {
 
       final response = await request.send();
 
-      print("➡️ URL: $url");
-      print("➡️ Headers: $headers");
-      print("➡️ Body: $body");
-      print("➡️ Status Code: ${response.statusCode}");
-
       final responseBody = await response.stream.bytesToString();
-      print("➡️ Response: $responseBody");
 
       if (response.statusCode == 201) {
         return json.decode(responseBody);
@@ -45,7 +39,6 @@ class CreateTimesheetService {
         throw Exception("Failed: ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("❌ Error: $e");
       rethrow;
     }
   }
