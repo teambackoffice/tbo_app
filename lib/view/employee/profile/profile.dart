@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/log_out_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
+import 'package:tbo_app/view/login_page/login_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -108,7 +109,10 @@ class ProfilePage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Container(height: 1, color: Color(0xFFE5E5E5)),
+                            Container(
+                              height: 1,
+                              color: const Color(0xFFE5E5E5),
+                            ),
                             const SizedBox(height: 16),
                             const Text(
                               "Designation",
@@ -120,9 +124,8 @@ class ProfilePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              profile["designation"] ??
-                                  "", // you can also store this in secure storage
-                              style: TextStyle(
+                              profile["designation"] ?? "",
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Color(0xFF2D2D2D),
@@ -209,7 +212,7 @@ class ProfilePage extends StatelessWidget {
                         height: 55,
                         child: ElevatedButton(
                           onPressed: () {
-                            _handleLogout(context, profile["name"]!);
+                            _handleLogout(context, profile["email"]!);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1C7690),
@@ -239,86 +242,119 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _handleLogout(BuildContext context, String username) {
-    final parentContext = context;
-
-    showDialog(
+  Future<void> _handleLogout(BuildContext context, String email) async {
+    // ✅ Show confirmation dialog
+    final confirmed = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Logout'),
           content: const Text('Are you sure you want to log out?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1C7690),
-                foregroundColor: Color(0xFF1C7690),
+                foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () async {
-                // Close confirmation dialog
-                Navigator.of(dialogContext).pop();
-
-                // Show loading dialog
-                showDialog(
-                  context: parentContext,
-                  barrierDismissible: false,
-                  builder: (_) => const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF1C7690)),
-                  ),
-                );
-
-                try {
-                  final logoutController = Provider.of<LogOutController>(
-                    parentContext,
-                    listen: false,
-                  );
-                  final loginController = Provider.of<LoginController>(
-                    parentContext,
-                    listen: false,
-                  );
-
-                  // clear session from API / storage
-                  await logoutController.logout("Employee");
-
-                  // update login state so AuthWrapper rebuilds
-                  await loginController.clearSession();
-
-                  if (parentContext.mounted) {
-                    Navigator.of(parentContext).pop(); // close loading
-                    // ✅ No manual navigation needed, AuthWrapper will now show LoginPage
-                  }
-                } catch (e) {
-                  if (parentContext.mounted) {
-                    Navigator.of(parentContext).pop(); // close loading
-                    ScaffoldMessenger.of(parentContext).showSnackBar(
-                      const SnackBar(
-                        content: Text("Failed to log out. Please try again."),
-                      ),
-                    );
-                  }
-                }
-              },
-
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text(
                 'Log Out',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w500),
               ),
             ),
           ],
         );
       },
     );
+
+    // ✅ If user cancelled, return early
+    if (confirmed != true || !context.mounted) return;
+
+    // ✅ Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF1C7690)),
+      ),
+    );
+
+    try {
+      final logoutController = context.read<LogOutController>();
+      final loginController = context.read<LoginController>();
+
+      // ✅ Use email for logout (or username based on your API)
+      final username = email.isNotEmpty ? email : 'user';
+      final success = await logoutController.logout(username);
+
+      // Close loading dialog
+      if (context.mounted) Navigator.of(context).pop();
+
+      if (!context.mounted) return;
+
+      // ✅ Always clear login controller state (even if API failed)
+      await loginController.logout();
+
+      if (!context.mounted) return;
+
+      // ✅ Always navigate to login page (local logout always succeeds)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+
+      // ✅ Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            logoutController.logoutMessage ?? 'Logged out successfully',
+          ),
+          backgroundColor: success ? Colors.green : Colors.orange,
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog if still open
+      if (context.mounted) Navigator.of(context).pop();
+
+      if (!context.mounted) return;
+
+      // ✅ Force logout locally even on error
+      try {
+        final loginController = context.read<LoginController>();
+        await loginController.logout();
+
+        if (!context.mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logged Out Successfully'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } catch (e2) {
+        // Last resort error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Logout error: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

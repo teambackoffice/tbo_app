@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/login_controller.dart';
+import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
+import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
+import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +17,13 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true; // 🔒 password visibility state
+
+  @override
+  void dispose() {
+    _loginIdController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,18 +96,76 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: authController.isLoading
                       ? null
                       : () async {
-                          // Get the result from login
+                          // ✅ Validate inputs
+                          if (_loginIdController.text.trim().isEmpty ||
+                              _passwordController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Please enter username and password',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // ✅ Perform login
                           final result = await authController.login(
                             _loginIdController.text.trim(),
                             _passwordController.text.trim(),
                           );
 
-                          // Handle navigation based on result
+                          if (!mounted) return;
+
+                          // ✅ Handle navigation based on result
                           if (result != null && result["success"] == true) {
-                            // Navigation will be handled automatically by AuthWrapper
-                            // since LoginController updates isLoggedIn and currentRole
+                            final role = result["role"]?.toLowerCase();
+                            Widget nextPage;
+
+                            switch (role) {
+                              case 'admin':
+                              case 'administrator':
+                                nextPage = const AdminBottomNavigation();
+                                break;
+                              case 'crm':
+                              case 'supervisor':
+                                nextPage = const CRMBottomNavigation();
+                                break;
+                              case 'employee':
+                              case 'user':
+                              case 'staff':
+                                nextPage = const EmployeeBottomNavigation();
+                                break;
+                              default:
+                                // Unknown role, stay on login
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Unknown user role'),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                                return;
+                            }
+
+                            // ✅ Navigate and remove all previous routes
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => nextPage),
+                              (route) => false,
+                            );
                           } else {
-                            // Error is already set in the controller and will be displayed
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result?["error"] ??
+                                      authController.errorMessage ??
+                                      "Login failed",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -129,11 +197,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 16),
 
-              // Error message
+              // Error message (optional, since we're using SnackBar)
               if (authController.errorMessage != null)
                 Text(
                   authController.errorMessage!,
                   style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
                 ),
             ],
           ),

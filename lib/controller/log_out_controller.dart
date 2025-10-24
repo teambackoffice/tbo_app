@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:tbo_app/services/log_out_service.dart';
 import 'package:tbo_app/services/login_service.dart';
 
@@ -22,29 +23,57 @@ class LogOutController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // ✅ Call logout API (OneSignal unlinking happens inside LogOutService)
+      // ✅ Logout from OneSignal FIRST
+      try {
+        await OneSignal.logout();
+      } catch (e) {
+        // Continue with logout even if OneSignal fails
+      }
+
+      // ✅ Call backend logout API
       final response = await _authService.logout(username: username);
 
-      if (response["status"] == "error") {
+      // ✅ Check for multiple possible response formats
+      bool isSuccess = false;
+
+      if (response["status"] == "success" ||
+          response["message"]?["success_key"] == 1 ||
+          response.containsKey("message") && response["message"] != null) {
+        isSuccess = true;
+      } else if (response["status"] == "error") {
         _errorMessage = "Logout failed: ${response["message"]}";
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      } else {
+      }
+
+      // ✅ Clear local storage regardless of API response
+      // (User should be logged out locally even if API fails)
+      await _loginService.logout();
+
+      if (isSuccess) {
         _logoutMessage = "Logout successful";
-
-        // ✅ Clear secure storage after successful logout
-        await _loginService.logout();
-
         _isLoading = false;
         notifyListeners();
         return true;
+      } else {
+        // Even if API failed, we cleared local storage
+        _logoutMessage = "Logged out locally";
+        _isLoading = false;
+        notifyListeners();
+        return true; // ✅ Return true because local logout succeeded
       }
     } catch (e) {
-      _errorMessage = "Logout error: ${e.toString()}";
-      _isLoading = false;
-      notifyListeners();
-      return false;
+      // ✅ Still clear local storage even on exception
+      try {
+        await _loginService.logout();
+        _logoutMessage = "Logged out locally";
+        _isLoading = false;
+        notifyListeners();
+        return true; // ✅ Return true because local logout succeeded
+      } catch (storageError) {
+        _errorMessage = "Logout error: ${e.toString()}";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
     }
   }
 
@@ -55,6 +84,11 @@ class LogOutController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // ✅ Logout from OneSignal
+      try {
+        await OneSignal.logout();
+      } catch (e) {}
+
       await _loginService.logout();
       _logoutMessage = "Logged out locally";
     } catch (e) {

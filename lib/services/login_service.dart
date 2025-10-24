@@ -59,7 +59,6 @@ class LoginService {
             // ✅ Link user to OneSignal
             try {
               await OneSignal.login(email);
-              print('✅ OneSignal: User linked with email: $email');
 
               // ✅ Add tags for targeted notifications
               final tags = <String, String>{
@@ -72,10 +71,7 @@ class LoginService {
               }
 
               await OneSignalService().sendTags(tags);
-              print('✅ OneSignal: Tags added - $tags');
-            } catch (e) {
-              print('⚠️ OneSignal error: $e');
-            }
+            } catch (e) {}
           }
 
           // full_name
@@ -95,10 +91,7 @@ class LoginService {
                 await OneSignalService().sendTags({
                   'employee_id': employeeName,
                 });
-                print('✅ OneSignal: Employee ID tag added: $employeeName');
-              } catch (e) {
-                print('⚠️ OneSignal tag error: $e');
-              }
+              } catch (e) {}
             }
           }
         }
@@ -146,10 +139,7 @@ class LoginService {
     // ✅ Remove OneSignal user before clearing storage
     try {
       await OneSignalService().removeExternalUserId();
-      print('✅ OneSignal: User unlinked on logout');
-    } catch (e) {
-      print('⚠️ OneSignal logout error: $e');
-    }
+    } catch (e) {}
 
     await _storage.deleteAll();
   }

@@ -32,10 +32,7 @@ import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/firebase_options.dart';
-import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
-import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
-import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
-import 'package:tbo_app/view/login_page/login_page.dart';
+import 'package:tbo_app/view/splash/splash_screen.dart';
 
 // ✅ Global navigator key for navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -201,77 +198,9 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: const AuthWrapper(),
+            home: const SplashScreen(),
           ),
         );
-      },
-    );
-  }
-}
-
-class AuthWrapper extends StatefulWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
-
-class _AuthWrapperState extends State<AuthWrapper> {
-  bool _isInitializing = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkStoredSession();
-  }
-
-  Future<void> _checkStoredSession() async {
-    final authController = context.read<LoginController>();
-    await authController.loadStoredSession();
-
-    if (mounted) {
-      setState(() {
-        _isInitializing = false;
-      });
-    }
-  }
-
-  Widget _getHomePageBasedOnRole(String? role) {
-    if (role == null) {
-      return const LoginPage();
-    }
-
-    switch (role.toLowerCase()) {
-      case 'admin':
-      case 'administrator':
-        return const AdminBottomNavigation();
-      case 'crm':
-      case 'supervisor':
-        return const CRMBottomNavigation();
-      case 'employee':
-      case 'user':
-      case 'staff':
-        return const EmployeeBottomNavigation();
-      default:
-        return const LoginPage();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isInitializing) {
-      return Scaffold(
-        backgroundColor: Color(0xFFFAF9F6),
-        body: Center(child: Image.asset("assets/TBO Smart_Logo_New.jpg")),
-      );
-    }
-
-    return Consumer<LoginController>(
-      builder: (context, authController, child) {
-        if (authController.isLoggedIn) {
-          return _getHomePageBasedOnRole(authController.currentRole);
-        }
-        return const LoginPage();
       },
     );
   }
