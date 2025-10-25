@@ -1,0 +1,246 @@
+name: Flutter CI/CD
+ 
+on:
+
+  push:
+
+    branches:
+
+      - main
+
+      - master
+
+  workflow_dispatch:
+ 
+jobs:
+
+  # Build and deploy Android
+
+  deploy-android:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+
+        uses: actions/checkout@v4
+ 
+      - name: Setup Java
+
+        uses: actions/setup-java@v4
+
+        with:
+
+          distribution: 'zulu'
+
+          java-version: '17'
+
+          cache: 'gradle'
+ 
+      - name: Setup Flutter
+
+        uses: subosito/flutter-action@v2
+
+        with:
+
+          flutter-version: '3.24.0'
+
+          channel: 'stable'
+
+          cache: true
+ 
+      - name: Install dependencies
+
+        run: flutter pub get
+ 
+      - name: Run tests
+
+        run: flutter test
+ 
+      - name: Decode Android keystore
+
+        run: |
+
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+ 
+      - name: Create key.properties
+
+        run: |
+
+          cat > android/key.properties << EOF
+
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+
+          storeFile=keystore.jks
+
+          EOF
+ 
+      - name: Build Android App Bundle
+
+        run: flutter build appbundle --release
+ 
+      - name: Setup Ruby for Fastlane
+
+        uses: ruby/setup-ruby@v1
+
+        with:
+
+          ruby-version: '3.2'
+
+          bundler-cache: true
+
+          working-directory: android
+ 
+      - name: Deploy to Play Store
+
+        env:
+
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+
+        run: |
+
+          cd android
+
+          bundle install
+
+          bundle exec fastlane deploy_play_store
+ 
+      - name: Upload Android artifacts
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: android-release
+
+          path: build/app/outputs/bundle/release/app-release.aab
+ 
+  # Build and deploy iOS
+
+  deploy-ios:
+
+    runs-on: macos-latest
+
+    steps:
+
+      - name: Checkout code
+
+        uses: actions/checkout@v4
+ 
+      - name: Setup Flutter
+
+        uses: subosito/flutter-action@v2
+
+        with:
+
+          flutter-version: '3.24.0'
+
+          channel: 'stable'
+
+          cache: true
+ 
+      - name: Install dependencies
+
+        run: flutter pub get
+ 
+      - name: Run tests
+
+        run: flutter test
+ 
+      - name: Setup Ruby for Fastlane
+
+        uses: ruby/setup-ruby@v1
+
+        with:
+
+          ruby-version: '3.2'
+
+          bundler-cache: true
+
+          working-directory: ios
+ 
+      - name: Install CocoaPods
+
+        run: |
+
+          cd ios
+
+          pod install
+ 
+      - name: Import certificates
+
+        env:
+
+          APPLE_CERTIFICATES_P12: ${{ secrets.APPLE_CERTIFICATES_P12 }}
+
+          APPLE_CERTIFICATES_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_PASSWORD }}
+
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
+        run: |
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+
+          security default-keychain -s build.keychain
+
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+
+          security set-keychain-settings -t 3600 -u build.keychain
+
+          echo "$APPLE_CERTIFICATES_P12" | base64 --decode > certificate.p12
+
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATES_PASSWORD" -T /usr/bin/codesign
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+          rm certificate.p12
+ 
+      - name: Import provisioning profile
+
+        env:
+
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+
+        run: |
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+
+          echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+ 
+      - name: Build iOS app
+
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+ 
+      - name: Deploy to TestFlight/App Store
+
+        env:
+
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+
+        run: |
+
+          cd ios
+
+          bundle install
+
+          bundle exec fastlane deploy_testflight
+ 
+      - name: Upload iOS artifacts
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: ios-release
+
+          path: build/ios/ipa/*.ipa
+ 
