@@ -234,6 +234,13 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
                                                     ),
                                                   ),
                                                   const SizedBox(height: 4),
+                                                  Text(
+                                                    'ID: $_planningId',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[700],
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                             ),
