@@ -90,6 +90,38 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
     estimatedCostController.text = totalCost.toStringAsFixed(2);
   }
 
+  // 🔥 ADD THIS METHOD TO CALCULATE DURATION
+  void _calculateDuration() {
+    if (plannedStartDateController.text.isNotEmpty &&
+        plannedEndDateController.text.isNotEmpty) {
+      try {
+        DateTime startDate = DateFormat(
+          'dd-MM-yyyy',
+        ).parse(plannedStartDateController.text);
+        DateTime endDate = DateFormat(
+          'dd-MM-yyyy',
+        ).parse(plannedEndDateController.text);
+
+        int duration = endDate.difference(startDate).inDays;
+
+        // Ensure duration is not negative
+        if (duration < 0) {
+          estimatedDurationController.text = '0';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('End date must be after start date'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        } else {
+          estimatedDurationController.text = duration.toString();
+        }
+      } catch (e) {
+        print('Error calculating duration: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<LeadSegmentController>(context);
@@ -154,10 +186,6 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
               },
               child: Column(
                 children: [
-                  _buildTextField(
-                    'Estimated Duration (Days)',
-                    estimatedDurationController,
-                  ),
                   SizedBox(height: 16),
                   _buildTextField(
                     'Planned Start Date',
@@ -169,6 +197,12 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                     'Planned End Date',
                     plannedEndDateController,
                     suffixIcon: Icons.calendar_today,
+                  ),
+                  SizedBox(height: 16),
+                  _buildTextField(
+                    'Estimated Duration (Days)',
+                    estimatedDurationController,
+                    readOnly: true,
                   ),
                 ],
               ),
@@ -475,6 +509,9 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
     if (picked != null) {
       controller.text =
           "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
+
+      // 🔥 CALCULATE DURATION AFTER SELECTING DATE
+      _calculateDuration();
     }
   }
 
