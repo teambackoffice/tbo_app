@@ -52,7 +52,7 @@ android {
 
     defaultConfig {
         applicationId = "com.tbo_smart"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

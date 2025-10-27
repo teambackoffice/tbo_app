@@ -49,13 +49,13 @@ class LogOutController extends ChangeNotifier {
       await _loginService.logout();
 
       if (isSuccess) {
-        _logoutMessage = "Logout successful";
+        _logoutMessage = "Logout Successful";
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
         // Even if API failed, we cleared local storage
-        _logoutMessage = "Logged out locally";
+        _logoutMessage = "Logout Successful";
         _isLoading = false;
         notifyListeners();
         return true; // ✅ Return true because local logout succeeded
@@ -64,7 +64,7 @@ class LogOutController extends ChangeNotifier {
       // ✅ Still clear local storage even on exception
       try {
         await _loginService.logout();
-        _logoutMessage = "Logged out locally";
+        _logoutMessage = "Logout Successful";
         _isLoading = false;
         notifyListeners();
         return true; // ✅ Return true because local logout succeeded
@@ -90,7 +90,7 @@ class LogOutController extends ChangeNotifier {
       } catch (e) {}
 
       await _loginService.logout();
-      _logoutMessage = "Logged out locally";
+      _logoutMessage = "Logout Successful";
     } catch (e) {
       _errorMessage = "Quick logout error: ${e.toString()}";
     }
