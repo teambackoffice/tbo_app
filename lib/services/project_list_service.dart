@@ -8,8 +8,13 @@ import 'package:tbo_app/modal/project_list_modal.dart';
 class ProjectListService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  Future<ProjectList> fetchprojectlist() async {
-    final String url = '${ApiConstants.baseUrl}project_api.get_project_list';
+  Future<ProjectList> fetchProjectList({String? status}) async {
+    String url = '${ApiConstants.baseUrl}project_api.get_project_list';
+
+    // Add status as a query parameter if provided
+    if (status != null && status.isNotEmpty) {
+      url += '?status=$status';
+    }
 
     try {
       final String? sid = await _secureStorage.read(key: 'sid');
@@ -25,11 +30,7 @@ class ProjectListService {
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-
           final projectList = ProjectList.fromJson(decoded);
-
-          try {} catch (_) {}
-
           return projectList;
         } catch (e) {
           throw Exception('Failed to parse response: $e');

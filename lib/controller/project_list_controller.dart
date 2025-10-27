@@ -11,11 +11,11 @@ class GetProjectListController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchprojectlist() async {
+  Future<void> fetchprojectlist({String? status}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      projectList = await _service.fetchprojectlist();
+      projectList = await _service.fetchProjectList( status: status);
       _error = null;
     } catch (e) {
       _error = e.toString();
