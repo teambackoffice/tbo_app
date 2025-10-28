@@ -242,14 +242,72 @@ class EmployeeHandoverPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      item.task,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                        height: 1.3,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          item.task,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            height: 1.3,
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: item.status == 'Approved'
+                                ? Colors.green.withOpacity(0.15)
+                                : item.status == 'Rejected'
+                                ? Colors.red.withOpacity(0.15)
+                                : Colors.orange.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: item.status == 'Approved'
+                                  ? Colors.green
+                                  : item.status == 'Rejected'
+                                  ? Colors.red
+                                  : Colors.orange,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                item.status == 'Approved'
+                                    ? Icons.check_circle
+                                    : item.status == 'Rejected'
+                                    ? Icons.cancel
+                                    : Icons.hourglass_top,
+                                size: 14,
+                                color: item.status == 'Approved'
+                                    ? Colors.green
+                                    : item.status == 'Rejected'
+                                    ? Colors.red
+                                    : Colors.orange,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                item.status,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: item.status == 'Approved'
+                                      ? Colors.green
+                                      : item.status == 'Rejected'
+                                      ? Colors.red
+                                      : Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),

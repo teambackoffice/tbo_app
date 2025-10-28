@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
+import 'package:tbo_app/controller/handover_task_post_controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
 import 'package:tbo_app/modal/get_employee_handover_modal.dart';
 
@@ -84,7 +85,7 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.blue[50],
                   borderRadius: BorderRadius.circular(10),
@@ -96,7 +97,7 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Task Information',
                   style: TextStyle(
@@ -577,16 +578,6 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
                                     widget.handoverItem.toEmployee;
                               });
                               Navigator.pop(context);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Employee changed to ${employee.employeeName}',
-                                  ),
-                                  backgroundColor: Colors.blue,
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
                             },
                           ),
                         );
@@ -870,6 +861,11 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
   }
 
   void _showActionDialog(BuildContext context, String action, Color color) {
+    final handoverController = Provider.of<HandoverPostController>(
+      context,
+      listen: false,
+    );
+
     final displayToEmployee =
         selectedEmployee ??
         Message(
@@ -884,93 +880,146 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('$action Handover'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Are you sure you want to $action this handover request?'),
-            if (isEmployeeChanged && action == 'Accept') ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.blue[700],
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Employee Changed',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[900],
-                            fontSize: 13,
+      barrierDismissible: false,
+      builder: (context) {
+        return Consumer<HandoverPostController>(
+          builder: (context, controller, _) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('$action Handover'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Are you sure you want to $action this handover request?',
+                  ),
+                  if (isEmployeeChanged && action == 'Accept') ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 16,
+                                color: Colors.blue[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Employee Changed',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue[900],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Task will be assigned to:',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      displayToEmployee.employeeName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue[900],
-                        fontSize: 14,
+                          const SizedBox(height: 8),
+                          Text(
+                            'Task will be assigned to:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            displayToEmployee.employeeName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue[900],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implement action with selected employee
-              // Use displayToEmployee.name for the new employee ID
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isEmployeeChanged && action == 'Accept'
-                        ? 'Handover ${action.toLowerCase()}ed and assigned to ${displayToEmployee.employeeName}'
-                        : 'Handover ${action.toLowerCase()}ed successfully',
-                  ),
-                  backgroundColor: color,
+              actions: [
+                TextButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(action),
-          ),
-        ],
-      ),
+                ElevatedButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : () async {
+                          final scaffoldMessenger = ScaffoldMessenger.of(
+                            context,
+                          );
+                          final navigator = Navigator.of(context);
+
+                          // Show loading indicator
+                          await handoverController.handleHandover(
+                            name: widget.handoverItem.name,
+                            action: action.toLowerCase(),
+                            toEmployee: displayToEmployee.name,
+                          );
+
+                          navigator.pop(context);
+
+                          // Show feedback after API call
+                          if (handoverController.response != null &&
+                              !handoverController.response!
+                                  .toLowerCase()
+                                  .contains("error")) {
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isEmployeeChanged && action == 'Accept'
+                                      ? 'Handover ${action.toLowerCase()}ed and assigned to ${displayToEmployee.employeeName}'
+                                      : 'Handover ${action.toLowerCase()}ed successfully',
+                                ),
+                                backgroundColor: color,
+                              ),
+                            );
+                          } else {
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Failed to ${action.toLowerCase()} handover. Please try again.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: controller.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(action),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
