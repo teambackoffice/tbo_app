@@ -11,15 +11,11 @@ String employeeDateRequestModalToJson(EmployeeDateRequestModal data) =>
     json.encode(data.toJson());
 
 class EmployeeDateRequestModal {
-  String message;
+  String? message;
   List<Datum> data;
-  bool success;
+  bool? success;
 
-  EmployeeDateRequestModal({
-    required this.message,
-    required this.data,
-    required this.success,
-  });
+  EmployeeDateRequestModal({this.message, required this.data, this.success});
 
   factory EmployeeDateRequestModal.fromJson(Map<String, dynamic> json) =>
       EmployeeDateRequestModal(
@@ -40,7 +36,7 @@ class Datum {
   String employee;
   String employeeName;
   DateTime requestDate;
-  Status status;
+  String status;
   String task;
   String? taskSubject;
   DateTime requestedStartDate;
@@ -65,7 +61,7 @@ class Datum {
     employee: json["employee"],
     employeeName: json["employee_name"],
     requestDate: DateTime.parse(json["request_date"]),
-    status: statusValues.map[json["status"]] ?? Status.PENDING,
+    status: json["status"],
     task: json["task"],
     taskSubject: json["task_subject"],
     requestedStartDate: DateTime.parse(json["requested_start_date"]),
@@ -79,7 +75,7 @@ class Datum {
     "employee_name": employeeName,
     "request_date":
         "${requestDate.year.toString().padLeft(4, '0')}-${requestDate.month.toString().padLeft(2, '0')}-${requestDate.day.toString().padLeft(2, '0')}",
-    "status": statusValues.reverse[status],
+    "status": status,
     "task": task,
     "task_subject": taskSubject,
     "requested_start_date":
@@ -89,13 +85,6 @@ class Datum {
     "reason": reason,
   };
 }
-
-enum Status { APPROVED, PENDING }
-
-final statusValues = EnumValues({
-  "Approved": Status.APPROVED,
-  "Pending": Status.PENDING,
-});
 
 class EnumValues<T> {
   Map<String, T> map;

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_get_date_controller.dart';
 import 'package:tbo_app/modal/employee_get_date_modal.dart';
 
+// Assuming EmployeeDateRequestController and EmployeeDateRequestModal (with Datum) are defined elsewhere
+
 class EmployeeDateRequestScreen extends StatefulWidget {
   const EmployeeDateRequestScreen({super.key});
 
@@ -12,15 +14,72 @@ class EmployeeDateRequestScreen extends StatefulWidget {
 }
 
 class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
+  // --- Pagination & Search State Variables ---
+  // Initial number of items to show
+  int _visibleItemCount = 10;
+  // Step size for "Load More"
+  final int _pageSize = 10;
+  // Controller for the search text field
+  final TextEditingController _searchController = TextEditingController();
+  // Current search query
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
+    // Load data as before
     final controller = Provider.of<EmployeeDateRequestController>(
       context,
       listen: false,
     );
     controller.getEmployeeDateRequest();
+
+    // Listener for search input changes
+    _searchController.addListener(_onSearchChanged);
   }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // --- Search Helper Method ---
+  void _onSearchChanged() {
+    // Reset the visible count when search query changes
+    // This ensures that the user sees the start of the filtered list
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+      _visibleItemCount = _pageSize;
+    });
+  }
+
+  // --- Pagination Helper Method ---
+  void _loadMore() {
+    setState(() {
+      _visibleItemCount += _pageSize;
+    });
+  }
+
+  // --- Filtering Logic ---
+  List<Datum> _getFilteredData(List<Datum> allData) {
+    if (_searchQuery.isEmpty) {
+      return allData;
+    }
+
+    return allData.where((datum) {
+      final name = datum.employeeName.toLowerCase();
+      final task = (datum.taskSubject ?? datum.task).toLowerCase();
+      final reason = (datum.reason ?? '').toLowerCase();
+
+      return name.contains(_searchQuery) ||
+          task.contains(_searchQuery) ||
+          reason.contains(_searchQuery);
+    }).toList();
+  }
+
+  // --- Build Methods ---
 
   @override
   Widget build(BuildContext context) {
@@ -44,114 +103,45 @@ class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
       ),
       body: Column(
         children: [
-          // Header section with refresh button and stats
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Employee Requests",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF667eea).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: controller.isLoading
-                              ? null
-                              : () {
-                                  controller.getEmployeeDateRequest();
-                                },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (controller.isLoading)
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  Icon(
-                                    Icons.refresh_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                SizedBox(width: 8),
-                                Text(
-                                  controller.isLoading
-                                      ? "Loading..."
-                                      : "Refresh",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Content area
+          // Search Bar
+          _buildSearchBar(),
+          // Main content area
           Expanded(child: _buildContent(controller)),
         ],
+      ),
+    );
+  }
+
+  // New Widget: Search Bar
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: "Search by name, task, or reason...",
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.clear, color: Colors.grey[500]),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 10,
+            horizontal: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.grey[100],
+        ),
+        style: TextStyle(fontSize: 16, color: Colors.grey[800]),
       ),
     );
   }
@@ -165,13 +155,132 @@ class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
       return _buildErrorState(controller);
     }
 
-    if (controller.requestData != null &&
-        controller.requestData!.data.isNotEmpty) {
-      return _buildRequestsList(controller);
+    final allData = controller.requestData?.data ?? [];
+    final filteredData = _getFilteredData(allData);
+
+    if (filteredData.isNotEmpty) {
+      return _buildRequestsList(filteredData);
     }
 
+    // If we have data but the search query yields no results
+    if (allData.isNotEmpty && _searchQuery.isNotEmpty) {
+      return _buildNoSearchResultsState();
+    }
+
+    // Original empty state (no data fetched)
     return _buildEmptyState();
   }
+
+  // MODIFIED: _buildRequestsList to use the filtered and paginated data
+  Widget _buildRequestsList(List<Datum> filteredData) {
+    // Only show items up to the current visible count
+    final itemsToShow = filteredData.take(_visibleItemCount).toList();
+
+    // Check if there are more items to load
+    final hasMore = filteredData.length > _visibleItemCount;
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      // Add 1 for the "Load More" button if needed
+      itemCount: itemsToShow.length + (hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index < itemsToShow.length) {
+          final Datum datum = itemsToShow[index];
+          return _buildRequestCard(datum);
+        } else {
+          // This is the "Load More" button's index
+          return _buildLoadMoreButton();
+        }
+      },
+    );
+  }
+
+  // New Widget: Load More Button
+  Widget _buildLoadMoreButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 20.0),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: _loadMore,
+          icon: Icon(Icons.expand_more_rounded, size: 20),
+          label: Text("Load More "),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Color(0xFF667eea),
+            side: BorderSide(color: Color(0xFF667eea).withOpacity(0.5)),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // New Widget: No Search Results State
+  Widget _buildNoSearchResultsState() {
+    return Center(
+      child: Container(
+        margin: EdgeInsets.all(20),
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                color: Colors.orange[400],
+                size: 40,
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              "No matching results",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Try adjusting your search query.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 16),
+            TextButton(
+              onPressed: () => _searchController.clear(),
+              child: Text("Clear Search"),
+              style: TextButton.styleFrom(foregroundColor: Color(0xFF667eea)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // UNMODIFIED helper functions below...
 
   Widget _buildLoadingState() {
     return Center(
@@ -337,17 +446,6 @@ class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
     );
   }
 
-  Widget _buildRequestsList(EmployeeDateRequestController controller) {
-    return ListView.builder(
-      padding: EdgeInsets.all(16),
-      itemCount: controller.requestData!.data.length,
-      itemBuilder: (context, index) {
-        final Datum datum = controller.requestData!.data[index];
-        return _buildRequestCard(datum);
-      },
-    );
-  }
-
   Widget _buildRequestCard(Datum datum) {
     return Container(
       margin: EdgeInsets.only(bottom: 16),
@@ -395,13 +493,70 @@ class _EmployeeDateRequestScreenState extends State<EmployeeDateRequestScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            datum.employeeName,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                datum.employeeName,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: datum.status == 'Approved'
+                                      ? Colors.green.withOpacity(0.15)
+                                      : datum.status == 'Rejected'
+                                      ? Colors.red.withOpacity(0.15)
+                                      : Colors.orange.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: datum.status == 'Approved'
+                                        ? Colors.green
+                                        : datum.status == 'Rejected'
+                                        ? Colors.red
+                                        : Colors.orange,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      datum.status == 'Approved'
+                                          ? Icons.check_circle
+                                          : datum.status == 'Rejected'
+                                          ? Icons.cancel
+                                          : Icons.hourglass_top,
+                                      size: 14,
+                                      color: datum.status == 'Approved'
+                                          ? Colors.green
+                                          : datum.status == 'Rejected'
+                                          ? Colors.red
+                                          : Colors.orange,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      datum.status,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: datum.status == 'Approved'
+                                            ? Colors.green
+                                            : datum.status == 'Rejected'
+                                            ? Colors.red
+                                            : Colors.orange,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 2),
                           Text(
