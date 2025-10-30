@@ -48,7 +48,8 @@ class _HomepageState extends State<Homepage> {
         context,
         listen: false,
       );
-      controller.fetchTaskSummary(status: "all"); // or whatever status you need
+      // ⭐ UPDATED CALL: Removed status parameter
+      controller.fetchTaskSummary();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskByEmployeeController>().fetchTasks();
@@ -424,20 +425,10 @@ class _HomepageState extends State<Homepage> {
                         color: Colors.black,
                       ),
                     ),
-                    // Add refresh button for debugging
-                    // IconButton(
-                    //   onPressed: () {
-                    //     final controller = Provider.of<TaskCountController>(
-                    //       context,
-                    //       listen: false,
-                    //     );
-                    //     controller.fetchTaskSummary(status: "all");
-                    //   },
-                    //   icon: const Icon(Icons.refresh),
-                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
+                // ... inside your widget's build method ...
 
                 // Task Overview Pie Chart with Provider
                 Consumer<TaskCountController>(
@@ -488,7 +479,8 @@ class _HomepageState extends State<Homepage> {
                               const SizedBox(height: 10),
                               ElevatedButton(
                                 onPressed: () {
-                                  controller.fetchTaskSummary(status: "all");
+                                  // ⭐ UPDATED CALL: Removed status parameter
+                                  controller.fetchTaskSummary();
                                 },
                                 child: const Text("Retry"),
                               ),
@@ -587,6 +579,7 @@ class _HomepageState extends State<Homepage> {
                     );
                   },
                 ),
+                // ...
                 const SizedBox(height: 100),
               ],
             ),
@@ -773,114 +766,6 @@ class _HomepageState extends State<Homepage> {
     }
 
     return sections;
-  }
-
-  // Helper to build static task card
-  Widget _buildTaskCard(
-    BuildContext context, {
-    required Color color,
-    required String priority,
-    required String title,
-    required String dueDate,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      height: 218,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: priority == "High"
-                  ? const Color(0xFFFFE5E5)
-                  : const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              priority,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(
-                Icons.access_time_rounded,
-                color: Colors.white70,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "Time",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "18 Hours",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                dueDate,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              InkWell(
-                onTap: onTap,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_outward,
-                    color: Colors.black,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }
 

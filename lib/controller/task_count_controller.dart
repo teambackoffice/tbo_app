@@ -8,13 +8,15 @@ class TaskCountController extends ChangeNotifier {
   Map<String, dynamic>? taskSummaryData;
   String? errorMessage;
 
-  Future<void> fetchTaskSummary({required String status}) async {
+  // Removed the unused 'status' parameter from the controller's fetch method
+  Future<void> fetchTaskSummary() async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _service.getTaskCount(status: status);
+      // Called without the redundant status parameter
+      final response = await _service.getTaskCount();
       taskSummaryData = response;
     } catch (e) {
       errorMessage = e.toString();

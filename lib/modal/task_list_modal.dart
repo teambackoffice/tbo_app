@@ -13,38 +13,48 @@ String allTaskListModalToJson(AllTaskListModal data) =>
 class AllTaskListModal {
   String message;
   List<TaskDetails> data;
-  bool? success; // Made nullable since it might not be in response
+  bool? success;
 
   AllTaskListModal({required this.message, required this.data, this.success});
 
-  factory AllTaskListModal.fromJson(Map<String, dynamic> json) =>
-      AllTaskListModal(
-        message: json["message"],
-        data: List<TaskDetails>.from(
-          json["data"].map((x) => TaskDetails.fromJson(x)),
-        ),
-        success: json["success"], // Will be null if not present
-      );
+  factory AllTaskListModal.fromJson(Map<String, dynamic> json) {
+    // Extract the nested "message" object
+    final messageObj = json["message"] as Map<String, dynamic>;
+
+    return AllTaskListModal(
+      message: messageObj["message"] as String,
+      data: List<TaskDetails>.from(
+        messageObj["data"].map((x) => TaskDetails.fromJson(x)),
+      ),
+      success: messageObj["success"] as bool?,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    "message": message,
-    "data": List<dynamic>.from(data.map((x) => x.toJson())),
-    "success": success,
+    "message": {
+      "success": success,
+      "message": message,
+      "data": List<dynamic>.from(data.map((x) => x.toJson())),
+    },
   };
 }
 
 class TaskDetails {
   String name;
-  String? subject; // Made nullable
+  String? subject;
   String status;
   String priority;
   double progress;
-  String? project; // Made nullable
-  DateTime? expStartDate; // Made nullable - this was causing the main error
-  DateTime? expEndDate; // Made nullable - this was causing the main error
-  String? description; // Made nullable
+  String? project;
+  DateTime? expStartDate;
+  DateTime? expEndDate;
+  String? description;
   DateTime creation;
-  List<String> assignedUsers;
+  String? assignedUsers;
+  String? type;
+  double? customEstimatedHours;
+  String? parentTask;
+  double? expectedTime;
 
   TaskDetails({
     required this.name,
@@ -57,27 +67,33 @@ class TaskDetails {
     this.expEndDate,
     this.description,
     required this.creation,
-    required this.assignedUsers,
+    this.assignedUsers,
+    this.type,
+    this.customEstimatedHours,
+    this.parentTask,
+    this.expectedTime,
   });
 
   factory TaskDetails.fromJson(Map<String, dynamic> json) => TaskDetails(
     name: json["name"],
-    subject: json["subject"], // Can be null
+    subject: json["subject"],
     status: json["status"],
     priority: json["priority"],
     progress: (json["progress"] as num).toDouble(),
-    project: json["project"], // Can be null
+    project: json["project"],
     expStartDate: json["exp_start_date"] != null
         ? DateTime.parse(json["exp_start_date"])
-        : null, // Handle null dates
+        : null,
     expEndDate: json["exp_end_date"] != null
         ? DateTime.parse(json["exp_end_date"])
-        : null, // Handle null dates
-    description: json["description"], // Can be null
+        : null,
+    description: json["description"],
     creation: DateTime.parse(json["creation"]),
-    assignedUsers: json["assigned_users"] != null
-        ? List<String>.from(json["assigned_users"].map((x) => x))
-        : [], // Handle null assigned_users
+    assignedUsers: json["custom_assigned_employee"],
+    type: json["type"],
+    customEstimatedHours: (json["custom_estimated_hours"] as num?)?.toDouble(),
+    parentTask: json["parent_task"],
+    expectedTime: (json["expected_time"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -87,14 +103,14 @@ class TaskDetails {
     "priority": priority,
     "progress": progress,
     "project": project,
-    "exp_start_date": expStartDate != null
-        ? "${expStartDate!.year.toString().padLeft(4, '0')}-${expStartDate!.month.toString().padLeft(2, '0')}-${expStartDate!.day.toString().padLeft(2, '0')}"
-        : null,
-    "exp_end_date": expEndDate != null
-        ? "${expEndDate!.year.toString().padLeft(4, '0')}-${expEndDate!.month.toString().padLeft(2, '0')}-${expEndDate!.day.toString().padLeft(2, '0')}"
-        : null,
+    "exp_start_date": expStartDate?.toIso8601String().split('T').first,
+    "exp_end_date": expEndDate?.toIso8601String().split('T').first,
     "description": description,
     "creation": creation.toIso8601String(),
-    "assigned_users": List<dynamic>.from(assignedUsers.map((x) => x)),
+    "custom_assigned_employee": assignedUsers,
+    "type": type,
+    "custom_estimated_hours": customEstimatedHours,
+    "parent_task": parentTask,
+    "expected_time": expectedTime,
   };
 }
