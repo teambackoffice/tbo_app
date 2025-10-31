@@ -420,28 +420,6 @@ class TaskCard extends StatelessWidget {
                   ),
                 ),
               ),
-              GestureDetector(
-                onTap: onDelete,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.delete_outline,
-                    color: Color(0xFFFF3B30),
-                    size: 20,
-                  ),
-                ),
-              ),
             ],
           ),
           SizedBox(height: 12),

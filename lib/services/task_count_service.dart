@@ -7,7 +7,8 @@ import 'package:tbo_app/config/api_constants.dart';
 class TaskCountService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  Future<Map<String, dynamic>?> getTaskCount({required String status}) async {
+  // Removed the unused 'status' parameter for cleaner code
+  Future<Map<String, dynamic>?> getTaskCount() async {
     // Read sid and employee ID from secure storage
     final sid = await _secureStorage.read(key: 'sid');
     final employeeId = await _secureStorage.read(key: 'employee_id');
@@ -30,6 +31,7 @@ class TaskCountService {
   ) async {
     // Your API uses these exact status names
     final statuses = ['open', 'working', 'completed'];
+    // Initialize map with default counts
     Map<String, int> counts = {'open': 0, 'working': 0, 'completed': 0};
 
     for (String status in statuses) {
@@ -37,7 +39,9 @@ class TaskCountService {
         final count = await _getCountForStatus(employeeId, sid, status);
         counts[status] = count;
       } catch (e) {
-        // Continue with other statuses, keep count as 0
+        // Log the error for debugging, but continue with other statuses
+        // print('Error fetching count for status $status: $e');
+        // Count remains 0 due to initialization
       }
     }
 
@@ -64,9 +68,11 @@ class TaskCountService {
     if (response.statusCode == 200) {
       try {
         final jsonResponse = jsonDecode(resBody);
-        final count = jsonResponse['message']?['count'] ?? 0;
+        // ⭐ CRITICAL FIX: The API response uses 'total_count', not 'count'
+        final count = jsonResponse['message']?['total_count'] ?? 0;
         return count as int;
       } catch (e) {
+        // Malformed JSON or missing key will result in 0
         return 0;
       }
     } else {

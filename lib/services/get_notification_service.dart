@@ -17,6 +17,7 @@ class NotificationService {
     );
 
     final request = http.Request('GET', uri);
+    print("NotificationService Request URL: $uri");
 
     // Add SID cookie if available
     if (sid != null) {
@@ -27,6 +28,8 @@ class NotificationService {
     request.headers['Content-Type'] = 'application/json';
 
     final response = await request.send();
+    print("NotificationService Response Status: ${response.statusCode}");
+    print("NotificationService Response Body: ${response.reasonPhrase}");
 
     if (response.statusCode == 200) {
       final String responseString = await response.stream.bytesToString();
@@ -39,58 +42,12 @@ class NotificationService {
       return notificationModal;
     } else if (response.statusCode == 401) {
       throw Exception("❌ Unauthorized: Please login again");
-    } else if (response.statusCode == 404) {
-      throw Exception("❌ Notifications not found");
+    } else if (response.statusCode == 404 || response.statusCode == 417) {
+      throw Exception(" No notifications found ");
     } else {
       throw Exception(
         "❌ Failed to load notifications: ${response.statusCode} - ${response.reasonPhrase}",
       );
-    }
-  }
-
-  // Optional: Mark notification as read on backend
-  Future<void> markNotificationAsRead({
-    required String userId,
-    required String notificationId,
-  }) async {
-    String? sid = await _storage.read(key: "sid");
-
-    final uri = Uri.parse("${ApiConstants.baseUrl}auth.mark_notification_read");
-
-    final response = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        if (sid != null) 'Cookie': 'sid=$sid',
-      },
-      body: jsonEncode({'user_id': userId, 'notification_id': notificationId}),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to mark notification as read");
-    }
-  }
-
-  // Optional: Delete notification
-  Future<void> deleteNotification({
-    required String userId,
-    required String notificationId,
-  }) async {
-    String? sid = await _storage.read(key: "sid");
-
-    final uri = Uri.parse("${ApiConstants.baseUrl}auth.delete_notification");
-
-    final response = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        if (sid != null) 'Cookie': 'sid=$sid',
-      },
-      body: jsonEncode({'user_id': userId, 'notification_id': notificationId}),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to delete notification");
     }
   }
 }

@@ -12,7 +12,7 @@ class TaskListService {
     String? status,
     String? assignedUsers,
   }) async {
-    String baseUrl = '${ApiConstants.baseUrl}project_api.get_task_list';
+    String baseUrl = '${ApiConstants.baseUrl}project_api.get_project_tasks';
 
     // Build query params only if provided
     final queryParams = <String, String>{};
@@ -43,11 +43,7 @@ class TaskListService {
         try {
           final decoded = jsonDecode(response.body);
 
-          // 📌 Print Parsed JSON
-
           final tasklist = allTaskListModalFromJson(response.body);
-
-          // 📌 Print Parsed Model
 
           return tasklist;
         } catch (e) {
