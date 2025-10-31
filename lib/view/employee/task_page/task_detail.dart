@@ -258,81 +258,86 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 ),
 
               // Action Buttons Row (Handover and Date Request)
-              Row(
-                children: [
-                  // Handover Task Button
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 4,
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CreateHandoverPage(taskId: widget.task.name),
+              widget.task.status == 'Completed'
+                  ? SizedBox()
+                  : Row(
+                      children: [
+                        // Handover Task Button
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CreateHandoverPage(
+                                      taskId: widget.task.name,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Handover Task',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        child: const Text(
-                          'Handover Task',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  // // Date Request Button
-                  // Expanded(
-                  //   child: Container(
-                  //     padding: const EdgeInsets.symmetric(
-                  //       vertical: 8,
-                  //       horizontal: 4,
-                  //     ),
-                  //     child: ElevatedButton(
-                  //       onPressed: () {
-                  //         Navigator.push(
-                  //           context,
-                  //           MaterialPageRoute(
-                  //             builder: (context) =>
-                  //                 CreateDateRequest(taskId: widget.task.name),
-                  //           ),
-                  //         );
-                  //       },
-                  //       style: ElevatedButton.styleFrom(
-                  //         backgroundColor: const Color(0xFFF59E0B),
-                  //         foregroundColor: Colors.white,
-                  //         padding: const EdgeInsets.symmetric(vertical: 16),
-                  //         shape: RoundedRectangleBorder(
-                  //           borderRadius: BorderRadius.circular(12),
-                  //         ),
-                  //       ),
-                  //       child: const Text(
-                  //         'Date Request',
-                  //         style: TextStyle(
-                  //           fontSize: 14,
-                  //           fontWeight: FontWeight.w600,
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                ],
-              ),
+                        // // Date Request Button
+                        // Expanded(
+                        //   child: Container(
+                        //     padding: const EdgeInsets.symmetric(
+                        //       vertical: 8,
+                        //       horizontal: 4,
+                        //     ),
+                        //     child: ElevatedButton(
+                        //       onPressed: () {
+                        //         Navigator.push(
+                        //           context,
+                        //           MaterialPageRoute(
+                        //             builder: (context) =>
+                        //                 CreateDateRequest(taskId: widget.task.name),
+                        //           ),
+                        //         );
+                        //       },
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: const Color(0xFFF59E0B),
+                        //         foregroundColor: Colors.white,
+                        //         padding: const EdgeInsets.symmetric(vertical: 16),
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(12),
+                        //         ),
+                        //       ),
+                        //       child: const Text(
+                        //         'Date Request',
+                        //         style: TextStyle(
+                        //           fontSize: 14,
+                        //           fontWeight: FontWeight.w600,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+                      ],
+                    ),
               const SizedBox(height: 16),
             ],
           ),

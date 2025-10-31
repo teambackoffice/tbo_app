@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/modal/task_list_modal.dart';
+import 'package:tbo_app/view/admin/task/task_details.dart';
 
 class AdminTaskPage extends StatefulWidget {
   const AdminTaskPage({super.key});
@@ -352,13 +353,13 @@ class _AdminTaskPageState extends State<AdminTaskPage>
                       final task = paginatedTasks[index];
                       return GestureDetector(
                         onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) =>
-                          //         AdminTodoDetails(task: task),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  AdminTaskDetailsPage(task: task),
+                            ),
+                          );
                         },
                         child: Container(
                           margin: EdgeInsets.only(bottom: 16),
