@@ -230,14 +230,32 @@ class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
                               color: Colors.grey[700],
                             ),
                           ),
-
-                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Text(
+                                'Lead Segment',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                lead.customLeadSegment ?? 'N/A',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                            ],
+                          ),
 
                           // Lead Source section
                           Row(
                             children: [
                               Text(
-                                'Lead Source',
+                                'Lead Source ',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[500],
@@ -255,16 +273,26 @@ class _CRMLeadsDetailsState extends State<CRMLeadsDetails> {
                             ],
                           ),
 
-                          const SizedBox(height: 24),
-
                           // Description
-                          Text(
-                            'Lorem ipsum dolor sit amet consectetur. Cum ac viverra euismod volutpat scelerisque porttitor. Nibh id dui tortor cras. Eget arcu tellus arcu tempus bibendum. At aliquam scelerisque vitae lectus phasellus mollis. Morbi vitae aliquet urna fames metus ornare.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.5,
-                              color: Colors.grey[600],
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Market Segment',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                lead.marketSegment,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                            ],
                           ),
 
                           const SizedBox(height: 24),

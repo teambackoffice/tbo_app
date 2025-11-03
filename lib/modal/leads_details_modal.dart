@@ -59,6 +59,7 @@ class Data {
   String industry;
   DateTime creation;
   DateTime modified;
+  String? customLeadSegment;
 
   Data({
     required this.leadId,
@@ -84,6 +85,7 @@ class Data {
     required this.industry,
     required this.creation,
     required this.modified,
+    this.customLeadSegment,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
@@ -110,6 +112,7 @@ class Data {
     industry: json["industry"],
     creation: DateTime.parse(json["creation"]),
     modified: DateTime.parse(json["modified"]),
+    customLeadSegment: json["custom_lead_segment"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -136,5 +139,6 @@ class Data {
     "industry": industry,
     "creation": creation.toIso8601String(),
     "modified": modified.toIso8601String(),
+    "custom_lead_segment": customLeadSegment,
   };
 }
