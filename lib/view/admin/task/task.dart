@@ -15,12 +15,19 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     with TickerProviderStateMixin {
   String selectedFilter = 'All';
   String selectedDate = '';
+  String searchQuery = '';
 
   // Pagination variables
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   final int _itemsPerPage = 10;
   bool _isLoadingMore = false;
+
+  // Search Animation Controller
+  late AnimationController _searchAnimationController;
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   // FAB Animation Controller
   late AnimationController _fabAnimationController;
@@ -37,6 +44,12 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     selectedDate =
         '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year.toString().substring(2)}';
 
+    // Initialize Search animation
+    _searchAnimationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+
     // Initialize FAB animation
     _fabAnimationController = AnimationController(
       duration: Duration(milliseconds: 300),
@@ -48,6 +61,13 @@ class _AdminTaskPageState extends State<AdminTaskPage>
 
     // Add scroll listener for pagination
     _scrollController.addListener(_onScroll);
+
+    // Listen to search changes
+    _searchController.addListener(() {
+      setState(() {
+        searchQuery = _searchController.text;
+      });
+    });
 
     // Fetch initial tasks
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -75,7 +95,7 @@ class _AdminTaskPageState extends State<AdminTaskPage>
   Future<void> _loadMoreTasks() async {
     if (_taskController.tasklist == null) return;
 
-    final totalItems = _taskController.tasklist!.data.length;
+    final totalItems = _getFilteredTasks().length;
     final loadedItems = (_currentPage + 1) * _itemsPerPage;
 
     if (loadedItems >= totalItems) return;
@@ -92,10 +112,29 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     });
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearchExpanded = !_isSearchExpanded;
+    });
+    if (_isSearchExpanded) {
+      _searchAnimationController.forward();
+      Future.delayed(Duration(milliseconds: 300), () {
+        _searchFocusNode.requestFocus();
+      });
+    } else {
+      _searchAnimationController.reverse();
+      _searchController.clear();
+      _searchFocusNode.unfocus();
+    }
+  }
+
   @override
   void dispose() {
+    _searchAnimationController.dispose();
     _fabAnimationController.dispose();
     _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -152,8 +191,16 @@ class _AdminTaskPageState extends State<AdminTaskPage>
 
     var tasks = _taskController.tasklist!.data;
 
-    // Apply date filter if needed
-    // You can add date filtering logic here based on selectedDate
+    // Apply search filter
+    if (searchQuery.isNotEmpty) {
+      tasks = tasks.where((task) {
+        final taskName = (task.subject ?? task.name).toLowerCase();
+        final assignedUser = (task.assignedUsers ?? '').toLowerCase();
+        final query = searchQuery.toLowerCase();
+
+        return taskName.contains(query) || assignedUser.contains(query);
+      }).toList();
+    }
 
     return tasks;
   }
@@ -165,6 +212,137 @@ class _AdminTaskPageState extends State<AdminTaskPage>
       filteredTasks.length,
     );
     return filteredTasks.sublist(0, endIndex);
+  }
+
+  Widget _buildAnimatedSearchBar() {
+    return AnimatedBuilder(
+      animation: _searchAnimationController,
+      builder: (context, child) {
+        return Container(
+          height: 48,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _isSearchExpanded
+                  ? Color(0xFF2D7D8C)
+                  : Colors.grey.shade300,
+              width: _isSearchExpanded ? 2 : 1,
+            ),
+            boxShadow: _isSearchExpanded
+                ? [
+                    BoxShadow(
+                      color: Color(0xFF2D7D8C).withOpacity(0.2),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Stack(
+            children: [
+              // Search Input Field
+              Positioned.fill(
+                child: Opacity(
+                  opacity: _isSearchExpanded ? 1.0 : 0.0,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 20, right: 60),
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                      decoration: InputDecoration(
+                        hintText: 'Search by employee name..',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Color(0xFF2D7D8C).withOpacity(0.6),
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Placeholder text when collapsed
+              if (!_isSearchExpanded)
+                Positioned.fill(
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search, color: Color(0xFF2D7D8C), size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Search Tasks',
+                          style: TextStyle(
+                            color: Color(0xFF2D7D8C),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              // Clear and Close Button
+              if (_isSearchExpanded)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  bottom: 4,
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: _toggleSearch,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF2D7D8C), Color(0xFF3A9AAB)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Tap area when collapsed
+              if (!_isSearchExpanded)
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: _toggleSearch,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -215,22 +393,6 @@ class _AdminTaskPageState extends State<AdminTaskPage>
           }
 
           final paginatedTasks = _getPaginatedTasks();
-
-          if (paginatedTasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.task_alt, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No tasks found',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
 
           return Padding(
             padding: EdgeInsets.all(16.0),
@@ -334,188 +496,264 @@ class _AdminTaskPageState extends State<AdminTaskPage>
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
+
+                SizedBox(height: 16),
+
+                // Animated Search Bar (Full Width)
+                _buildAnimatedSearchBar(),
+
+                // Show search results count when searching
+                if (searchQuery.isNotEmpty) ...[
+                  SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2D7D8C).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${_getFilteredTasks().length} result${_getFilteredTasks().length != 1 ? 's' : ''} found',
+                        style: TextStyle(
+                          color: Color(0xFF2D7D8C),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 16),
+
                 // Tasks List
                 Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: paginatedTasks.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == paginatedTasks.length) {
-                        return Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-
-                      final task = paginatedTasks[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  AdminTaskDetailsPage(task: task),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
+                  child: paginatedTasks.isEmpty
+                      ? Center(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Priority Badge
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: getStatusColor(task.status),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  task.status,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                              Icon(
+                                searchQuery.isNotEmpty
+                                    ? Icons.search_off
+                                    : Icons.task_alt,
+                                size: 64,
+                                color: Colors.grey,
                               ),
                               SizedBox(height: 16),
-                              // Task Name
                               Text(
-                                task.subject ?? task.name,
+                                searchQuery.isNotEmpty
+                                    ? 'No tasks match your search'
+                                    : 'No tasks found',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              SizedBox(height: 16),
-                              // Task Details Row
-                              Row(
-                                children: [
-                                  // Time Column
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.access_time,
-                                              size: 16,
-                                              color: Colors.grey,
-                                            ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              'Time',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          calculateTimeRemaining(
-                                            task.expEndDate,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              if (searchQuery.isNotEmpty) ...[
+                                SizedBox(height: 8),
+                                Text(
+                                  'Try adjusting your search terms',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade400,
                                   ),
-                                  // Due Date Column
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today_outlined,
-                                              size: 16,
-                                              color: Colors.grey,
-                                            ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              'Due Date',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          formatDate(task.expEndDate),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Assigned To Column
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Assigned to',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          task.assignedUsers ?? "",
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ],
                           ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount:
+                              paginatedTasks.length + (_isLoadingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == paginatedTasks.length) {
+                              return Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+
+                            final task = paginatedTasks[index];
+
+                            // Highlight search matches
+                            final taskName = task.subject ?? task.name;
+                            final assignedUser = task.assignedUsers ?? "";
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        AdminTaskDetailsPage(task: task),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: EdgeInsets.only(bottom: 16),
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Priority Badge
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: getStatusColor(task.status),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        task.status,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    // Task Name with highlight
+                                    Text(
+                                      taskName,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    // Task Details Row
+                                    Row(
+                                      children: [
+                                        // Time Column
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.access_time,
+                                                    size: 16,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'Time',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                calculateTimeRemaining(
+                                                  task.expEndDate,
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Due Date Column
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons
+                                                        .calendar_today_outlined,
+                                                    size: 16,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'Due Date',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                formatDate(task.expEndDate),
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Assigned To Column
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Assigned to',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                assignedUser,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
