@@ -22,44 +22,68 @@ class _CRMAllLeadsPageState extends State<CRMAllLeadsPage> {
     });
   }
 
-  // Helper method to get status color based on status string
   Color getStatusColor(String? status) {
     if (status == null) return Colors.grey;
-
     switch (status.toLowerCase()) {
       case 'open':
       case 'fresh':
-        return Colors.blue;
+        return Colors.blueAccent;
       case 'replied':
       case 'working':
-        return Colors.orange;
+        return Colors.orangeAccent;
       case 'quotation':
       case 'proposal':
-        return Colors.red;
+        return Colors.purpleAccent;
       case 'interested':
         return Colors.amber;
-
       case 'converted':
       case 'won':
         return Colors.green;
-      case 'Do not contact':
+      case 'do not contact':
       case 'closed':
+        return Colors.redAccent;
       default:
-        return Colors.blue; // Default color
+        return Colors.grey;
+    }
+  }
+
+  IconData getStatusIcon(String? status) {
+    if (status == null) return Icons.help_outline;
+    switch (status.toLowerCase()) {
+      case 'open':
+      case 'fresh':
+        return Icons.refresh;
+      case 'replied':
+      case 'working':
+        return Icons.work_outline;
+      case 'quotation':
+      case 'proposal':
+        return Icons.description_outlined;
+      case 'interested':
+        return Icons.star_border;
+      case 'converted':
+      case 'won':
+        return Icons.check_circle_outline;
+      case 'do not contact':
+      case 'closed':
+        return Icons.block;
+      default:
+        return Icons.help_outline;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F7F3),
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F5F5),
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black12,
         title: const Text(
           'All Leads',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.black87,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -74,7 +98,12 @@ class _CRMAllLeadsPageState extends State<CRMAllLeadsPage> {
           } else if (controller.error != null) {
             return Center(child: Text('Error: ${controller.error}'));
           } else if (leads.isEmpty) {
-            return const Center(child: Text('No leads available'));
+            return const Center(
+              child: Text(
+                'No leads available',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
           }
 
           return ListView.builder(
@@ -82,85 +111,120 @@ class _CRMAllLeadsPageState extends State<CRMAllLeadsPage> {
             itemCount: leads.length,
             itemBuilder: (context, index) {
               final lead = leads[index];
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index < leads.length - 1 ? 12 : 0,
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            CRMLeadsDetails(leadId: lead.leadId),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+              final color = getStatusColor(lead.status);
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CRMLeadsDetails(leadId: lead.leadId),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
+                  );
+                },
+                child: Container(
+                  margin: EdgeInsets.only(
+                    bottom: index < leads.length - 1 ? 14 : 0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: CircleAvatar(
+                      backgroundColor: color.withOpacity(0.15),
+                      radius: 24,
+                      child: Text(
+                        (lead.companyName?.substring(0, 1) ?? '?')
+                            .toUpperCase(),
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      lead.companyName ?? 'Unknown Company',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: Colors.grey[600],
                             ),
-                            decoration: BoxDecoration(
-                              color: getStatusColor(lead.status),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              lead.status ?? 'Unknown',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(width: 4),
+                            Text(
+                              lead.territory ?? 'Unknown Location',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            lead.companyName ?? 'Unknown Company',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                color.withOpacity(0.9),
+                                color.withOpacity(0.7),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.location_on_outlined,
+                                getStatusIcon(lead.status),
                                 size: 14,
-                                color: Colors.grey[600],
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Text(
-                                lead.territory ?? 'Unknown Location',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
+                                lead.status?.toUpperCase() ?? 'UNKNOWN',
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w400,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey,
                     ),
                   ),
                 ),
