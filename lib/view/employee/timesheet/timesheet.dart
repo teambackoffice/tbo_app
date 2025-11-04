@@ -14,7 +14,6 @@ class EmployeeSchedulePage extends StatefulWidget {
 }
 
 class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
-  String selectedFilter = 'All';
   DateTime? selectedDate;
   GetTimesheetController? _controller;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -65,22 +64,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     if (_controller?.allLeads?.data == null) return [];
 
     List<Datum> filtered = _controller!.allLeads!.data;
-
-    if (selectedFilter != 'All') {
-      if (selectedFilter == 'Approved') {
-        filtered = filtered
-            .where((emp) => emp.status.toLowerCase() == 'approved')
-            .toList();
-      } else if (selectedFilter == 'Send to Approval') {
-        filtered = filtered
-            .where(
-              (emp) =>
-                  emp.status.toLowerCase() == 'draft' ||
-                  emp.status.toLowerCase() == 'pending',
-            )
-            .toList();
-      }
-    }
 
     if (selectedDate != null) {
       filtered = filtered.where((emp) {
@@ -452,16 +435,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
-                    // Status Filter Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFilterChip('All'),
-                        _buildFilterChip('Approved'),
-                        _buildFilterChip('Send to Approval'),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -507,7 +480,9 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'Try adjusting your filters',
+                              selectedDate != null
+                                  ? 'No timesheets for the selected date'
+                                  : 'No timesheets available',
                               style: TextStyle(
                                 color: Colors.grey[400],
                                 fontSize: 14,
@@ -527,36 +502,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String filter) {
-    bool isSelected = selectedFilter == filter;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedFilter = filter;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.teal : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.teal : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          filter,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
       ),
     );
   }
@@ -604,25 +549,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color:
-                          employee.status.toLowerCase() == 'pending' ||
-                              employee.status.toLowerCase() == 'draft'
-                          ? Colors.black
-                          : Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
                   ),
                 ),
               ],

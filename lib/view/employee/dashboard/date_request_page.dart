@@ -139,8 +139,6 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                     _buildTab('Pending', allRequests),
                     const SizedBox(width: 12),
                     _buildTab('Approved', allRequests),
-                    const SizedBox(width: 12),
-                    _buildTab('Rejected', allRequests),
                   ],
                 ),
               ),

@@ -9,7 +9,6 @@ import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.dart';
 import 'package:tbo_app/view/admin/task/task.dart';
-import 'package:tbo_app/view/employee/dashboard/notification/notification.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -23,6 +22,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String? _fullName;
   String? designation;
   String? _imageUrl;
+  String? role;
 
   Future<String?> _getSid() async {
     return await _storage.read(key: "sid");
@@ -32,10 +32,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final name = await _storage.read(key: 'employee_full_name');
     final designationValue = await _storage.read(key: 'designation');
     final imageUrl = await _storage.read(key: 'image');
+    final roleValue = await _storage.read(key: 'role_profile_name');
     setState(() {
       _fullName = name;
       designation = designationValue;
       _imageUrl = imageUrl;
+      role = roleValue;
     });
   }
 
@@ -176,29 +178,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ],
                     ),
                   ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationsScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 45,
-                      height: 45,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4A90A4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.notifications,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                  // InkWell(
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //         builder: (context) => const NotificationsScreen(),
+                  //       ),
+                  //     );
+                  //   },
+                  //   child: Container(
+                  //     width: 45,
+                  //     height: 45,
+                  //     decoration: const BoxDecoration(
+                  //       color: Color(0xFF4A90A4),
+                  //       shape: BoxShape.circle,
+                  //     ),
+                  //     child: const Icon(
+                  //       Icons.notifications,
+                  //       color: Colors.white,
+                  //       size: 20,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
 
