@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
@@ -13,8 +12,7 @@ class AdminLeadsPage extends StatefulWidget {
 }
 
 class _AdminLeadsPageState extends State<AdminLeadsPage> {
-  String selectedFilter = 'All';
-  String selectedDate = '';
+  String searchQuery = '';
   int currentPage = 1;
   int itemsPerPage = 10;
 
@@ -40,13 +38,25 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     }
   }
 
-  // Filter leads based on selected filter
+  // Filter leads based on search query
   List<Leads> _getFilteredLeads(List<Leads> allLeads) {
-    if (selectedFilter == 'All') {
+    if (searchQuery.isEmpty) {
       return allLeads;
     }
     return allLeads.where((lead) {
-      return lead.status?.toLowerCase() == selectedFilter.toLowerCase();
+      final companyName = lead.companyName?.toLowerCase() ?? '';
+      final status = lead.status?.toLowerCase() ?? '';
+      final leadSegment =
+          lead.customLeadSegment?.toLowerCase() ??
+          lead.marketSegment?.toLowerCase() ??
+          '';
+      final projectType = lead.customProjectType?.toLowerCase() ?? '';
+      final query = searchQuery.toLowerCase();
+
+      return companyName.contains(query) ||
+          status.contains(query) ||
+          leadSegment.contains(query) ||
+          projectType.contains(query);
     }).toList();
   }
 
@@ -82,7 +92,6 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
   @override
   void initState() {
     super.initState();
-    selectedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
     // Add scroll listener
     _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,92 +127,37 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     }
   }
 
-  Widget _buildFilterSection() {
-    return Row(
-      children: [
-        // All Filter Dropdown
-        Expanded(
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
-              color: Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedFilter,
-                isExpanded: true,
-                icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
-                items:
-                    [
-                      'All',
-                      'Converted',
-                      'Contacted',
-                      'Proposal Sent',
-                      'Lost Quotation',
-                    ].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            value,
-                            style: TextStyle(fontSize: 14, color: Colors.black),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedFilter = newValue!;
-                    currentPage = 1; // Reset to first page when filter changes
-                  });
-                },
-              ),
-            ),
-          ),
+  Widget _buildSearchSection() {
+    return TextFormField(
+      onChanged: (value) {
+        setState(() {
+          searchQuery = value;
+          currentPage = 1; // Reset to first page when search changes
+        });
+      },
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderRadius: const BorderRadius.all(Radius.circular(25.0)),
         ),
-        SizedBox(width: 70),
-        // Date Filter
-        GestureDetector(
-          onTap: () async {
-            final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2030),
-            );
-            if (picked != null) {
-              setState(() {
-                selectedDate = DateFormat('dd-MM-yyyy').format(picked);
-              });
-            }
-          },
-          child: Container(
-            height: 40,
-            width: 160,
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
-              color: Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  selectedDate,
-                  style: TextStyle(fontSize: 14, color: Colors.black),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.calendar_today, color: Colors.grey[600], size: 16),
-              ],
-            ),
-          ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderRadius: const BorderRadius.all(Radius.circular(25.0)),
         ),
-        SizedBox(height: 16),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade400),
+          borderRadius: const BorderRadius.all(Radius.circular(25.0)),
+        ),
+        hintText: 'Search leads...',
+        hintStyle: TextStyle(color: Colors.grey.shade500),
+        suffixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+      ),
     );
   }
 
@@ -501,10 +455,10 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
               padding: EdgeInsets.all(16),
               itemCount: 1 + paginatedLeads.length + (_showPagination ? 1 : 0),
               itemBuilder: (context, index) {
-                // First item is the filter section
+                // First item is the search section
                 if (index == 0) {
                   return Column(
-                    children: [_buildFilterSection(), SizedBox(height: 16)],
+                    children: [_buildSearchSection(), SizedBox(height: 16)],
                   );
                 }
 

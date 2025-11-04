@@ -15,8 +15,7 @@ class CommonProjectPage extends StatefulWidget {
 
 class _CommonProjectPageState extends State<CommonProjectPage>
     with TickerProviderStateMixin {
-  String selectedFilter = 'All';
-  String selectedDate = '';
+  String searchQuery = '';
   bool _isFabExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
@@ -39,11 +38,6 @@ class _CommonProjectPageState extends State<CommonProjectPage>
         listen: false,
       ).fetchprojectlist();
     });
-
-    // Set today's date when the page loads
-    final now = DateTime.now();
-    selectedDate =
-        '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year.toString().substring(2)}';
   }
 
   @override
@@ -63,8 +57,6 @@ class _CommonProjectPageState extends State<CommonProjectPage>
     });
   }
 
-  final List<String> filterOptions = ['All', 'Open', 'Progress', 'Completed'];
-
   Color getStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'open':
@@ -80,28 +72,26 @@ class _CommonProjectPageState extends State<CommonProjectPage>
     }
   }
 
-  // Filter projects based on selected filter and date
+  // Filter projects based on search query
   List<ProjectDetails> getFilteredProjects(List<ProjectDetails>? projects) {
     if (projects == null) return [];
 
-    List<ProjectDetails> filtered = projects;
-
-    // Filter by status
-    if (selectedFilter != 'All') {
-      filtered = filtered.where((project) {
-        final projectStatus = project.status ?? 'Open';
-
-        // Handle different status mappings
-        if (selectedFilter == 'Progress') {
-          return projectStatus.toLowerCase() == 'progress' ||
-              projectStatus.toLowerCase() == 'in progress';
-        }
-
-        return projectStatus.toLowerCase() == selectedFilter.toLowerCase();
-      }).toList();
+    if (searchQuery.isEmpty) {
+      return projects;
     }
 
-    return filtered;
+    return projects.where((project) {
+      final projectName = project.projectName?.toLowerCase() ?? '';
+      final projectId = project.name?.toLowerCase() ?? '';
+      final projectType = project.projectType?.toLowerCase() ?? '';
+      final status = project.status?.toLowerCase() ?? '';
+      final query = searchQuery.toLowerCase();
+
+      return projectName.contains(query) ||
+          projectId.contains(query) ||
+          projectType.contains(query) ||
+          status.contains(query);
+    }).toList();
   }
 
   Widget _buildExpandableFab() {
@@ -295,122 +285,41 @@ class _CommonProjectPageState extends State<CommonProjectPage>
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Filter Row
-            Row(
-              children: [
-                // Status Filter Dropdown
-                Expanded(
-                  child: Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(26),
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedFilter,
-                        isExpanded: true,
-                        icon: Padding(
-                          padding: EdgeInsets.only(right: 20),
-                          child: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Colors.grey.shade600,
-                            size: 24,
-                          ),
-                        ),
-                        items: filterOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 20),
-                              child: Text(
-                                value,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedFilter = newValue!;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
+            // Search Field
+            TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
                 ),
-                SizedBox(width: 16),
-                // Date Filter
-                Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(26),
-                    border: Border.all(color: Colors.grey.shade300, width: 1),
-                  ),
-                  child: InkWell(
-                    onTap: () async {
-                      final DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: ColorScheme.light(
-                                primary: Color(0xFF28A745),
-                                onPrimary: Colors.white,
-                                onSurface: Colors.black,
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          selectedDate =
-                              '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year.toString().substring(2)}';
-                        });
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(26),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            selectedDate,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 20,
-                            color: Colors.grey.shade600,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
                 ),
-              ],
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade400),
+                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
+                ),
+                hintText: 'Search projects...',
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                suffixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+              ),
             ),
-            SizedBox(height: 32),
+            SizedBox(height: 24),
             // Projects List
             Expanded(
               child: Consumer<GetProjectListController>(
@@ -468,55 +377,6 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                   final projects = controller.projectList?.data;
                   final filteredProjects = getFilteredProjects(projects);
 
-                  if (projects != null && projects.isNotEmpty) {}
-
-                  if (filteredProjects.isEmpty &&
-                      projects?.isNotEmpty == true) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.filter_list_off,
-                            size: 64,
-                            color: Colors.grey.shade400,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'No projects match your filters',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Try selecting "All" or different filters',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                selectedFilter = 'All';
-                                selectedDate = '';
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF28A745),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text('Clear Filters'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
                   if (projects == null || projects.isEmpty) {
                     return Center(
                       child: Column(
@@ -549,119 +409,156 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                     );
                   }
 
-                  return ListView.builder(
-                    itemCount: filteredProjects.length,
-                    itemBuilder: (context, index) {
-                      final project = filteredProjects[index];
-                      final status = project.status ?? 'Open';
-
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ProjectDetailsPage(project: project),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                  if (filteredProjects.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey.shade400,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Project ID
-                                        Text(
-                                          project.name ?? 'Unknown Project',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey.shade500,
-                                            fontWeight: FontWeight.w400,
+                          SizedBox(height: 16),
+                          Text(
+                            'No matching projects',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Try adjusting your search query',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await controller.fetchprojectlist();
+                    },
+                    child: ListView.builder(
+                      itemCount: filteredProjects.length,
+                      itemBuilder: (context, index) {
+                        final project = filteredProjects[index];
+                        final status = project.status ?? 'Open';
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProjectDetailsPage(project: project),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 16),
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Project ID
+                                          Text(
+                                            project.name ?? 'Unknown Project',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade500,
+                                              fontWeight: FontWeight.w400,
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        // Project Name
-                                        Text(
-                                          project.projectName ??
-                                              'No Project Name',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black,
+                                          SizedBox(height: 4),
+                                          // Project Name
+                                          Text(
+                                            project.projectName ??
+                                                'No Project Name',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        // Project Type Label
-                                        Text(
-                                          'Project Type',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey.shade500,
-                                            fontWeight: FontWeight.w400,
+                                          SizedBox(height: 16),
+                                          // Project Type Label
+                                          Text(
+                                            'Project Type',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade500,
+                                              fontWeight: FontWeight.w400,
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        // Project Type Value
-                                        Text(
-                                          project.projectType ??
-                                              'Not specified',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black,
+                                          SizedBox(height: 4),
+                                          // Project Type Value
+                                          Text(
+                                            project.projectType ??
+                                                'Not specified',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Status Badge
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: getStatusColor(status),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      status,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    // Status Badge
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: getStatusColor(status),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        status,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   );
                 },
               ),

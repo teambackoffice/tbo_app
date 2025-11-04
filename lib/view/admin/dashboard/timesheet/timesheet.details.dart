@@ -11,14 +11,24 @@ class TimesheetApprovalPage extends StatefulWidget {
 }
 
 class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
-  // Track which cards are expanded
   Set<int> expandedCards = <int>{};
 
   String formatDate(DateTime date) {
-    String day = date.day.toString().padLeft(2, '0');
-    String month = date.month.toString().padLeft(2, '0');
-    String year = date.year.toString().substring(2);
-    return '$day-$month-$year';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String formatTime(DateTime time) {
@@ -32,33 +42,46 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
     return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
   }
 
-  double convertHoursToDecimal(int totalHours) {
-    return totalHours / 3600; // Assuming totalHours is in seconds
-  }
-
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'approved':
-        return Colors.green;
+        return const Color(0xFF10B981);
       case 'submitted':
-        return Colors.blue;
+        return const Color(0xFF3B82F6);
       case 'pending':
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case 'draft':
-        return Colors.grey;
+        return const Color(0xFF6B7280);
       default:
-        return Colors.grey;
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  Color getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return const Color(0xFFD1FAE5);
+      case 'submitted':
+        return const Color(0xFFDBEAFE);
+      case 'pending':
+        return const Color(0xFFFEF3C7);
+      case 'draft':
+        return const Color(0xFFF3F4F6);
+      default:
+        return const Color(0xFFF3F4F6);
     }
   }
 
   String getStatusDisplayText(String status) {
     switch (status.toLowerCase()) {
       case 'submitted':
-        return 'Send to Approval';
+        return 'Sent to Approval';
       case 'approved':
         return 'Approved';
       case 'draft':
         return 'Draft';
+      case 'pending':
+        return 'Pending';
       default:
         return status;
     }
@@ -67,390 +90,320 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.black,
+              size: 18,
+            ),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          'Timesheet Details',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Employee Header Section
-            Text(
-              widget.timesheet.employeeName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.timesheet.employee,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-
-            // Date Section
-            const Text(
-              'Date Range',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${formatDate(widget.timesheet.startDate)} - ${formatDate(widget.timesheet.endDate)}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Total Working Hours Section
-            const Text(
-              'Total Working Hours',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${widget.timesheet.totalHours.toInt()} hrs',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Status Section
-            const Text(
-              'Status',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: getStatusColor(widget.timesheet.status),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    getStatusDisplayText(widget.timesheet.status),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+            // Header Card with Employee Info
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // Time Sheets Section
-            const Text(
-              'Time Logs :-',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-
-            // Task Cards from API data
-            if (widget.timesheet.timeLogs.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: Text(
-                    'No time logs available',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              ...widget.timesheet.timeLogs.asMap().entries.map((entry) {
-                int index = entry.key;
-                TimeLog timeLog = entry.value;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildTaskCard(
-                    index: index,
-                    title: timeLog.activityType,
-                    subtitle: timeLog.task,
-                    fromTime: formatTime(timeLog.fromTime),
-                    toTime: formatTime(timeLog.toTime),
-                    totalHours: '${timeLog.hours.toInt()} Hr',
-                    description: timeLog.description,
-                    project: timeLog.project,
-                    client:
-                        'Client Information', // This might need to be added to your API
-                  ),
-                );
-              }),
-
-            const SizedBox(height: 40),
-
-            // Action Buttons at the bottom of scroll content
-            // Always show buttons for testing - you can modify this condition later
-            Column(
-              children: [
-                // Show current status for debugging
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    border: Border.all(color: Colors.blue),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Current Status: ${widget.timesheet.status}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ),
-
-                // Show buttons based on status
-                if (widget.timesheet.status.toLowerCase() == 'submitted' ||
-                    widget.timesheet.status.toLowerCase() == 'draft' ||
-                    widget.timesheet.status.toLowerCase() == 'pending') ...[
-                  // Reject Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _showRejectDialog();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE53E3E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Employee Info
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF2E7D8A), Color(0xFF2E7D8A)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.timesheet.employeeName.isNotEmpty
+                                ? widget.timesheet.employeeName[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'Reject',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.timesheet.employeeName,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.timesheet.employee,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 24),
 
-                  // Approve Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _showApprovalDialog();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2D9CDB),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
+                  // Info Cards Row
+                  Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildInfoCard(
+                          icon: Icons.access_time_rounded,
+                          label: 'Total Hours',
+                          value: '${widget.timesheet.totalHours.toInt()} hrs',
+                          color: const Color(0xFF2E7D8A),
                         ),
                       ),
-                      child: const Text(
-                        'Approve',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                ] else if (widget.timesheet.status.toLowerCase() ==
-                    'approved') ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'This timesheet has been approved',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ] else ...[
-                  // For any other status, show action buttons anyway for testing
-                  // Reject Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _showRejectDialog();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE53E3E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        'Reject',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Approve Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _showApprovalDialog();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2D9CDB),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        'Approve',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
                 ],
-              ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Time Logs Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2E7D8A).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.assignment_outlined,
+                          color: Color(0xFF2E7D8A),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Time Logs',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3B82F6).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${widget.timesheet.timeLogs.length}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2E7D8A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Task Cards
+                  if (widget.timesheet.timeLogs.isEmpty)
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No time logs available',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ...widget.timesheet.timeLogs.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      TimeLog timeLog = entry.value;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildTaskCard(
+                          index: index,
+                          title: timeLog.activityType,
+                          subtitle: timeLog.task,
+                          fromTime: formatTime(timeLog.fromTime),
+                          toTime: formatTime(timeLog.toTime),
+                          totalHours: '${timeLog.hours.toInt()} Hr',
+                          description: timeLog.description,
+                          project: timeLog.project,
+                        ),
+                      );
+                    }),
+
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showApprovalDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Approve Timesheet'),
-          content: Text(
-            'Are you sure you want to approve ${widget.timesheet.employeeName}\'s timesheet?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: Implement approval API call
-                Navigator.of(context).pop();
-                _showSuccessMessage('Timesheet approved successfully');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2D9CDB),
-              ),
-              child: const Text(
-                'Approve',
-                style: TextStyle(color: Colors.white),
-              ),
+      // Optional: Floating Action Buttons for Approve/Reject
+      // Uncomment this section when you're ready to implement approval actions
+      /*
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  void _showRejectDialog() {
-    final TextEditingController reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Reject Timesheet'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        ),
+        child: SafeArea(
+          child: Row(
             children: [
-              Text(
-                'Are you sure you want to reject ${widget.timesheet.employeeName}\'s timesheet?',
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Reason for rejection',
-                  border: OutlineInputBorder(),
+              Expanded(
+                child: _buildActionButton(
+                  label: 'Reject',
+                  icon: Icons.close_rounded,
+                  color: const Color(0xFFEF4444),
+                  onPressed: () {
+                    // _showRejectDialog();
+                  },
                 ),
-                maxLines: 3,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  label: 'Approve',
+                  icon: Icons.check_rounded,
+                  color: const Color(0xFF10B981),
+                  onPressed: () {
+                    // _showApprovalDialog();
+                  },
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: Implement rejection API call with reason
-                Navigator.of(context).pop();
-                _showSuccessMessage('Timesheet rejected');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE53E3E),
-              ),
-              child: const Text(
-                'Reject',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
+      */
     );
   }
 
-  void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: color,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -463,222 +416,324 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
     required String totalHours,
     required String description,
     required String project,
-    required String client,
   }) {
     final bool isExpanded = expandedCards.contains(index);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isExpanded) {
+            expandedCards.remove(index);
+          } else {
+            expandedCards.add(index);
+          }
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isExpanded
+                ? const Color(0xFF2E7D8A).withOpacity(0.3)
+                : Colors.transparent,
+            width: 2,
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: isExpanded
+                  ? const Color(0xFF2E7D8A).withOpacity(0.1)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: isExpanded ? 20 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            children: [
+              // Main Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Row
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF2E7D8A), Color(0xFF2E7D8A)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.work_outline_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF64748B),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        AnimatedRotation(
+                          duration: const Duration(milliseconds: 300),
+                          turns: isExpanded ? 0.5 : 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Time Info Cards
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildTimeInfo(
+                              icon: Icons.login_rounded,
+                              label: 'From',
+                              time: fromTime,
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: const Color(0xFFE2E8F0),
+                          ),
+                          Expanded(
+                            child: _buildTimeInfo(
+                              icon: Icons.logout_rounded,
+                              label: 'To',
+                              time: toTime,
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: const Color(0xFFE2E8F0),
+                          ),
+                          Expanded(
+                            child: _buildTimeInfo(
+                              icon: Icons.timer_outlined,
+                              label: 'Total',
+                              time: totalHours,
+                              highlight: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Expanded Details
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 300),
+                      crossFadeState: isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+
+                          // Description
+                          _buildDetailSection(
+                            icon: Icons.description_outlined,
+                            title: 'Description',
+                            content: description.isNotEmpty
+                                ? description
+                                : 'No description provided',
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Project and Client
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDetailSection(
+                                  icon: Icons.folder_outlined,
+                                  title: 'Project',
+                                  content: project.isNotEmpty ? project : 'N/A',
+                                  compact: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeInfo({
+    required IconData icon,
+    required String label,
+    required String time,
+    bool highlight = false,
+  }) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: highlight ? Color(0xFF2E7D8A) : const Color(0xFF64748B),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Color(0xFF94A3B8),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          time,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: highlight
+                ? const Color(0xFF2E7D8A)
+                : const Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailSection({
+    required IconData icon,
+    required String title,
+    required String content,
+    bool compact = false,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(compact ? 12 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (isExpanded) {
-                      expandedCards.remove(index);
-                    } else {
-                      expandedCards.add(index);
-                    }
-                  });
-                },
-                child: AnimatedRotation(
-                  duration: const Duration(milliseconds: 300),
-                  turns: isExpanded ? 0.5 : 0,
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey,
-                    size: 24,
-                  ),
+              Icon(icon, size: 16, color: const Color(0xFF64748B)),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Time Section
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'From time',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      fromTime,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'To Time',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      toTime,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Total Working Hour
-          const Text(
-            'Total Working Hour',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-          const SizedBox(height: 4),
+          SizedBox(height: compact ? 6 : 8),
           Text(
-            totalHours,
+            content,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.black,
-            ),
-          ),
-
-          // Expanded Content
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 300),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox.shrink(),
-            secondChild: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: Colors.grey.withOpacity(0.2),
-                ),
-                const SizedBox(height: 16),
-
-                // Description
-                const Text(
-                  'Description',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description.isNotEmpty
-                      ? description
-                      : 'No description provided',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Project and Client in a row
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Project',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            project.isNotEmpty ? project : 'N/A',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Client',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            client,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              color: Color(0xFF1E293B),
+              height: 1.4,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

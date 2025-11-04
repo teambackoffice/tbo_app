@@ -12,24 +12,27 @@ class EmployeeTimesheet extends StatefulWidget {
 }
 
 class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
-  String selectedFilter = 'All';
-  DateTime selectedDate = DateTime.now();
+  DateTime? selectedDate; // Made nullable to allow "show all"
   String searchQuery = '';
-
-  final List<String> filterOptions = ['All', 'Draft', 'Submitted', 'Approved'];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-    if (picked != null && picked != selectedDate) {
+    if (picked != null) {
       setState(() {
         selectedDate = picked;
       });
     }
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      selectedDate = null;
+    });
   }
 
   @override
@@ -61,26 +64,8 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
     return totalHours / 3600; // Assuming totalHours is in seconds
   }
 
-  Color getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return Colors.green;
-      case 'submitted':
-        return Colors.blue;
-      case 'draft':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
   List<Datum> getFilteredTimesheets(List<Datum> timesheets) {
     return timesheets.where((timesheet) {
-      // Filter by status
-      bool statusMatch =
-          selectedFilter == 'All' ||
-          timesheet.status.toLowerCase() == selectedFilter.toLowerCase();
-
       // Filter by search query
       bool searchMatch =
           searchQuery.isEmpty ||
@@ -89,14 +74,17 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
           ) ||
           timesheet.employee.toLowerCase().contains(searchQuery.toLowerCase());
 
-      // Filter by date (check if selected date is within start and end date)
+      // Filter by date (only if a date is selected)
       bool dateMatch =
-          selectedDate.isAfter(
-            timesheet.startDate.subtract(const Duration(days: 1)),
-          ) &&
-          selectedDate.isBefore(timesheet.endDate.add(const Duration(days: 1)));
+          selectedDate == null ||
+          (selectedDate!.isAfter(
+                timesheet.startDate.subtract(const Duration(days: 1)),
+              ) &&
+              selectedDate!.isBefore(
+                timesheet.endDate.add(const Duration(days: 1)),
+              ));
 
-      return statusMatch && searchMatch && dateMatch;
+      return searchMatch && dateMatch;
     }).toList();
   }
 
@@ -136,24 +124,24 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: getStatusColor(timesheet.status),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        timesheet.status,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(
+                    //     horizontal: 16,
+                    //     vertical: 4,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: getStatusColor(timesheet.status),
+                    //     borderRadius: BorderRadius.circular(20),
+                    //   ),
+                    //   child: Text(
+                    //     timesheet.status,
+                    //     style: const TextStyle(
+                    //       color: Colors.white,
+                    //       fontSize: 12,
+                    //       fontWeight: FontWeight.w500,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -297,62 +285,12 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
             ),
           ),
 
-          // Filter Row with Dropdown and Date Selector
+          // Date Selector with Clear Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                // Dropdown Filter
                 Expanded(
-                  flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedFilter,
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.grey,
-                        ),
-                        isExpanded: true,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedFilter = newValue;
-                            });
-                          }
-                        },
-                        items: filterOptions.map<DropdownMenuItem<String>>((
-                          String value,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // Date Selector
-                Expanded(
-                  flex: 1,
                   child: GestureDetector(
                     onTap: () => _selectDate(context),
                     child: Container(
@@ -369,9 +307,13 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            formatDate(selectedDate),
-                            style: const TextStyle(
-                              color: Colors.black,
+                            selectedDate != null
+                                ? formatDate(selectedDate!)
+                                : 'All Dates',
+                            style: TextStyle(
+                              color: selectedDate != null
+                                  ? Colors.black
+                                  : Colors.grey.shade600,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -386,6 +328,18 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                     ),
                   ),
                 ),
+                if (selectedDate != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _clearDateFilter,
+                    icon: const Icon(Icons.clear),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      side: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -506,7 +460,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Try adjusting your filters or search query',
+                          'Try adjusting your date or search query',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade500,
