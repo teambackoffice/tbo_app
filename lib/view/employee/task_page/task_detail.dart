@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/employee_task_update_contoller.dart';
+import 'package:tbo_app/controller/get_task_assignment_controller.dart';
 import 'package:tbo_app/modal/employee_task_list_modal.dart';
 import 'package:tbo_app/view/employee/task_page/handover_task.dart';
 
@@ -21,6 +22,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   void initState() {
     super.initState();
     currentStatus = widget.task.status;
+
+    // Fetch task details when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<GetTaskAssignmentController>().fetchTaskDetails(
+        widget.task.name,
+      );
+    });
   }
 
   @override
@@ -155,10 +163,111 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         ),
                       ],
                     ),
+
+                    // Employee Task Assignment ID Section
+                    const SizedBox(height: 16),
+                    Consumer<GetTaskAssignmentController>(
+                      builder: (context, controller, _) {
+                        if (controller.isLoading) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
+                        if (controller.errorMessage != null) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.shade700,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    controller.errorMessage!,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        if (controller.employeeTaskAssignmentId != null) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Assignment ID',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF10B981,
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.assignment_outlined,
+                                      size: 18,
+                                      color: Color(0xFF10B981),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      controller.employeeTaskAssignmentId!,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF10B981),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
+
               // Status Change Card
               Container(
                 width: double.infinity,
@@ -259,7 +368,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
               // Action Buttons Row (Handover and Date Request)
               widget.task.status == 'Completed'
-                  ? SizedBox()
+                  ? const SizedBox()
                   : Row(
                       children: [
                         // Handover Task Button
@@ -276,6 +385,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                   MaterialPageRoute(
                                     builder: (context) => CreateHandoverPage(
                                       taskId: widget.task.name,
+                                      assignmentID: context
+                                          .read<GetTaskAssignmentController>()
+                                          .employeeTaskAssignmentId!,
                                     ),
                                   ),
                                 );
@@ -300,42 +412,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             ),
                           ),
                         ),
-
-                        // // Date Request Button
-                        // Expanded(
-                        //   child: Container(
-                        //     padding: const EdgeInsets.symmetric(
-                        //       vertical: 8,
-                        //       horizontal: 4,
-                        //     ),
-                        //     child: ElevatedButton(
-                        //       onPressed: () {
-                        //         Navigator.push(
-                        //           context,
-                        //           MaterialPageRoute(
-                        //             builder: (context) =>
-                        //                 CreateDateRequest(taskId: widget.task.name),
-                        //           ),
-                        //         );
-                        //       },
-                        //       style: ElevatedButton.styleFrom(
-                        //         backgroundColor: const Color(0xFFF59E0B),
-                        //         foregroundColor: Colors.white,
-                        //         padding: const EdgeInsets.symmetric(vertical: 16),
-                        //         shape: RoundedRectangleBorder(
-                        //           borderRadius: BorderRadius.circular(12),
-                        //         ),
-                        //       ),
-                        //       child: const Text(
-                        //         'Date Request',
-                        //         style: TextStyle(
-                        //           fontSize: 14,
-                        //           fontWeight: FontWeight.w600,
-                        //         ),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
                       ],
                     ),
               const SizedBox(height: 16),
@@ -351,7 +427,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
     await controller.editTask(
       taskId: widget.task.name,
-      project: widget.task.project, // ensure Task model has this field
+      project: widget.task.project,
       subject: widget.task.subject,
       status: currentStatus,
       priority: widget.task.priority,
@@ -373,7 +449,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           backgroundColor: const Color(0xFF10B981),
         ),
       );
-      Navigator.pop(context, true); // return true so parent can refresh
+      Navigator.pop(context, true);
     }
   }
 

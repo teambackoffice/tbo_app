@@ -17,14 +17,18 @@ class TaskListResponse {
     required this.data,
   });
 
-  factory TaskListResponse.fromJson(Map<String, dynamic> json) =>
-      TaskListResponse(
-        success: json["success"] ?? false,
-        message: json["message"] ?? '',
-        data: json["data"] != null
-            ? List<Task>.from(json["data"].map((x) => Task.fromJson(x)))
-            : [],
-      );
+  factory TaskListResponse.fromJson(Map<String, dynamic> json) {
+    // Handle nested message object
+    final messageObj = json['message'] ?? {};
+
+    return TaskListResponse(
+      success: messageObj['success'] ?? false,
+      message: messageObj['message'] ?? '',
+      data: messageObj['data'] != null
+          ? List<Task>.from(messageObj['data'].map((x) => Task.fromJson(x)))
+          : [],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "success": success,

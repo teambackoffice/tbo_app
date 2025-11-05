@@ -7,7 +7,12 @@ import 'package:tbo_app/modal/all_employees.modal.dart';
 
 class CreateHandoverPage extends StatefulWidget {
   final String taskId;
-  const CreateHandoverPage({super.key, required this.taskId});
+  final String assignmentID;
+  const CreateHandoverPage({
+    super.key,
+    required this.taskId,
+    required this.assignmentID,
+  });
 
   @override
   State<CreateHandoverPage> createState() => _CreateHandoverPageState();
@@ -104,6 +109,7 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
           fromEmployee: _employeeIdController.text,
           toEmployee: _selectedEmployee!.name,
           task: _taskIdController.text,
+          employeeTask: widget.assignmentID,
           handoverReason:
               _selectedReason!, // Use selected reason instead of text field
           handoverNotes: _notesController.text.isNotEmpty
@@ -223,7 +229,7 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
 
               // Handover Type Dropdown
               DropdownButtonFormField<String>(
-                value: _handoverType,
+                initialValue: _handoverType,
                 decoration: const InputDecoration(
                   labelText: "Handover Type",
                   prefixIcon: Icon(Icons.swap_horiz),
@@ -254,7 +260,7 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
 
               // Reason Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedReason,
+                initialValue: _selectedReason,
                 decoration: const InputDecoration(
                   labelText: 'Handover Reason',
                   prefixIcon: Icon(Icons.info_outline),

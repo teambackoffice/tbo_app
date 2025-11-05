@@ -19,28 +19,32 @@ class HandoverPostService {
         return null;
       }
 
+      // 🌐 Build the full API URL
       final url = Uri.parse(
         "${ApiConstants.baseUrl}task_assignment_api.accept_handover_request"
         "?name=$name&action=$action&to_employee=$toEmployee",
       );
 
+      // 🧾 Prepare GET request
       var request = http.Request('GET', url);
-
-      // ✅ Add session cookie header
       request.headers.addAll({
         'Cookie': 'sid=$sessionId',
         'Content-Type': 'application/json',
       });
 
+      // 🚀 Send the request
       final response = await request.send();
 
+      // 📦 Read the response body
+      final responseBody = await response.stream.bytesToString();
+
+      // ✅ Handle response
       if (response.statusCode == 200) {
-        final body = await response.stream.bytesToString();
-        return body;
+        return responseBody;
       } else {
         return null;
       }
-    } catch (e) {
+    } catch (e, stack) {
       return null;
     }
   }
