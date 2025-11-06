@@ -443,12 +443,17 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
       );
     } else {
+      final backendMessage =
+          controller.responseData?["message"]?["message"] ??
+          "Task updated successfully";
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Task status updated to $currentStatus"),
+          content: Text(backendMessage),
           backgroundColor: const Color(0xFF10B981),
         ),
       );
+
       Navigator.pop(context, true);
     }
   }

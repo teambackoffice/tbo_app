@@ -17,7 +17,6 @@ class NotificationService {
     );
 
     final request = http.Request('GET', uri);
-    print("NotificationService Request URL: $uri");
 
     // Add SID cookie if available
     if (sid != null) {
@@ -28,8 +27,6 @@ class NotificationService {
     request.headers['Content-Type'] = 'application/json';
 
     final response = await request.send();
-    print("NotificationService Response Status: ${response.statusCode}");
-    print("NotificationService Response Body: ${response.reasonPhrase}");
 
     if (response.statusCode == 200) {
       final String responseString = await response.stream.bytesToString();

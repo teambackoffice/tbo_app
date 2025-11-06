@@ -30,7 +30,11 @@ class ProjectListService {
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
-          final projectList = ProjectList.fromJson(decoded);
+
+          // Extract the nested 'message' object which contains the actual data
+          final actualData = decoded['message'];
+
+          final projectList = ProjectList.fromJson(actualData);
           return projectList;
         } catch (e) {
           throw Exception('Failed to parse response: $e');

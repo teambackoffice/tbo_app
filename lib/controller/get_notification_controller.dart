@@ -29,8 +29,6 @@ class NotificationProvider extends ChangeNotifier {
 
     try {
       _notificationModal = await _service.fetchNotifications(userId: userId);
-
-      print('✅ OneSignal: In-app messages resumed');
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

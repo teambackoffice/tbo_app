@@ -19,10 +19,8 @@ class CreateNewLeadController extends ChangeNotifier {
     notifyListeners();
 
     if (response != null && response['success'] == true) {
-      print('Lead ID: ${response['data']['lead_id']}');
       return true;
     } else {
-      print('Failed to create lead. Response: $response');
       return false;
     }
   }

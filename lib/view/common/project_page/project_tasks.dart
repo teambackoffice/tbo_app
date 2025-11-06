@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/employee_assignments_controller.dart';
+import 'package:tbo_app/controller/get_task_assignment_controller.dart';
+import 'package:tbo_app/controller/task_assignment_submit_controller.dart';
 import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/modal/employee_assignment_modal.dart';
 import 'package:tbo_app/services/post_notification_service.dart';
@@ -235,6 +237,178 @@ class _ProjectTasksState extends State<ProjectTasks> {
     }
   }
 
+  void _handleSubmit() async {
+    // Get the first task's assignment to fetch details
+    final employeeAssignmentsController =
+        Provider.of<EmployeeAssignmentsController>(context, listen: false);
+
+    final assignments = employeeAssignmentsController.allLeads?.data ?? [];
+
+    if (assignments.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No assignments found'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final List<TaskAssignment> allTasks = [];
+    for (var assignment in assignments) {
+      allTasks.addAll(assignment.taskAssignments);
+    }
+
+    if (allTasks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No tasks available to submit'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Get the first task ID to fetch assignment details
+    final firstTaskId = allTasks[0].task;
+
+    // Create a controller to fetch task details
+    final getTaskController = GetTaskAssignmentController();
+
+    // Add listener to show loading state
+    getTaskController.addListener(() {
+      if (getTaskController.isLoading) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text('Fetching task details...'),
+              ],
+            ),
+            duration: Duration(seconds: 30),
+          ),
+        );
+      }
+    });
+
+    // Fetch task details to get the employee_task_assignment_id (docname)
+    await getTaskController.fetchTaskDetails(firstTaskId);
+
+    if (getTaskController.errorMessage != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${getTaskController.errorMessage}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final docName = getTaskController.employeeTaskAssignmentId;
+
+    if (docName == null || docName.isEmpty) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not retrieve assignment document name'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Now submit with the docname
+    final taskSubmissionController = Provider.of<TaskSubmissionController>(
+      context,
+      listen: false,
+    );
+
+    // Add listener to submission controller
+    taskSubmissionController.addListener(() {
+      if (taskSubmissionController.isLoading) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text('Submitting tasks...'),
+              ],
+            ),
+            duration: Duration(seconds: 30),
+          ),
+        );
+      }
+    });
+
+    await taskSubmissionController.submitEmployeeTask(docName: docName);
+
+    // Hide loading
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    // Check response message from controller
+    if (taskSubmissionController.responseMessage != null) {
+      final response = taskSubmissionController.responseMessage!;
+
+      // Check if response indicates success or failure
+      final isSuccess =
+          !response.toLowerCase().contains('error') &&
+          !response.toLowerCase().contains('failed') &&
+          !response.toLowerCase().contains('exception');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isSuccess
+                ? 'Tasks submitted successfully!'
+                : 'Submission failed: $response',
+          ),
+          backgroundColor: isSuccess ? Color(0xFF34C759) : Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      // Refresh the task list only on success
+      if (isSuccess) {
+        Provider.of<EmployeeAssignmentsController>(
+          context,
+          listen: false,
+        ).feetchemployeeassignments(projectId: widget.projectId!);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No response from server'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -321,8 +495,38 @@ class _ProjectTasksState extends State<ProjectTasks> {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: ListView.builder(
-              itemCount: allTasks.length,
+              itemCount: allTasks.length + 1, // +1 for the submit button
               itemBuilder: (context, index) {
+                // If it's the last item, show the submit button
+                if (index == allTasks.length) {
+                  return Padding(
+                    padding: EdgeInsets.only(top: 8, bottom: 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF1C7690),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Text(
+                          'Submit',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Otherwise, show the task card
                 return TaskCard(
                   taskAssignment: allTasks[index],
                   onDelete: () {
