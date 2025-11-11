@@ -12,6 +12,8 @@ class TeamMembersPage extends StatefulWidget {
 
 class _TeamMembersPageState extends State<TeamMembersPage> {
   final _storage = const FlutterSecureStorage();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   Future<String?> _getSid() async {
     return await _storage.read(key: "sid");
@@ -31,6 +33,31 @@ class _TeamMembersPageState extends State<TeamMembersPage> {
         controller.fetchallemployees();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<dynamic> _filterEmployees(List<dynamic> employees) {
+    if (_searchQuery.isEmpty) {
+      return employees;
+    }
+
+    return employees.where((employee) {
+      final name = employee.employeeName.isNotEmpty
+          ? employee.employeeName.toLowerCase()
+          : employee.name.toLowerCase();
+      final role = employee.designation.toLowerCase();
+      final department = employee.department.toLowerCase();
+      final query = _searchQuery.toLowerCase();
+
+      return name.contains(query) ||
+          role.contains(query) ||
+          department.contains(query);
+    }).toList();
   }
 
   @override
@@ -91,6 +118,56 @@ class _TeamMembersPageState extends State<TeamMembersPage> {
                     },
                   ),
                 ],
+              ),
+            ),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, role, or department',
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF1C7690),
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
               ),
             ),
 
@@ -190,19 +267,71 @@ class _TeamMembersPageState extends State<TeamMembersPage> {
                   }
 
                   final employees = controller.allEmployees!.message;
+                  final filteredEmployees = _filterEmployees(employees);
+
+                  if (filteredEmployees.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No results found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Try searching with different keywords',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
                   return Column(
                     children: [
-                      // Header with count
+                      // Results count
+                      if (_searchQuery.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Found ${filteredEmployees.length} result${filteredEmployees.length != 1 ? 's' : ''}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       Expanded(
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 10,
                           ),
-                          itemCount: employees.length,
+                          itemCount: filteredEmployees.length,
                           itemBuilder: (context, index) {
-                            final employee = employees[index];
+                            final employee = filteredEmployees[index];
                             return _buildTeamMemberTile(
                               name: employee.employeeName.isNotEmpty
                                   ? employee.employeeName
