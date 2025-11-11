@@ -30,26 +30,24 @@ class TaskEmployeeAssignService {
         "sub_task_assignments": subTaskAssignments,
       });
 
-      final request = http.Request(
-        'POST',
-        Uri.parse(
-          '${ApiConstants.baseUrl}task_assignment_api.update_assignment_employees',
-        ),
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}task_assignment_api.update_assignment_employees',
       );
 
+      final request = http.Request('POST', url);
       request.body = body;
       request.headers.addAll(headers);
 
       final response = await request.send();
-
       final respStr = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        return json.decode(respStr);
+        final decoded = json.decode(respStr);
+        return decoded;
       } else {
         throw Exception("Failed: ${response.reasonPhrase}");
       }
-    } catch (e) {
+    } catch (e, stack) {
       rethrow;
     }
   }

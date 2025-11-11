@@ -10,35 +10,6 @@ class ResourcesScreen extends StatefulWidget {
 }
 
 class _ResourcesScreenState extends State<ResourcesScreen> {
-  // void _showDeleteDialog(int index) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Delete Resource'),
-  //         content: Text('Are you sure you want to delete this resource?'),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: Text('Cancel'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               setState(() {
-  //                 resources.removeAt(index);
-  //               });
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: Text('Delete', style: TextStyle(color: Colors.red)),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,89 +33,87 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: widget.projects.resourceRequirements!.length,
-          itemBuilder: (context, index) {
-            final resource = widget.projects.resourceRequirements![index];
-            return Container(
-              margin: EdgeInsets.only(bottom: 16),
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+      body:
+          widget.projects.resourceRequirements == null ||
+              widget.projects.resourceRequirements!.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No Resources Available',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Resource Type',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            resource.resourceType!,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Resource Name',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+            )
+          : Padding(
+              padding: EdgeInsets.all(16.0),
+              child: ListView.builder(
+                itemCount: widget.projects.resourceRequirements!.length,
+                itemBuilder: (context, index) {
+                  final resource = widget.projects.resourceRequirements![index];
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        resource.resourceName!,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Resource Type',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  resource.resourceType ?? 'N/A',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
+                        SizedBox(height: 16),
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Quantity Required',
+                              'Resource Name',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -153,54 +122,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              '${resource.quantityRequired!}',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Text(
-                                  'Estimated Cost',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                Spacer(),
-
-                                // GestureDetector(
-                                //   onTap: () => _showDeleteDialog(index),
-                                //   child: Container(
-                                //     decoration: BoxDecoration(
-                                //       color: Colors.white,
-                                //       borderRadius: BorderRadius.circular(12),
-                                //       boxShadow: [
-                                //         BoxShadow(
-                                //           color: Colors.grey.withOpacity(0.1),
-                                //           spreadRadius: 1,
-                                //           blurRadius: 4,
-                                //           offset: Offset(0, 2),
-                                //         ),
-                                //       ],
-                                //     ),
-                                //     padding: EdgeInsets.all(8),
-                                //     child: Icon(
-                                //       Icons.delete_outlined,
-                                //       color: Colors.red,
-                                //       size: 20,
-                                //     ),
-                                //   ),
-                                // ),
-                              ],
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              resource.estimatedCost!.toStringAsFixed(2),
+                              resource.resourceName ?? 'N/A',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
@@ -209,15 +131,92 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Quantity Required',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    resource.quantityRequired != null
+                                        ? '${resource.quantityRequired}'
+                                        : 'N/A',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Estimated Cost',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      Spacer(),
+                                    ],
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    resource.estimatedCost != null
+                                        ? resource.estimatedCost!
+                                              .toStringAsFixed(2)
+                                        : 'N/A',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: 14),
+                                  Text(
+                                    'Total Cost',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    (resource.quantityRequired != null &&
+                                            resource.estimatedCost != null)
+                                        ? ((resource.quantityRequired ?? 0) *
+                                                  (resource.estimatedCost ?? 0))
+                                              .toStringAsFixed(2)
+                                        : 'N/A',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
+            ),
     );
   }
 }

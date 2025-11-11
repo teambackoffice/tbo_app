@@ -18,6 +18,9 @@ class Resource {
     required this.quantity,
     required this.cost,
   });
+
+  // 🔥 ADD COMPUTED PROPERTY FOR TOTAL COST (cost * quantity)
+  double get totalCost => cost * quantity;
 }
 
 class ProjectPlanningScreen extends StatefulWidget {
@@ -65,11 +68,12 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
   // Resources list
   List<Resource> resources = [];
 
-  // 🔥 ADD THIS METHOD TO CALCULATE TOTAL COST
+  // 🔥 UPDATED METHOD TO CALCULATE TOTAL COST (using cost * quantity)
   void _updateEstimatedCost() {
     double totalResourceCost = resources.fold(
       0.0,
-      (sum, resource) => sum + resource.cost,
+      (sum, resource) =>
+          sum + resource.totalCost, // 🔥 NOW USES totalCost (cost * quantity)
     );
 
     // Get base cost from lead segment if available
@@ -673,7 +677,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Estimated Cost',
+                  'Estimated Cost (Unit)',
                   style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                 ),
                 Text(
@@ -682,6 +686,20 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                     fontSize: 12,
                     color: Colors.black87,
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                // 🔥 ADD TOTAL COST DISPLAY (cost * quantity)
+                Text(
+                  'Total Cost',
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                ),
+                Text(
+                  resource.totalCost.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF008B8B),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -772,7 +790,7 @@ class _ProjectPlanningScreenState extends State<ProjectPlanningScreen> {
                 ),
                 SizedBox(height: 16),
                 _buildDialogTextField(
-                  'Estimated Cost',
+                  'Estimated Cost (per unit)',
                   costController,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),

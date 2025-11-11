@@ -162,7 +162,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               ),
                             ),
                             Text(
-                              '${_fullName ?? 'User'} !',
+                              '${_fullName ?? 'Admin'} !',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

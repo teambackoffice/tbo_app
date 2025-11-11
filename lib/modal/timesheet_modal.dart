@@ -12,24 +12,23 @@ String timesheetModalToJson(TimesheetModal data) => json.encode(data.toJson());
 class TimesheetModal {
   String message;
   List<Datum> data;
-  bool success;
 
-  TimesheetModal({
-    required this.message,
-    required this.data,
-    required this.success,
-  });
+  TimesheetModal({required this.message, required this.data});
 
-  factory TimesheetModal.fromJson(Map<String, dynamic> json) => TimesheetModal(
-    message: json["message"],
-    data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
-    success: json["success"],
-  );
+  factory TimesheetModal.fromJson(Map<String, dynamic> json) {
+    // The 'message' key itself contains the real data
+    final inner = json['message'];
+    return TimesheetModal(
+      message: inner['message'] ?? '',
+      data: (inner['data'] as List<dynamic>)
+          .map((e) => Datum.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "message": message,
-    "data": List<dynamic>.from(data.map((x) => x.toJson())),
-    "success": success,
+    "data": data.map((x) => x.toJson()).toList(),
   };
 }
 

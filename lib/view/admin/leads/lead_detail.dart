@@ -1,11 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tbo_app/controller/create_project_planning_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
-import 'package:tbo_app/utils/app_storage.dart';
 import 'package:tbo_app/view/admin/leads/project_planning.dart';
 
 class LeadDetailsPage extends StatefulWidget {
@@ -17,47 +16,26 @@ class LeadDetailsPage extends StatefulWidget {
 }
 
 class _LeadDetailsPageState extends State<LeadDetailsPage> {
-  // ✅ Use the dedicated planning storage
-  final FlutterSecureStorage _storage = AppStorage.planningStorage;
-
   String? _planningId;
-  bool _isCheckingPlanning = true;
 
   @override
   void initState() {
     super.initState();
-    _checkExistingPlanning();
+    _loadSavedPlanningId();
   }
 
-  // ✅ Check if planning already exists in storage
-  Future<void> _checkExistingPlanning() async {
-    try {
-      final key = 'planning_${widget.lead.leadName?.trim().toLowerCase()}';
-      final storedPlanningId = await _storage.read(key: key);
-
-      setState(() {
-        _planningId = storedPlanningId;
-        _isCheckingPlanning = false;
-      });
-
-      debugPrint("Loaded planning_id from storage: $storedPlanningId");
-    } catch (e) {
-      debugPrint("Error checking planning: $e");
-      setState(() {
-        _isCheckingPlanning = false;
-      });
-    }
+  // ✅ Load saved planning id from local storage
+  Future<void> _loadSavedPlanningId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _planningId = prefs.getString("planning_${widget.lead}");
+    });
   }
 
-  // ✅ Save planning ID to storage
+  // ✅ Save planning Id locally
   Future<void> _savePlanningId(String planningId) async {
-    try {
-      final key = 'planning_${widget.lead.leadName?.trim().toLowerCase()}';
-      await _storage.write(key: key, value: planningId);
-      debugPrint("Saved planning_id to storage: $planningId");
-    } catch (e) {
-      debugPrint("Error saving planning: $e");
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("planning_${widget.lead}", planningId);
   }
 
   @override
@@ -134,7 +112,10 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
                             widget.lead.customLeadSegment ?? 'N/A',
                           ),
                           const SizedBox(height: 24),
-                          _buildInfoField('Lead Type', 'High [Hardcoded]'),
+                          _buildInfoField(
+                            'Project Type',
+                            widget.lead.customProjectType ?? 'N/A',
+                          ),
                           const SizedBox(height: 24),
                           _buildInfoField(
                             'Full Name',
@@ -151,11 +132,6 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
                             widget.lead.mobileNo ?? 'N/A',
                           ),
                           const SizedBox(height: 24),
-                          _buildInfoField(
-                            'Project Type',
-                            widget.lead.customProjectType ?? 'N/A',
-                          ),
-                          const SizedBox(height: 24),
                           _buildStatusField(
                             'Status',
                             widget.lead.status ?? 'N/A',
@@ -166,20 +142,15 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
                           if (widget.lead.status == "Converted")
                             Consumer<ProjectPlanningController>(
                               builder: (context, controller, child) {
-                                // Loading while checking existing planning
-                                if (_isCheckingPlanning) {
-                                  return _buildLoadingButton();
-                                }
-
-                                // If planning exists
+                                // ✅ If planning exists → show OPEN button
                                 if (_planningId != null) {
-                                  return _buildProjectCreatedCard(_planningId!);
+                                  return _buildOpenContainer();
                                 }
-
-                                // Otherwise show create button
+                                // ✅ If not exists → show CREATE button
                                 return _buildCreateButton(controller);
                               },
                             ),
+
                           const SizedBox(height: 20),
                         ],
                       ),
@@ -195,7 +166,7 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
     );
   }
 
-  // ✅ Create Button Widget
+  // ✅ Create Button UI
   Widget _buildCreateButton(ProjectPlanningController controller) {
     return SizedBox(
       width: double.infinity,
@@ -229,136 +200,91 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
     );
   }
 
-  // ✅ Existing Planning Card
-  Widget _buildProjectCreatedCard(String planningId) {
+  // ✅ Open Button UI
+  Widget _buildOpenContainer() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF4CAF50), width: 1),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Project Created',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ID: $planningId',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ✅ Loading Button
-  Widget _buildLoadingButton() {
-    return SizedBox(
       width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1C7690),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDFF5E1), // light green
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green, width: 2),
+      ),
+      child: const Center(
+        child: Text(
+          "Project Created",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.green,
           ),
-        ),
-        child: const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         ),
       ),
     );
   }
 
-  // ✅ Handle Project Planning Creation
+  // ✅ Create planning → Save locally → Navigate
   Future<void> _handleProjectPlanning(
     ProjectPlanningController controller,
   ) async {
     try {
-      String? planningId = _planningId;
+      String response = await controller.createProjectPlanning(
+        planningName: widget.lead.leadName ?? '',
+        leadSegment: widget.lead.customLeadSegment ?? '',
+      );
 
-      // If no planning exists, create one
+      String? planningId = _extractPlanningId(response);
+
       if (planningId == null) {
-        String response = await controller.createProjectPlanning(
-          planningName: widget.lead.leadName ?? '',
-          leadSegment: widget.lead.customLeadSegment ?? '',
-        );
-
-        planningId = _extractPlanningId(response);
-
-        if (planningId != null) {
-          await _savePlanningId(planningId);
-          setState(() => _planningId = planningId);
-        }
+        _showError("Failed to create project planning");
+        return;
       }
 
-      if (planningId != null && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProjectPlanningScreen(
-              lead: widget.lead,
-              planningId: planningId!,
-            ),
-          ),
+      // ✅ Save planning ID locally
+      await _savePlanningId(planningId);
+
+      setState(() {
+        _planningId = planningId;
+      });
+
+      // ✅ Navigate to project planning screen
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ProjectPlanningScreen(lead: widget.lead, planningId: planningId),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      if (e.toString().contains('already exists') ||
+          e.toString().contains('duplicate')) {
+        _showError(
+          'Project planning already exists for this lead',
+          isWarning: true,
         );
       } else {
-        _showError('Failed to get planning ID');
-      }
-    } catch (e) {
-      if (mounted) {
-        if (e.toString().contains('already exists') ||
-            e.toString().contains('duplicate')) {
-          _showError(
-            'Project planning already exists for this lead',
-            isWarning: true,
-          );
-        } else {
-          _showError('Error: ${e.toString()}');
-        }
+        _showError('Error: ${e.toString()}');
       }
     }
   }
 
-  // ✅ Parse planning ID from response
+  // ✅ Parse planning ID from API response
   String? _extractPlanningId(String response) {
     try {
       final jsonResponse = json.decode(response);
-      final planningId =
-          jsonResponse['data']?['planning_id']?.toString() ??
+      return jsonResponse['data']?['planning_id']?.toString() ??
           jsonResponse['data']?['name']?.toString() ??
           jsonResponse['planning_id']?.toString() ??
           jsonResponse['name']?.toString();
-
-      debugPrint("Extracted planning_id: $planningId");
-      return planningId;
     } catch (e) {
-      debugPrint('Error parsing response: $e');
       return null;
     }
   }
 
-  // ✅ SnackBar Error Helper
+  // ✅ SnackBar helper
   void _showError(String message, {bool isWarning = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -368,7 +294,7 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
     );
   }
 
-  // ✅ UI Helpers
+  // ✅ UI helper widgets
   Widget _buildInfoField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
