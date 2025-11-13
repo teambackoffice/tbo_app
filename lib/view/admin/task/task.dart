@@ -14,7 +14,7 @@ class AdminTaskPage extends StatefulWidget {
 class _AdminTaskPageState extends State<AdminTaskPage>
     with TickerProviderStateMixin {
   String selectedFilter = 'All';
-  String selectedDate = '';
+  DateTime? selectedDate;
   String searchQuery = '';
 
   // Pagination variables
@@ -23,16 +23,9 @@ class _AdminTaskPageState extends State<AdminTaskPage>
   final int _itemsPerPage = 10;
   bool _isLoadingMore = false;
 
-  // Search Animation Controller
-  late AnimationController _searchAnimationController;
-  bool _isSearchExpanded = false;
+  // Controllers
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-
-  // FAB Animation Controller
-  late AnimationController _fabAnimationController;
-  late Animation<double> _fabAnimation;
-  bool _isFabOpen = false;
 
   late TaskListController _taskController;
 
@@ -40,24 +33,7 @@ class _AdminTaskPageState extends State<AdminTaskPage>
   void initState() {
     super.initState();
     // Set today's date when the page loads
-    final now = DateTime.now();
-    selectedDate =
-        '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year.toString().substring(2)}';
-
-    // Initialize Search animation
-    _searchAnimationController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    // Initialize FAB animation
-    _fabAnimationController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fabAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
-    );
+    selectedDate = DateTime.now();
 
     // Add scroll listener for pagination
     _scrollController.addListener(_onScroll);
@@ -104,7 +80,7 @@ class _AdminTaskPageState extends State<AdminTaskPage>
       _isLoadingMore = true;
     });
 
-    await Future.delayed(Duration(milliseconds: 500)); // Simulate loading
+    await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
       _currentPage++;
@@ -112,41 +88,52 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     });
   }
 
-  void _toggleSearch() {
+  void _clearSearch() {
     setState(() {
-      _isSearchExpanded = !_isSearchExpanded;
-    });
-    if (_isSearchExpanded) {
-      _searchAnimationController.forward();
-      Future.delayed(Duration(milliseconds: 300), () {
-        _searchFocusNode.requestFocus();
-      });
-    } else {
-      _searchAnimationController.reverse();
+      searchQuery = '';
       _searchController.clear();
-      _searchFocusNode.unfocus();
+    });
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      selectedDate = null;
+    });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF2D7D8C),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+      });
     }
   }
 
   @override
   void dispose() {
-    _searchAnimationController.dispose();
-    _fabAnimationController.dispose();
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
-  }
-
-  void _toggleFab() {
-    setState(() {
-      _isFabOpen = !_isFabOpen;
-    });
-    if (_isFabOpen) {
-      _fabAnimationController.forward();
-    } else {
-      _fabAnimationController.reverse();
-    }
   }
 
   final List<String> filterOptions = ['All', 'Open', 'Working', 'Completed'];
@@ -154,20 +141,69 @@ class _AdminTaskPageState extends State<AdminTaskPage>
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'open':
+        return const Color(0xFF3B82F6);
       case 'urgent':
-        return Color.fromARGB(255, 31, 85, 201);
+        return const Color(0xFFEF4444);
       case 'working':
-        return Color(0xFFF39C12);
+        return const Color(0xFFF59E0B);
       case 'completed':
-        return Color.fromARGB(255, 33, 181, 70);
+        return const Color(0xFF10B981);
       default:
-        return Color(0xFF2D7D8C);
+        return const Color(0xFF2D7D8C);
+    }
+  }
+
+  Color getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return const Color(0xFFEFF6FF);
+      case 'urgent':
+        return const Color(0xFFFEF2F2);
+      case 'working':
+        return const Color(0xFFFFFBEB);
+      case 'completed':
+        return const Color(0xFFECFDF5);
+      default:
+        return const Color(0xFFF0F9FA);
     }
   }
 
   String formatDate(DateTime? date) {
     if (date == null) return 'N/A';
-    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year.toString().substring(2)}';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  String formatDateShort(DateTime? date) {
+    if (date == null) return 'Select Date';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}, ${date.year}';
   }
 
   String calculateTimeRemaining(DateTime? endDate) {
@@ -178,11 +214,25 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     if (difference.isNegative) {
       return 'Overdue';
     } else if (difference.inDays > 0) {
-      return '${difference.inDays} Days';
+      return '${difference.inDays}d left';
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} Hours';
+      return '${difference.inHours}h left';
     } else {
-      return '${difference.inMinutes} Minutes';
+      return '${difference.inMinutes}m left';
+    }
+  }
+
+  Color getTimeRemainingColor(DateTime? endDate) {
+    if (endDate == null) return const Color(0xFF6B7280);
+    final now = DateTime.now();
+    final difference = endDate.difference(now);
+
+    if (difference.isNegative) {
+      return const Color(0xFFEF4444);
+    } else if (difference.inDays <= 1) {
+      return const Color(0xFFF59E0B);
+    } else {
+      return const Color(0xFF10B981);
     }
   }
 
@@ -196,9 +246,22 @@ class _AdminTaskPageState extends State<AdminTaskPage>
       tasks = tasks.where((task) {
         final taskName = (task.subject ?? task.name).toLowerCase();
         final assignedUser = (task.assignedUsers ?? '').toLowerCase();
+        final projectName = (task.projectName ?? '').toLowerCase();
         final query = searchQuery.toLowerCase();
 
-        return taskName.contains(query) || assignedUser.contains(query);
+        return taskName.contains(query) ||
+            assignedUser.contains(query) ||
+            projectName.contains(query);
+      }).toList();
+    }
+
+    // Apply date filter
+    if (selectedDate != null) {
+      tasks = tasks.where((task) {
+        if (task.expEndDate == null) return false;
+        return task.expEndDate!.year == selectedDate!.year &&
+            task.expEndDate!.month == selectedDate!.month &&
+            task.expEndDate!.day == selectedDate!.day;
       }).toList();
     }
 
@@ -214,224 +277,597 @@ class _AdminTaskPageState extends State<AdminTaskPage>
     return filteredTasks.sublist(0, endIndex);
   }
 
-  Widget _buildAnimatedSearchBar() {
-    return AnimatedBuilder(
-      animation: _searchAnimationController,
-      builder: (context, child) {
-        return Container(
-          height: 48,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _isSearchExpanded
-                  ? Color(0xFF2D7D8C)
-                  : Colors.grey.shade300,
-              width: _isSearchExpanded ? 2 : 1,
-            ),
-            boxShadow: _isSearchExpanded
-                ? [
-                    BoxShadow(
-                      color: Color(0xFF2D7D8C).withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ]
-                : [],
+  Widget _buildTaskCard(TaskDetails task) {
+    final taskName = task.subject ?? task.name;
+    final assignedUser = task.assignedUsers ?? "Unassigned";
+    final projectName = task.projectName ?? "No Project";
+    final timeRemaining = calculateTimeRemaining(task.expEndDate);
+    final timeColor = getTimeRemainingColor(task.expEndDate);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          child: Stack(
-            children: [
-              // Search Input Field
-              Positioned.fill(
-                child: Opacity(
-                  opacity: _isSearchExpanded ? 1.0 : 0.0,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 20, right: 60),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                      decoration: InputDecoration(
-                        hintText: 'Search by employee name..',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: Color(0xFF2D7D8C).withOpacity(0.6),
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminTaskDetailsPage(task: task),
               ),
-              // Placeholder text when collapsed
-              if (!_isSearchExpanded)
-                Positioned.fill(
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search, color: Color(0xFF2D7D8C), size: 22),
-                        SizedBox(width: 8),
-                        Text(
-                          'Search Tasks',
-                          style: TextStyle(
-                            color: Color(0xFF2D7D8C),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              // Clear and Close Button
-              if (_isSearchExpanded)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  bottom: 4,
-                  child: Row(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: _toggleSearch,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF2D7D8C), Color(0xFF3A9AAB)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Center(
-                              child: Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Status Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: getStatusBackgroundColor(task.status),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        task.status.toUpperCase(),
+                        style: TextStyle(
+                          color: getStatusColor(task.status),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              // Tap area when collapsed
-              if (!_isSearchExpanded)
-                Positioned.fill(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(24),
-                      onTap: _toggleSearch,
                     ),
+                    // Time Remaining Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: timeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: timeColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            timeRemaining,
+                            style: TextStyle(
+                              color: timeColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Task Name
+                Text(
+                  taskName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111827),
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 8),
+
+                // Project Name
+                Row(
+                  children: [
+                    Icon(
+                      Icons.folder_outlined,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        projectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Divider
+                Container(height: 1, color: const Color(0xFFF3F4F6)),
+
+                const SizedBox(height: 16),
+
+                // Details Row
+                Row(
+                  children: [
+                    // Due Date
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Due Date',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            formatDate(task.expEndDate),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Vertical Divider
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: const Color(0xFFF3F4F6),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Assigned To
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline_rounded,
+                                size: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Assigned To',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF2D7D8C),
+                                      Color(0xFF3A9AAB),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    assignedUser.isNotEmpty
+                                        ? assignedUser[0].toUpperCase()
+                                        : 'U',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  assignedUser,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF111827),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Arrow
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required VoidCallback onTap,
+    VoidCallback? onClear,
+    bool isActive = false,
+    IconData? icon,
+  }) {
+    return Container(
+      height: 40,
+      padding: EdgeInsets.only(left: isActive ? 12 : 16),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF2D7D8C) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? const Color(0xFF2D7D8C) : const Color(0xFFE5E7EB),
+        ),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF2D7D8C).withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : [],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isActive ? Colors.white : const Color(0xFF6B7280),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isActive ? Colors.white : const Color(0xFF111827),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+          if (isActive && onClear != null) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: onClear,
+              icon: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ] else
+            const SizedBox(width: 16),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
-        backgroundColor: Color(0xFFF5F5F5),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Tasks',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
+        automaticallyImplyLeading: false,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF111827),
+              size: 18,
+            ),
           ),
         ),
-        centerTitle: true,
+        backgroundColor: const Color(0xFFFAFAFA),
+        title: const Text(
+          'Tasks',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
       ),
       body: Consumer<TaskListController>(
         builder: (context, controller, child) {
           if (controller.isLoading && _currentPage == 0) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF2D7D8C),
+                strokeWidth: 3,
+              ),
+            );
           }
 
           if (controller.error != null) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  SizedBox(height: 16),
-                  Text(
-                    'Error loading tasks',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text(controller.error!),
-                  SizedBox(height: 16),
-                  ElevatedButton(onPressed: _fetchTasks, child: Text('Retry')),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.error_outline_rounded,
+                        size: 40,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Unable to Load Tasks',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      controller.error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _fetchTasks,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2D7D8C),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.refresh_rounded, size: 20),
+                      label: const Text(
+                        'Try Again',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           final paginatedTasks = _getPaginatedTasks();
+          final totalFilteredTasks = _getFilteredTasks().length;
 
           return Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                // Search Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Color(0xFF2D7D8C),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      hintText: 'Search tasks, projects, or people...',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 15,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFF6B7280),
+                        size: 22,
+                      ),
+                      suffixIcon: searchQuery.isNotEmpty
+                          ? IconButton(
+                              onPressed: _clearSearch,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Color(0xFF6B7280),
+                                size: 20,
+                              ),
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
                 // Filter Row
-                Row(
-                  children: [
-                    // Status Filter Dropdown
-                    Expanded(
-                      child: Container(
-                        height: 48,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      // Status Filter
+                      Container(
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: selectedFilter,
-                            isExpanded: true,
-                            icon: Padding(
-                              padding: EdgeInsets.only(right: 16),
-                              child: Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Colors.grey,
-                              ),
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Color(0xFF6B7280),
+                              size: 20,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
                             ),
                             items: filterOptions.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 16),
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
+                                  padding: const EdgeInsets.only(left: 12),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.filter_list_rounded,
+                                        size: 16,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(value),
+                                    ],
                                   ),
                                 ),
                               );
@@ -445,325 +881,161 @@ class _AdminTaskPageState extends State<AdminTaskPage>
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12),
-                    // Date Filter
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.grey.shade300),
+                      const SizedBox(width: 8),
+                      // Date Filter Chip
+                      _buildFilterChip(
+                        label: selectedDate != null
+                            ? formatDateShort(selectedDate!)
+                            : 'Select Date',
+                        onTap: () => _selectDate(context),
+                        onClear: selectedDate != null ? _clearDateFilter : null,
+                        isActive: selectedDate != null,
+                        icon: Icons.calendar_today_rounded,
                       ),
-                      child: InkWell(
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2030),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDate =
-                                  '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year.toString().substring(2)}';
-                            });
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(24),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                selectedDate,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(
-                                Icons.calendar_today_outlined,
-                                size: 18,
-                                color: Colors.grey,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
-                SizedBox(height: 16),
-
-                // Animated Search Bar (Full Width)
-                _buildAnimatedSearchBar(),
-
-                // Show search results count when searching
-                if (searchQuery.isNotEmpty) ...[
-                  SizedBox(height: 12),
+                // Results Count
+                if (searchQuery.isNotEmpty || selectedDate != null) ...[
+                  const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(0xFF2D7D8C).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFF2D7D8C).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${_getFilteredTasks().length} result${_getFilteredTasks().length != 1 ? 's' : ''} found',
-                        style: TextStyle(
+                        '$totalFilteredTasks result${totalFilteredTasks != 1 ? 's' : ''} found',
+                        style: const TextStyle(
                           color: Color(0xFF2D7D8C),
                           fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                 ],
 
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Tasks List
                 Expanded(
                   child: paginatedTasks.isEmpty
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                searchQuery.isNotEmpty
-                                    ? Icons.search_off
-                                    : Icons.task_alt,
-                                size: 64,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                searchQuery.isNotEmpty
-                                    ? 'No tasks match your search'
-                                    : 'No tasks found',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              if (searchQuery.isNotEmpty) ...[
-                                SizedBox(height: 8),
-                                Text(
-                                  'Try adjusting your search terms',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade400,
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Icon(
+                                    searchQuery.isNotEmpty ||
+                                            selectedDate != null
+                                        ? Icons.search_off_rounded
+                                        : Icons.task_alt_rounded,
+                                    size: 40,
+                                    color: const Color(0xFF6B7280),
                                   ),
                                 ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  searchQuery.isNotEmpty || selectedDate != null
+                                      ? 'No Matches Found'
+                                      : 'No Tasks Yet',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  searchQuery.isNotEmpty || selectedDate != null
+                                      ? 'Try adjusting your filters or search query'
+                                      : 'No tasks available at the moment',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF6B7280),
+                                    height: 1.5,
+                                  ),
+                                ),
+                                if (searchQuery.isNotEmpty ||
+                                    selectedDate != null) ...[
+                                  const SizedBox(height: 24),
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      _clearDateFilter();
+                                      _clearSearch();
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF2D7D8C),
+                                      side: const BorderSide(
+                                        color: Color(0xFF2D7D8C),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.clear_all_rounded,
+                                      size: 20,
+                                    ),
+                                    label: const Text(
+                                      'Clear Filters',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          itemCount:
-                              paginatedTasks.length + (_isLoadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == paginatedTasks.length) {
-                              return Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-
-                            final task = paginatedTasks[index];
-
-                            // Highlight search matches
-                            final taskName = task.subject ?? task.name;
-                            final assignedUser = task.assignedUsers ?? "";
-                            final projectName = task.projectName ?? "N/A";
-
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        AdminTaskDetailsPage(task: task),
+                      : RefreshIndicator(
+                          onRefresh: _fetchTasks,
+                          color: const Color(0xFF2D7D8C),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.only(bottom: 24),
+                            itemCount:
+                                paginatedTasks.length +
+                                (_isLoadingMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == paginatedTasks.length) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF2D7D8C),
+                                      strokeWidth: 3,
+                                    ),
                                   ),
                                 );
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 16),
-                                padding: EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Priority Badge
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: getStatusColor(task.status),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        task.status,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    // Task Name with highlight
-                                    Text(
-                                      taskName,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(height: 5),
-                                    // Task Name with highlight
-                                    Text(
-                                      projectName,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    // Task Details Row
-                                    Row(
-                                      children: [
-                                        // Time Column
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.access_time,
-                                                    size: 16,
-                                                    color: Colors.grey,
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    'Time',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 4),
-                                              Text(
-                                                calculateTimeRemaining(
-                                                  task.expEndDate,
-                                                ),
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Due Date Column
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons
-                                                        .calendar_today_outlined,
-                                                    size: 16,
-                                                    color: Colors.grey,
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    'Due Date',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 4),
-                                              Text(
-                                                formatDate(task.expEndDate),
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Assigned To Column
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Assigned to',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              SizedBox(height: 4),
-                                              Text(
-                                                assignedUser,
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                              }
+
+                              final task = paginatedTasks[index];
+                              return _buildTaskCard(task);
+                            },
+                          ),
                         ),
                 ),
               ],

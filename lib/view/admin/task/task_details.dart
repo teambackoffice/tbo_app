@@ -10,34 +10,77 @@ class AdminTaskDetailsPage extends StatelessWidget {
     switch (priority.toLowerCase()) {
       case 'high':
       case 'urgent':
-        return Color(0xFFE74C3C);
+        return const Color(0xFFEF4444);
       case 'medium':
-        return Color(0xFFF39C12);
+        return const Color(0xFFF59E0B);
       case 'low':
-        return Color(0xFF2D7D8C);
+        return const Color(0xFF10B981);
       default:
-        return Color(0xFF2D7D8C);
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  Color getPriorityBackgroundColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case 'urgent':
+        return const Color(0xFFFEF2F2);
+      case 'medium':
+        return const Color(0xFFFFFBEB);
+      case 'low':
+        return const Color(0xFFECFDF5);
+      default:
+        return const Color(0xFFF3F4F6);
     }
   }
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return Color(0xFF27AE60);
+        return const Color(0xFF10B981);
       case 'working':
-        return Color(0xFF3498DB);
+        return const Color(0xFF3B82F6);
       case 'open':
-        return Color(0xFFF39C12);
+        return const Color(0xFFF59E0B);
       case 'cancelled':
-        return Color(0xFFE74C3C);
+        return const Color(0xFFEF4444);
       default:
-        return Color(0xFF95A5A6);
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  Color getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return const Color(0xFFECFDF5);
+      case 'working':
+        return const Color(0xFFEFF6FF);
+      case 'open':
+        return const Color(0xFFFFFBEB);
+      case 'cancelled':
+        return const Color(0xFFFEF2F2);
+      default:
+        return const Color(0xFFF3F4F6);
     }
   }
 
   String formatDate(DateTime? date) {
     if (date == null) return 'Not set';
-    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String calculateTimeRemaining(DateTime? endDate) {
@@ -46,132 +89,263 @@ class AdminTaskDetailsPage extends StatelessWidget {
     final difference = endDate.difference(now);
 
     if (difference.isNegative) {
+      final overdueDays = difference.inDays.abs();
+      if (overdueDays > 0) {
+        return 'Overdue by $overdueDays day${overdueDays != 1 ? 's' : ''}';
+      }
       return 'Overdue';
     } else if (difference.inDays > 0) {
-      return '${difference.inDays} Days remaining';
+      return '${difference.inDays} day${difference.inDays != 1 ? 's' : ''} remaining';
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} Hours remaining';
+      return '${difference.inHours} hour${difference.inHours != 1 ? 's' : ''} remaining';
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} Minutes remaining';
+      return '${difference.inMinutes} minute${difference.inMinutes != 1 ? 's' : ''} remaining';
     } else {
-      return 'Due soon';
+      return 'Due very soon';
+    }
+  }
+
+  Color getTimeRemainingColor(DateTime? endDate) {
+    if (endDate == null) return const Color(0xFF6B7280);
+    final now = DateTime.now();
+    final difference = endDate.difference(now);
+
+    if (difference.isNegative) {
+      return const Color(0xFFEF4444);
+    } else if (difference.inDays <= 1) {
+      return const Color(0xFFF59E0B);
+    } else if (difference.inDays <= 3) {
+      return const Color(0xFF3B82F6);
+    } else {
+      return const Color(0xFF10B981);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final timeRemaining = calculateTimeRemaining(task.expEndDate);
+    final timeColor = getTimeRemainingColor(task.expEndDate);
+
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
-        backgroundColor: Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFFAFAFA),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Task Details',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
+        automaticallyImplyLeading: false,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF111827),
+              size: 18,
+            ),
           ),
         ),
-        centerTitle: true,
+        title: const Text(
+          'Task Details',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Task Header Card
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2D7D8C), Color(0xFF3A9AAB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
+                    color: const Color(0xFF2D7D8C).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Task ID
-                  Text(
-                    task.name,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
+                  // Task ID Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      task.name,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 16),
+
                   // Task Subject
                   Text(
                     task.subject ?? task.name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Colors.white,
+                      height: 1.3,
                     ),
                   ),
-                  SizedBox(height: 16),
+
+                  const SizedBox(height: 20),
+
                   // Priority and Status Row
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       // Priority Badge
                       Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: getPriorityColor(task.priority),
-                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.flag, color: Colors.white, size: 16),
-                            SizedBox(width: 6),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: getPriorityColor(task.priority),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(
-                              task.priority,
+                              task.priority.toUpperCase(),
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                color: getPriorityColor(task.priority),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(width: 12),
+
                       // Status Badge
                       Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: getStatusColor(task.status),
-                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.circle, color: Colors.white, size: 12),
-                            SizedBox(width: 6),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: getStatusColor(task.status),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(
-                              task.status,
+                              task.status.toUpperCase(),
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
+                                color: getStatusColor(task.status),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Time Remaining Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 14,
+                              color: timeColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              timeRemaining,
+                              style: TextStyle(
+                                color: timeColor,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -183,183 +357,323 @@ class AdminTaskDetailsPage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 16),
 
-            // Time Details Card
+            const SizedBox(height: 20),
+
+            // Timeline Section
+            _buildSectionHeader('Timeline', Icons.schedule_rounded),
+            const SizedBox(height: 12),
+
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Timeline',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 20),
                   // Start Date
-                  _buildInfoRow(
-                    icon: Icons.play_circle_outline,
+                  _buildTimelineRow(
+                    icon: Icons.play_circle_outline_rounded,
                     label: 'Start Date',
                     value: formatDate(task.expStartDate),
-                    iconColor: Color(0xFF27AE60),
+                    iconColor: const Color(0xFF10B981),
+                    isFirst: true,
                   ),
-                  SizedBox(height: 16),
+
                   // End Date
-                  _buildInfoRow(
+                  _buildTimelineRow(
                     icon: Icons.flag_outlined,
                     label: 'Due Date',
                     value: formatDate(task.expEndDate),
-                    iconColor: Color(0xFFE74C3C),
+                    iconColor: const Color(0xFFEF4444),
                   ),
-                  SizedBox(height: 16),
 
                   // Created Date
-                  _buildInfoRow(
-                    icon: Icons.calendar_today_outlined,
+                  _buildTimelineRow(
+                    icon: Icons.calendar_today_rounded,
                     label: 'Created On',
                     value: formatDate(task.creation),
-                    iconColor: Color(0xFF3498DB),
+                    iconColor: const Color(0xFF3B82F6),
+                    isLast: true,
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 16),
 
-            // Project and Assignment Card
+            const SizedBox(height: 20),
+
+            // Assignment Section
+            _buildSectionHeader('Assignment', Icons.assignment_rounded),
+            const SizedBox(height: 12),
+
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Assignment Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 20),
                   // Project
                   _buildInfoRow(
                     icon: Icons.folder_outlined,
                     label: 'Project',
                     value: task.project ?? 'Not assigned',
-                    iconColor: Color(0xFF9B59B6),
+                    iconColor: const Color(0xFF8B5CF6),
                   ),
-                  SizedBox(height: 16),
-                  // Assigned To
-                  _buildInfoRow(
-                    icon: Icons.person_outline,
-                    label: 'Assigned To',
-                    value: task.assignedUsers ?? 'Not assigned',
-                    iconColor: Color(0xFF2D7D8C),
+
+                  const SizedBox(height: 20),
+
+                  // Assigned To with Avatar
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.person_outline_rounded,
+                          color: Color(0xFF6B7280),
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Assigned To',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF2D7D8C),
+                                        Color(0xFF3A9AAB),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      (task.assignedUsers ?? 'U')[0]
+                                          .toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    task.assignedUsers ?? 'Not assigned',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Color(0xFF111827),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+
                   if (task.customEstimatedHours != null) ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     _buildInfoRow(
-                      icon: Icons.schedule_outlined,
+                      icon: Icons.timer_outlined,
                       label: 'Estimated Hours',
                       value: '${task.customEstimatedHours} hours',
-                      iconColor: Color(0xFF16A085),
+                      iconColor: const Color(0xFF14B8A6),
                     ),
                   ],
+
                   if (task.parentTask != null) ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     _buildInfoRow(
                       icon: Icons.account_tree_outlined,
                       label: 'Parent Task',
                       value: task.parentTask!,
-                      iconColor: Color(0xFF34495E),
+                      iconColor: const Color(0xFF6366F1),
                     ),
                   ],
                 ],
               ),
             ),
-            SizedBox(height: 16),
 
-            // Description Card
-            if (task.description != null && task.description!.isNotEmpty)
+            const SizedBox(height: 20),
+
+            // Description Section
+            if (task.description != null && task.description!.isNotEmpty) ...[
+              _buildSectionHeader('Description', Icons.description_outlined),
+              const SizedBox(height: 12),
+
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: Offset(0, 2),
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.description_outlined,
-                          color: Color(0xFF2D7D8C),
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Description',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      task.description!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.black87,
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  task.description!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF374151),
+                    height: 1.6,
+                  ),
                 ),
               ),
+            ],
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D7D8C).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: const Color(0xFF2D7D8C), size: 18),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF111827),
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimelineRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Column(
+      children: [
+        if (!isFirst)
+          Padding(
+            padding: const EdgeInsets.only(left: 22),
+            child: Container(
+              width: 2,
+              height: 16,
+              color: const Color(0xFFE5E7EB),
+            ),
+          ),
+        Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF111827),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast)
+          Padding(
+            padding: const EdgeInsets.only(left: 22),
+            child: Container(
+              width: 2,
+              height: 16,
+              color: const Color(0xFFE5E7EB),
+            ),
+          ),
+      ],
     );
   }
 
@@ -372,14 +686,15 @@ class AdminTaskDetailsPage extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: iconColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 20),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,18 +703,20 @@ class AdminTaskDetailsPage extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
-                  color: Colors.black,
+                  color: Color(0xFF111827),
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
