@@ -16,7 +16,7 @@ class CRMDashboardPage extends StatefulWidget {
 
   static Widget _buildStatCard({
     required String title,
-    required Widget valueWidget, // <-- change here
+    required Widget valueWidget,
     required Color color,
     required VoidCallback onTap,
   }) {
@@ -52,7 +52,11 @@ class CRMDashboardPage extends StatefulWidget {
               ),
             ),
             const SizedBox(height: 12),
-            valueWidget, // <-- dynamic widget (loader or number)
+            Expanded(
+              child: Center(
+                child: FittedBox(fit: BoxFit.scaleDown, child: valueWidget),
+              ),
+            ),
           ],
         ),
       ),
@@ -67,6 +71,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
   String? _fullName;
   String? designation;
   String? _imageUrl;
+
   Future<void> _userdetails() async {
     final name = await _storage.read(key: 'employee_full_name');
     final designationValue = await _storage.read(key: 'designation');
@@ -115,7 +120,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                     radius: 25,
                     backgroundColor: const Color(0xFF1C7690),
                     child: _imageUrl?.isEmpty ?? true
-                        ? Icon(Icons.person)
+                        ? const Icon(Icons.person, color: Colors.white)
                         : Image.asset(
                             _imageUrl!,
                             width: 30,
@@ -129,16 +134,16 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                     children: [
                       Text(
                         "Hello ${_fullName ?? ''}!",
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         designation ?? 'BDE',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
                           fontWeight: FontWeight.w400,
@@ -220,7 +225,6 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                           );
                         },
                       ),
-
                       CRMDashboardPage._buildStatCard(
                         title: "Deals\nConverted",
                         valueWidget: controller.isLoading
@@ -237,7 +241,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                                     .getCountByStatus("Converted")
                                     .toString(),
                                 style: const TextStyle(
-                                  fontSize: 50,
+                                  fontSize: 45,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
