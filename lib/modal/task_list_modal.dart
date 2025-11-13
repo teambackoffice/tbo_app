@@ -46,6 +46,7 @@ class TaskDetails {
   String priority;
   double progress;
   String? project;
+  String? projectName;
   DateTime? expStartDate;
   DateTime? expEndDate;
   String? description;
@@ -63,6 +64,7 @@ class TaskDetails {
     required this.priority,
     required this.progress,
     this.project,
+    this.projectName,
     this.expStartDate,
     this.expEndDate,
     this.description,
@@ -81,6 +83,7 @@ class TaskDetails {
     priority: json["priority"],
     progress: (json["progress"] as num).toDouble(),
     project: json["project"],
+    projectName: json["custom_project_name"],
     expStartDate: json["exp_start_date"] != null
         ? DateTime.parse(json["exp_start_date"])
         : null,
@@ -103,6 +106,7 @@ class TaskDetails {
     "priority": priority,
     "progress": progress,
     "project": project,
+    "custom_project_name": projectName,
     "exp_start_date": expStartDate?.toIso8601String().split('T').first,
     "exp_end_date": expEndDate?.toIso8601String().split('T').first,
     "description": description,

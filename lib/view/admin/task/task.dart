@@ -587,6 +587,7 @@ class _AdminTaskPageState extends State<AdminTaskPage>
                             // Highlight search matches
                             final taskName = task.subject ?? task.name;
                             final assignedUser = task.assignedUsers ?? "";
+                            final projectName = task.projectName ?? "N/A";
 
                             return GestureDetector(
                               onTap: () {
@@ -640,6 +641,16 @@ class _AdminTaskPageState extends State<AdminTaskPage>
                                       taskName,
                                       style: TextStyle(
                                         fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 5),
+                                    // Task Name with highlight
+                                    Text(
+                                      projectName,
+                                      style: TextStyle(
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
                                       ),
