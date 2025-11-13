@@ -241,7 +241,7 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                                     .getCountByStatus("Converted")
                                     .toString(),
                                 style: const TextStyle(
-                                  fontSize: 45,
+                                  fontSize: 50,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),

@@ -12,8 +12,15 @@ class EmployeeTimesheet extends StatefulWidget {
 }
 
 class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
-  DateTime? selectedDate; // Made nullable to allow "show all"
+  DateTime? selectedDate;
   String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -21,6 +28,19 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF2E7D8A),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -32,6 +52,13 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   void _clearDateFilter() {
     setState(() {
       selectedDate = null;
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      searchQuery = '';
+      _searchController.clear();
     });
   }
 
@@ -47,26 +74,43 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   }
 
   String formatDate(DateTime date) {
-    String day = date.day.toString().padLeft(2, '0');
-    String month = date.month.toString().padLeft(2, '0');
-    String year = date.year.toString().substring(2);
-    return '$day-$month-$year';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}, ${date.year}';
   }
 
   String formatDateFromApi(DateTime date) {
-    String day = date.day.toString().padLeft(2, '0');
-    String month = date.month.toString().padLeft(2, '0');
-    String year = date.year.toString().substring(2);
-    return '$day-$month-$year';
-  }
-
-  double convertHoursToDecimal(int totalHours) {
-    return totalHours / 3600; // Assuming totalHours is in seconds
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   List<Datum> getFilteredTimesheets(List<Datum> timesheets) {
     return timesheets.where((timesheet) {
-      // Filter by search query
       bool searchMatch =
           searchQuery.isEmpty ||
           timesheet.employeeName.toLowerCase().contains(
@@ -74,7 +118,6 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
           ) ||
           timesheet.employee.toLowerCase().contains(searchQuery.toLowerCase());
 
-      // Filter by date (only if a date is selected)
       bool dateMatch =
           selectedDate == null ||
           (selectedDate!.isAfter(
@@ -90,145 +133,313 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
 
   Color getStatusColor(String docst) {
     switch (docst.toLowerCase()) {
-      case 'Send for Approval':
-        return Colors.blue;
+      case 'send for approval':
+        return const Color(0xFF3B82F6);
       case 'approved':
-        return Colors.green;
+        return const Color(0xFF10B981);
       case 'rejected':
-        return Colors.red;
+        return const Color(0xFFEF4444);
       case 'draft':
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       default:
-        return Colors.grey;
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  Color getStatusBackgroundColor(String docst) {
+    switch (docst.toLowerCase()) {
+      case 'send for approval':
+        return const Color(0xFFEFF6FF);
+      case 'approved':
+        return const Color(0xFFECFDF5);
+      case 'rejected':
+        return const Color(0xFFFEF2F2);
+      case 'draft':
+        return const Color(0xFFFFFBEB);
+      default:
+        return const Color(0xFFF3F4F6);
     }
   }
 
   Widget buildEmployeeCard(Datum timesheet) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    TimesheetApprovalPage(timesheet: timesheet),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header Row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        timesheet.employeeName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                    // Avatar Circle
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2E7D8A), Color(0xFF3D9AA8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          timesheet.employeeName.isNotEmpty
+                              ? timesheet.employeeName[0].toUpperCase()
+                              : 'E',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
+
+                    // Employee Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            timesheet.employeeName,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                              height: 1.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            timesheet.employee,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF6B7280),
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Status Badge
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: getStatusColor(timesheet.docstatusName),
-                        borderRadius: BorderRadius.circular(20),
+                        color: getStatusBackgroundColor(
+                          timesheet.docstatusName,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         timesheet.docstatusName.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          color: getStatusColor(timesheet.docstatusName),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  timesheet.employee,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Date',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-                Text(
-                  '${formatDateFromApi(timesheet.startDate)} ',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Total Working Hours',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
+
+                const SizedBox(height: 20),
+
+                // Divider
+                Container(height: 1, color: const Color(0xFFF3F4F6)),
+
+                const SizedBox(height: 16),
+
+                // Details Row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${timesheet.totalHours.toInt()} hrs',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                    // Date Section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Date',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            formatDateFromApi(timesheet.startDate),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(
-                      width: 120,
-                      height: 30,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  TimesheetApprovalPage(timesheet: timesheet),
+
+                    // Vertical Divider
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: const Color(0xFFF3F4F6),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Hours Section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Total Hours',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${timesheet.totalHours.toInt()} hrs',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D8A),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
                           ),
-                        ),
-                        child: const Text(
-                          'View Details',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        ],
                       ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // View Details Button
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey.shade400,
                     ),
                   ],
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required VoidCallback onTap,
+    required VoidCallback onClear,
+    bool isActive = false,
+  }) {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.only(left: 16),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF2E7D8A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? const Color(0xFF2E7D8A) : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 16,
+                  color: isActive ? Colors.white : const Color(0xFF6B7280),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isActive ? Colors.white : const Color(0xFF111827),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isActive) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: onClear,
+              icon: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ] else
+            const SizedBox(width: 16),
         ],
       ),
     );
@@ -237,126 +448,132 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F7F3),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
+        elevation: 0,
         automaticallyImplyLeading: false,
         leading: Container(
-          width: 10,
-          height: 10,
-          decoration: const BoxDecoration(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: IconButton(
             padding: EdgeInsets.zero,
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(
-              Icons.arrow_back_ios_new_outlined,
-              color: Colors.black,
-              size: 20,
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF111827),
+              size: 18,
             ),
           ),
         ),
-        backgroundColor: const Color(0xFFF9F7F3),
+        backgroundColor: const Color(0xFFFAFAFA),
         title: const Text(
-          'Timesheet',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          'Timesheets',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
       ),
       body: Column(
         children: [
-          // Search Field
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextFormField(
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
-                ),
-                hintText: 'Search employee...',
-                hintStyle: TextStyle(color: Colors.grey.shade500),
-                suffixIcon: Icon(Icons.search, color: Colors.grey.shade500),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
 
-          // Date Selector with Clear Button
+          // Search and Filter Section
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                // Search Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Color(0xFF2E7D8A),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      hintText: 'Search by name or employee ID...',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 15,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFF6B7280),
+                        size: 22,
+                      ),
+                      suffixIcon: searchQuery.isNotEmpty
+                          ? IconButton(
+                              onPressed: _clearSearch,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Color(0xFF6B7280),
+                                size: 20,
+                              ),
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
                         vertical: 16,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            selectedDate != null
-                                ? formatDate(selectedDate!)
-                                : 'All Dates',
-                            style: TextStyle(
-                              color: selectedDate != null
-                                  ? Colors.black
-                                  : Colors.grey.shade600,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const Icon(
-                            Icons.calendar_today,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),
-                if (selectedDate != null) ...[
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _clearDateFilter,
-                    icon: const Icon(Icons.clear),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: const CircleBorder(),
-                      side: BorderSide(color: Colors.grey.shade300),
-                    ),
+
+                const SizedBox(height: 12),
+
+                // Date Filter Chip
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _buildFilterChip(
+                    label: selectedDate != null
+                        ? formatDate(selectedDate!)
+                        : 'Select Date',
+                    onTap: () => _selectDate(context),
+                    onClear: _clearDateFilter,
+                    isActive: selectedDate != null,
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -369,52 +586,78 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
               builder: (context, controller, child) {
                 if (controller.isLoading) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF2E7D8A)),
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF2E7D8A),
+                      strokeWidth: 3,
+                    ),
                   );
                 }
 
                 if (controller.error != null) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading timesheets',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.error_outline_rounded,
+                              size: 40,
+                              color: Color(0xFFEF4444),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          controller.error!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Unable to Load Timesheets',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            controller.fetchtimesheet();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D8A),
+                          const SizedBox(height: 8),
+                          Text(
+                            controller.error!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              height: 1.5,
+                            ),
                           ),
-                          child: const Text(
-                            'Retry',
-                            style: TextStyle(color: Colors.white),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => controller.fetchtimesheet(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2E7D8A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.refresh_rounded, size: 20),
+                            label: const Text(
+                              'Try Again',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -422,32 +665,45 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                 if (controller.allLeads?.data == null ||
                     controller.allLeads!.data.isEmpty) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No timesheets found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.access_time_rounded,
+                              size: 40,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No timesheet data available at the moment',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
+                          const SizedBox(height: 24),
+                          const Text(
+                            'No Timesheets Yet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          const Text(
+                            'There are no timesheet records available',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -458,32 +714,71 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
 
                 if (filteredTimesheets.isEmpty) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.filter_list_off,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No matching timesheets',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.filter_list_off_rounded,
+                              size: 40,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your date or search query',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
+                          const SizedBox(height: 24),
+                          const Text(
+                            'No Matches Found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827),
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Try adjusting your filters or search query',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              _clearDateFilter();
+                              _clearSearch();
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF2E7D8A),
+                              side: const BorderSide(color: Color(0xFF2E7D8A)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(Icons.clear_all_rounded, size: 20),
+                            label: const Text(
+                              'Clear Filters',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -492,8 +787,9 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                   onRefresh: () async {
                     await controller.fetchtimesheet();
                   },
+                  color: const Color(0xFF2E7D8A),
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: filteredTimesheets.length,
                     itemBuilder: (context, index) {
                       return buildEmployeeCard(filteredTimesheets[index]);
@@ -503,8 +799,6 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
               },
             ),
           ),
-
-          const SizedBox(height: 16),
         ],
       ),
     );
