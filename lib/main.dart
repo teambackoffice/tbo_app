@@ -33,6 +33,7 @@ import 'package:tbo_app/controller/task_assignment_submit_controller.dart';
 import 'package:tbo_app/controller/task_count_controller.dart';
 import 'package:tbo_app/controller/task_employee_assign.dart';
 import 'package:tbo_app/controller/task_list_controller.dart';
+import 'package:tbo_app/controller/update_timesheet_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/firebase_options.dart';
 import 'package:tbo_app/view/splash/splash_screen.dart';
@@ -200,6 +201,9 @@ class MyApp extends StatelessWidget {
             ),
             ChangeNotifierProvider<TaskSubmissionController>(
               create: (_) => TaskSubmissionController(),
+            ),
+            ChangeNotifierProvider<TimesheetStatusController>(
+              create: (_) => TimesheetStatusController(),
             ),
           ],
           child: MaterialApp(

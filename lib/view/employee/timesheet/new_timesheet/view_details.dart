@@ -351,15 +351,17 @@ class _ViewDetailsState extends State<ViewDetails> {
                               padding: const EdgeInsets.only(bottom: 16),
                               child: _buildTimesheetCard(
                                 index: index,
-                                title: timeLog.task.isNotEmpty
-                                    ? timeLog.task
-                                    : timeLog.project,
-                                project: timeLog.project,
+                                title: (timeLog.task?.isNotEmpty ?? false)
+                                    ? timeLog.task!
+                                    : (timeLog.project ?? 'No Project'),
+                                project: timeLog.project ?? 'No Project',
                                 fromTime: _formatTime(timeLog.fromTime),
                                 toTime: _formatTime(timeLog.toTime),
                                 totalHours: timeLog.hours.toStringAsFixed(2),
-                                activityType: timeLog.activityType,
-                                description: timeLog.description,
+                                activityType: timeLog.activityType ?? '',
+                                description:
+                                    timeLog.description ??
+                                    'No description provided',
                               ),
                             );
                           },

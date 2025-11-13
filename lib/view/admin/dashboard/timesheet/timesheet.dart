@@ -88,6 +88,21 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
     }).toList();
   }
 
+  Color getStatusColor(String docst) {
+    switch (docst.toLowerCase()) {
+      case 'Send for Approval':
+        return Colors.blue;
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'draft':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget buildEmployeeCard(Datum timesheet) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -124,24 +139,26 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Container(
-                    //   padding: const EdgeInsets.symmetric(
-                    //     horizontal: 16,
-                    //     vertical: 4,
-                    //   ),
-                    //   decoration: BoxDecoration(
-                    //     color: getStatusColor(timesheet.status),
-                    //     borderRadius: BorderRadius.circular(20),
-                    //   ),
-                    //   child: Text(
-                    //     timesheet.status,
-                    //     style: const TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 12,
-                    //       fontWeight: FontWeight.w500,
-                    //     ),
-                    //   ),
-                    // ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: getStatusColor(timesheet.docstatusName),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        timesheet.docstatusName.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),

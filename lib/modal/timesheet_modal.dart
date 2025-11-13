@@ -37,20 +37,24 @@ class Datum {
   String employee;
   String employeeName;
   String status;
+  int docstatus;
   double totalHours;
   DateTime startDate;
   DateTime endDate;
   List<TimeLog> timeLogs;
+  String docstatusName;
 
   Datum({
     required this.name,
     required this.employee,
     required this.employeeName,
     required this.status,
+    required this.docstatus,
     required this.totalHours,
     required this.startDate,
     required this.endDate,
     required this.timeLogs,
+    required this.docstatusName,
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
@@ -58,6 +62,8 @@ class Datum {
     employee: json["employee"],
     employeeName: json["employee_name"],
     status: json["status"],
+    docstatus: json["docstatus"],
+    docstatusName: json["docstatus_name"],
     totalHours: json["total_hours"],
     startDate: DateTime.parse(json["start_date"]),
     endDate: DateTime.parse(json["end_date"]),
@@ -71,6 +77,8 @@ class Datum {
     "employee": employee,
     "employee_name": employeeName,
     "status": status,
+    "docstatus": docstatus,
+    "docstatus_name": docstatusName,
     "total_hours": totalHours,
     "start_date":
         "${startDate.year.toString().padLeft(4, '0')}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
@@ -85,27 +93,27 @@ class TimeLog {
   DateTime fromTime;
   DateTime toTime;
   double hours;
-  String project;
-  String task;
-  String description;
+  String? project; // nullable
+  String? task; // nullable
+  String? description; // nullable
 
   TimeLog({
     required this.activityType,
     required this.fromTime,
     required this.toTime,
     required this.hours,
-    required this.project,
-    required this.task,
-    required this.description,
+    this.project,
+    this.task,
+    this.description,
   });
 
   factory TimeLog.fromJson(Map<String, dynamic> json) => TimeLog(
     activityType: json["activity_type"],
     fromTime: DateTime.parse(json["from_time"]),
     toTime: DateTime.parse(json["to_time"]),
-    hours: json["hours"],
-    project: json["project"],
-    task: json["task"],
+    hours: (json["hours"] as num).toDouble(),
+    project: json["project"], // safe: nullable
+    task: json["task"], // safe: nullable
     description: json["description"],
   );
 
