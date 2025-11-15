@@ -14,33 +14,54 @@ class CreateProjectPlanningService {
     required String planningName,
     required String leadSegment,
   }) async {
-    final sid = await _secureStorage.read(key: 'sid');
-
-    if (sid == null) {
-      throw Exception("Session ID not found in storage");
-    }
-
-    var headers = {'Content-Type': 'application/json', 'Cookie': ' sid=$sid;'};
-
-    var body = jsonEncode({
-      "planning_name": planningName,
-      "lead_segment": leadSegment,
-    });
-
     try {
+      // 🔑 Read SID for authentication
+      final sid = await _secureStorage.read(key: 'sid');
+
+      if (sid == null) {
+        throw Exception("Session ID not found in storage");
+      }
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'sid=$sid',
+      };
+
+      final body = jsonEncode({
+        "planning_name": planningName,
+        "lead_segment": leadSegment,
+      });
+
+      // 🧠 Log request details
+      print('🔹 API Request URL: $url');
+      print('🔹 Request Headers: $headers');
+      print('🔹 Request Body: $body');
+
+      // 🚀 Send request
       final response = await http.post(
         Uri.parse(url),
         headers: headers,
         body: body,
       );
 
-      if (response.statusCode != 201) {
-        throw Exception('Failed: ${response.reasonPhrase}');
-      }
+      // 🧾 Log response details
+      print('🔸 Response Status Code: ${response.statusCode}');
+      print('🔸 Response Headers: ${response.headers}');
+      print('🔸 Response Body: ${response.body}');
 
-      return response.body; // 🔥 CHANGE: Return the response body
-    } catch (e) {
-      throw Exception('Error: $e');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Project Planning Created Successfully.');
+        return response.body;
+      } else {
+        print('❌ Failed to Create Project Planning.');
+        throw Exception(
+          'Status: ${response.statusCode}, Reason: ${response.reasonPhrase}, Body: ${response.body}',
+        );
+      }
+    } catch (e, stack) {
+      print('🚨 Exception occurred while creating project planning: $e');
+      print('🚨 Stack Trace: $stack');
+      throw Exception('Error while creating project planning: $e');
     }
   }
 }

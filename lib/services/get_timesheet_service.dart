@@ -11,7 +11,7 @@ class GetTimesheetService {
   Future<TimesheetModal> fetchtimesheet({String? employee}) async {
     String url = '${ApiConstants.baseUrl}project_api.get_timesheet';
 
-    // 👉 Add employee param only if provided
+    // Add employee param only if provided
     if (employee != null && employee.isNotEmpty) {
       url += '?employee=$employee';
     }
@@ -23,10 +23,12 @@ class GetTimesheetService {
         throw Exception('Authentication required. Please login again.');
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
-      );
+      final headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'sid=$sid',
+      };
+
+      final response = await http.get(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200 ||
           response.statusCode == 201 ||

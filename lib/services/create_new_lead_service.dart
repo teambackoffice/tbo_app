@@ -29,13 +29,17 @@ class CreateNewLeadService {
         body: jsonEncode(leadData),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         return decoded;
       } else {
-        throw Exception('Failed to create lead: ${response.statusCode}');
+        return {
+          "success": false,
+          "status": response.statusCode,
+          "body": response.body,
+        };
       }
-    } catch (e) {
+    } catch (e, stack) {
       return null;
     }
   }

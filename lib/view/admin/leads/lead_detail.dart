@@ -28,14 +28,16 @@ class _LeadDetailsPageState extends State<LeadDetailsPage> {
   Future<void> _loadSavedPlanningId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _planningId = prefs.getString("planning_${widget.lead}");
+      // Use lead name or a unique ID field instead of the object itself
+      _planningId = prefs.getString("planning_${widget.lead.leadName}");
     });
   }
 
   // ✅ Save planning Id locally
   Future<void> _savePlanningId(String planningId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("planning_${widget.lead}", planningId);
+    // Use the same key pattern
+    await prefs.setString("planning_${widget.lead.leadName}", planningId);
   }
 
   @override

@@ -26,15 +26,15 @@ class CreateProjectService {
   }) async {
     try {
       // 🔑 Read SID
-      String? sid = await _secureStorage.read(key: 'sid');
+      final sid = await _secureStorage.read(key: 'sid');
       if (sid == null) throw Exception("SID not found. Please login again.");
 
-      var headers = {
+      final headers = {
         'Content-Type': 'application/json',
-        'Cookie': 'sid=$sid; ',
+        'Cookie': 'sid=$sid',
       };
 
-      var body = json.encode({
+      final body = json.encode({
         "planning_id": planningId,
         "planning_name": planningName,
         "lead": lead,
@@ -46,25 +46,38 @@ class CreateProjectService {
         "estimated_cost": estimatedCost,
         "planned_start_date": plannedStartDate,
         "planned_end_date": plannedEndDate,
-        "resource_requirements": json.encode(
-          resourceRequirements,
-        ), // ✅ keep as List<Map>
+        "resource_requirements": resourceRequirements, // keep as List<Map>
       });
 
-      var request = http.Request('POST', Uri.parse(url));
-      request.body = body;
-      request.headers.addAll(headers);
+      // 🧠 Print Request Details
+      print("🔹 API Request URL: $url");
+      print("🔹 Request Headers: $headers");
+      print("🔹 Request Body: $body");
 
-      http.StreamedResponse response = await request.send();
+      final request = http.Request('POST', Uri.parse(url))
+        ..headers.addAll(headers)
+        ..body = body;
 
-      String responseBody = await response.stream.bytesToString();
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
 
-      if (response.statusCode == 200) {
+      // 🧾 Print Response Details
+      print("🔸 Response Status Code: ${response.statusCode}");
+      print("🔸 Response Headers: ${response.headers}");
+      print("🔸 Response Body: $responseBody");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("✅ Project planning updated successfully.");
         return responseBody;
       } else {
-        throw Exception("Error: ${response.reasonPhrase}, Body: $responseBody");
+        print("❌ Failed to update project planning.");
+        throw Exception(
+          "Status: ${response.statusCode}, Reason: ${response.reasonPhrase}, Body: $responseBody",
+        );
       }
     } catch (e, stack) {
+      print("🚨 Exception occurred: $e");
+      print("🚨 Stack Trace: $stack");
       throw Exception("Failed to update project planning: $e");
     }
   }
