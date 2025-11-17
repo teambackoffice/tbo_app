@@ -28,7 +28,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
 
   Future<void> _loadEmployeeIdAndTimesheets() async {
     try {
-      final employeeId = await _secureStorage.read(key: 'employee_id');
+      final employeeId = await _secureStorage.read(key: 'employee_original_id');
 
       setState(() {
         _employeeId = employeeId;

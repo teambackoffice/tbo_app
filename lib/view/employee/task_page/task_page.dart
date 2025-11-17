@@ -424,6 +424,16 @@ class _TasksPageState extends State<TasksPage> {
     });
   }
 
+  /*************  ✨ Windsurf Command ⭐  *************/
+  /// Format a DateTime object into a String in the format 'DD-MM-YY'.
+  ///
+  /// This is used to display dates in a user-friendly format.
+  ///
+  /// Example:
+  /// final DateTime date = DateTime(2022, 12, 25);
+  /// final String formattedDate = _formatDatePicker(date);
+  /// print(formattedDate); // Output: 25-12-22
+  /*******  b66b6e16-8484-4659-bf1f-2cea213456d3  *******/
   String _formatDatePicker(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year.toString().substring(2)}';
   }

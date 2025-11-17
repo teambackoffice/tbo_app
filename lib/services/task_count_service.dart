@@ -11,7 +11,7 @@ class TaskCountService {
   Future<Map<String, dynamic>?> getTaskCount() async {
     // Read sid and employee ID from secure storage
     final sid = await _secureStorage.read(key: 'sid');
-    final employeeId = await _secureStorage.read(key: 'employee_id');
+    final employeeId = await _secureStorage.read(key: 'employee_original_id');
 
     if (sid == null) {
       throw Exception("Session ID not found in secure storage");

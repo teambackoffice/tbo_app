@@ -102,6 +102,7 @@ class LoginController with ChangeNotifier {
       case 'supervisor':
         return const CRMBottomNavigation();
       case 'employee':
+      case 'regular employee':
       case 'user':
       case 'staff':
         return const EmployeeBottomNavigation();

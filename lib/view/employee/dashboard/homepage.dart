@@ -29,7 +29,7 @@ class _HomepageState extends State<Homepage> {
     final name = await _storage.read(key: 'employee_full_name');
     final designationValue = await _storage.read(key: 'designation');
     final imageUrl = await _storage.read(key: 'image');
-    final empId = await _storage.read(key: 'employee_id');
+    final empId = await _storage.read(key: 'employee_original_id');
     setState(() {
       _fullName = name;
       designation = designationValue;

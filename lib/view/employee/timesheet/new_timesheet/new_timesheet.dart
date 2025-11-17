@@ -66,7 +66,7 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
 
   Future<void> _loadEmployeeData() async {
     try {
-      _employeeId = await _secureStorage.read(key: 'employee_id');
+      _employeeId = await _secureStorage.read(key: 'employee_original_id');
       _sid = await _secureStorage.read(key: 'sid');
 
       if (_employeeId == null || _sid == null) {

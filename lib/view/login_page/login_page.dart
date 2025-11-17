@@ -193,6 +193,7 @@ class _LoginPageState extends State<LoginPage> {
                                       nextPage = const CRMBottomNavigation();
                                       break;
                                     case 'employee':
+                                    case 'regular employee':
                                     case 'user':
                                     case 'staff':
                                       nextPage =
