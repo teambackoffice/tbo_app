@@ -49,11 +49,6 @@ class CreateProjectService {
         "resource_requirements": resourceRequirements, // keep as List<Map>
       });
 
-      // 🧠 Print Request Details
-      print("🔹 API Request URL: $url");
-      print("🔹 Request Headers: $headers");
-      print("🔹 Request Body: $body");
-
       final request = http.Request('POST', Uri.parse(url))
         ..headers.addAll(headers)
         ..body = body;
@@ -61,23 +56,14 @@ class CreateProjectService {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      // 🧾 Print Response Details
-      print("🔸 Response Status Code: ${response.statusCode}");
-      print("🔸 Response Headers: ${response.headers}");
-      print("🔸 Response Body: $responseBody");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("✅ Project planning updated successfully.");
         return responseBody;
       } else {
-        print("❌ Failed to update project planning.");
         throw Exception(
           "Status: ${response.statusCode}, Reason: ${response.reasonPhrase}, Body: $responseBody",
         );
       }
     } catch (e, stack) {
-      print("🚨 Exception occurred: $e");
-      print("🚨 Stack Trace: $stack");
       throw Exception("Failed to update project planning: $e");
     }
   }

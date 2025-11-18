@@ -74,8 +74,9 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
             );
           }
 
-          if (controller.dateRequestData == null ||
-              !controller.dateRequestData!.message.success) {
+          final msg = controller.dateRequestData?.message;
+
+          if (msg == null || msg.success != true) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +86,7 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                     size: 64,
                     color: Colors.grey.shade400,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'Failed to load requests',
                     style: TextStyle(
@@ -94,35 +95,18 @@ class _DateRequestsPageState extends State<DateRequestsPage> {
                       color: Colors.grey.shade600,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
-                    controller.dateRequestData?.message.message ??
-                        'Please try again',
+                    msg?.message ?? 'Please try again',
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _loadDateRequests,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF129476),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
                   ),
                 ],
               ),
             );
           }
 
-          final allRequests = controller.dateRequestData!.message.data;
+          final allRequests = controller.dateRequestData?.message.data ?? [];
+
           final filteredRequests = _getFilteredRequests(allRequests);
 
           return Column(

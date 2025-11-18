@@ -97,9 +97,11 @@ class LoginController with ChangeNotifier {
     switch (role.toLowerCase()) {
       case 'admin':
       case 'administrator':
+      case 'project coordinator':
         return const AdminBottomNavigation();
       case 'crm':
       case 'supervisor':
+      case 'bde':
         return const CRMBottomNavigation();
       case 'employee':
       case 'regular employee':

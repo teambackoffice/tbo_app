@@ -14,7 +14,7 @@ class CRMProfilePage extends StatelessWidget {
     final name = await storage.read(key: "username");
     final email = await storage.read(key: "email");
     final phone = await storage.read(key: "mobileNo");
-    final employeeId = await storage.read(key: "employee_original_id");
+    final employeeId = await storage.read(key: "employee_id");
     final designation = await storage.read(key: "designation");
     final imageUrl = await storage.read(key: "image");
 

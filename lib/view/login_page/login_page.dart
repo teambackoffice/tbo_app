@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/employee_task_list_controller.dart';
 import 'package:tbo_app/controller/login_controller.dart';
+import 'package:tbo_app/controller/task_count_controller.dart';
+import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/crm/bottom_navigation/bottom_navigation.dart';
 import 'package:tbo_app/view/employee/bottom_navigation/bottom_navigation_emply.dart';
@@ -180,16 +183,31 @@ class _LoginPageState extends State<LoginPage> {
 
                                 if (result != null &&
                                     result["success"] == true) {
+                                  // 🌟 Preload homepage data AFTER login + BEFORE navigating
+                                  await Future.wait([
+                                    context
+                                        .read<TaskCountController>()
+                                        .fetchTaskSummary(),
+                                    context
+                                        .read<TaskByEmployeeController>()
+                                        .fetchTasks(),
+                                    context
+                                        .read<UserDetailsController>()
+                                        .getUserDetails(),
+                                  ]);
+
                                   final role = result["role"]?.toLowerCase();
                                   Widget nextPage;
 
                                   switch (role) {
                                     case 'admin':
                                     case 'administrator':
+                                    case 'project coordinator':
                                       nextPage = const AdminBottomNavigation();
                                       break;
                                     case 'crm':
                                     case 'supervisor':
+                                    case "bde":
                                       nextPage = const CRMBottomNavigation();
                                       break;
                                     case 'employee':

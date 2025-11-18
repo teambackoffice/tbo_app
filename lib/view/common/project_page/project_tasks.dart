@@ -141,7 +141,7 @@ class _ProjectTasksState extends State<ProjectTasks> {
       }
 
       final taskAssignments = [
-        {"task_id": taskId, "employee_original_id": employeeId},
+        {"task_id": taskId, "employee_id": employeeId},
       ];
 
       final taskAssignController = TaskEmployeeAssignController();

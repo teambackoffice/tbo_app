@@ -1,3 +1,7 @@
+// To parse this JSON data:
+//
+//     final projectList = projectListFromJson(jsonString);
+
 import 'dart:convert';
 
 ProjectList projectListFromJson(String str) =>
@@ -5,21 +9,35 @@ ProjectList projectListFromJson(String str) =>
 
 String projectListToJson(ProjectList data) => json.encode(data.toJson());
 
+/// ROOT LEVEL
 class ProjectList {
-  String? message;
-  List<ProjectDetails>? data;
-  bool? success;
+  ProjectMessage? message;
 
-  ProjectList({this.message, this.data, this.success});
+  ProjectList({this.message});
 
   factory ProjectList.fromJson(Map<String, dynamic> json) => ProjectList(
+    message: json["message"] != null
+        ? ProjectMessage.fromJson(json["message"])
+        : null,
+  );
+
+  Map<String, dynamic> toJson() => {"message": message?.toJson()};
+}
+
+/// message → { message: "...", data: [...] }
+class ProjectMessage {
+  String? message;
+  List<ProjectDetails>? data;
+
+  ProjectMessage({this.message, this.data});
+
+  factory ProjectMessage.fromJson(Map<String, dynamic> json) => ProjectMessage(
     message: json["message"],
     data: json["data"] == null
         ? []
         : List<ProjectDetails>.from(
             json["data"].map((x) => ProjectDetails.fromJson(x)),
           ),
-    success: json["success"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -27,10 +45,10 @@ class ProjectList {
     "data": data == null
         ? []
         : List<dynamic>.from(data!.map((x) => x.toJson())),
-    "success": success,
   };
 }
 
+/// PROJECT DETAILS
 class ProjectDetails {
   String? name;
   String? projectName;
@@ -83,9 +101,7 @@ class ProjectDetails {
     customLeadSegment: json["custom_lead_segment"],
     customProjectPlanning: json["custom_project_planning"],
     notes: json["notes"],
-    estimatedCosting: (json["estimated_costing"] != null)
-        ? json["estimated_costing"].toDouble()
-        : null,
+    estimatedCosting: json["estimated_costing"]?.toDouble(),
     taskTemplates: json["task_templates"] == null
         ? []
         : List<TaskTemplate>.from(
@@ -107,12 +123,8 @@ class ProjectDetails {
     "status": status,
     "priority": priority,
     "department": department,
-    "expected_start_date": expectedStartDate != null
-        ? "${expectedStartDate!.year.toString().padLeft(4, '0')}-${expectedStartDate!.month.toString().padLeft(2, '0')}-${expectedStartDate!.day.toString().padLeft(2, '0')}"
-        : null,
-    "expected_end_date": expectedEndDate != null
-        ? "${expectedEndDate!.year.toString().padLeft(4, '0')}-${expectedEndDate!.month.toString().padLeft(2, '0')}-${expectedEndDate!.day.toString().padLeft(2, '0')}"
-        : null,
+    "expected_start_date": expectedStartDate?.toIso8601String(),
+    "expected_end_date": expectedEndDate?.toIso8601String(),
     "is_active": isActive,
     "custom_lead_segment": customLeadSegment,
     "custom_project_planning": customProjectPlanning,
@@ -127,6 +139,7 @@ class ProjectDetails {
   };
 }
 
+/// TASK TEMPLATES
 class TaskTemplate {
   String? templateName;
   double? estimatedHours;
@@ -159,6 +172,7 @@ class TaskTemplate {
   };
 }
 
+/// RESOURCE REQUIREMENTS
 class ResourceRequirement {
   String? resourceType;
   String? resourceName;

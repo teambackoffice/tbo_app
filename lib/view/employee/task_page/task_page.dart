@@ -225,6 +225,7 @@ class _TasksPageState extends State<TasksPage> {
                   }
 
                   final allTasks = taskController.taskListResponse?.data ?? [];
+
                   final filteredTasks = _filterTasks(allTasks);
 
                   if (allTasks.isEmpty) {

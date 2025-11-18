@@ -14,26 +14,42 @@ class EmployeeTaskDateRequestService {
     required String employeeId,
   }) async {
     try {
-      // Read sid from secure storage
+      // 🔵 READ SID
       String? sid = await _storage.read(key: 'sid');
+
       if (sid == null) {
         return null;
       }
 
-      var headers = {
+      final headers = {
         'Content-Type': 'application/json',
-        'Cookie': 'sid=$sid', // Add cookie header
+        'Cookie': 'sid=$sid',
       };
 
+      // 🔵 PREPARE REQUEST
       var request = http.Request('GET', Uri.parse(_baseUrl));
       request.body = json.encode({"employee": employeeId});
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
 
+      // 🔵 READ STRING BODY
+      String responseBody = await response.stream.bytesToString();
+
+      // 🟢 PRINT RAW BODY
+
       if (response.statusCode == 200) {
-        String responseBody = await response.stream.bytesToString();
-        return employeeDateRequestModalClassFromJson(responseBody);
+        try {
+          final decoded = jsonDecode(responseBody);
+
+          final parsedModel = employeeDateRequestModalClassFromJson(
+            responseBody,
+          );
+
+          return parsedModel;
+        } catch (e) {
+          return null;
+        }
       } else {
         return null;
       }

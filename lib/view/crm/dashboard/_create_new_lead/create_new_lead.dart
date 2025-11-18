@@ -19,31 +19,24 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
-  // final String _selectedLeadSource = 'Website';
+  String _selectedLeadSource = 'Advertisement';
   final String _selectedLeadStatus = 'New';
   String _selectedMarketSegment = 'Lower Income';
   String _selectedCustomLeadSegment = 'Erpnext';
   String _selectedProjectType = 'Internal';
+  String _selectedDepartment = 'Accounts';
+  String _selectedPriority = 'Medium';
 
-  // final List<String> _leadSources = [
-  //   'Website',
-  //   'Social Media',
-  //   'Email Campaign',
-  //   'ERPNext',
-  //   'Referral',
-  //   'Event',
-  //   'Advertisement',
-  // ];
-
-  // final List<String> _leadStatuses = [
-  //   'New',
-  //   'Contacted',
-  //   'Qualified',
-  //   'Proposal',
-  //   'Negotiation',
-  //   'Closed Won',
-  //   'Closed Lost',
-  // ];
+  final List<String> _leadSources = [
+    'Advertisement',
+    'Campaign',
+    'Cold Calling',
+    'Customer\'s Vendor',
+    'Exhibition',
+    'Existing Customer',
+    'IRFAD',
+    'LEADS COLLECTIONS',
+  ];
 
   final List<String> _marketSegments = [
     'Lower Income',
@@ -54,6 +47,19 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
   final List<String> _customLeadSegments = ['Erpnext', 'Digital'];
 
   final List<String> _projectTypes = ['Internal', 'External'];
+
+  final List<String> _departments = [
+    'Accounts',
+    'Business development - TBO',
+    'DIGITAL MARKETING - TBO',
+    'ERPNext - TBO',
+    'Human Resources',
+    'Information Technology - TBO',
+    'Management',
+    'Marketing',
+  ];
+
+  final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
   @override
   Widget build(BuildContext context) {
@@ -117,31 +123,19 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
               ),
               const SizedBox(height: 20),
 
-              // _buildLabel('Lead Source'),
-              // const SizedBox(height: 8),
-              // _buildDropdown(
-              //   value: _selectedLeadSource,
-              //   items: _leadSources,
-              //   onChanged: (value) {
-              //     setState(() {
-              //       _selectedLeadSource = value!;
-              //     });
-              //   },
-              // ),
-              // const SizedBox(height: 20),
+              _buildLabel('Lead Source'),
+              const SizedBox(height: 8),
+              _buildDropdown(
+                value: _selectedLeadSource,
+                items: _leadSources,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLeadSource = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
 
-              // _buildLabel('Lead Status'),
-              // const SizedBox(height: 8),
-              // _buildDropdown(
-              //   value: _selectedLeadStatus,
-              //   items: _leadStatuses,
-              //   onChanged: (value) {
-              //     setState(() {
-              //       _selectedLeadStatus = value!;
-              //     });
-              //   },
-              // ),
-              // const SizedBox(height: 20),
               _buildLabel('Market Segment'),
               const SizedBox(height: 8),
               _buildDropdown(
@@ -181,22 +175,32 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
               ),
               const SizedBox(height: 20),
 
-              // _buildLabel('Location'),
-              // const SizedBox(height: 8),
-              // _buildTextField(
-              //   controller: _locationController,
-              //   hintText: 'Enter location',
-              // ),
-              // const SizedBox(height: 20),
+              _buildLabel('Department'),
+              const SizedBox(height: 8),
+              _buildDropdown(
+                value: _selectedDepartment,
+                items: _departments,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedDepartment = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
 
-              // _buildLabel('Notes'),
-              // const SizedBox(height: 8),
-              // _buildTextField(
-              //   controller: _notesController,
-              //   hintText: 'Add additional notes',
-              //   maxLines: 5,
-              // ),
-              // const SizedBox(height: 40),
+              _buildLabel('Priority'),
+              const SizedBox(height: 8),
+              _buildDropdown(
+                value: _selectedPriority,
+                items: _priorities,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedPriority = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -280,7 +284,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
         border: Border.all(color: const Color(0xFF1C7690), width: 1.5),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: const InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: InputBorder.none,
@@ -302,13 +306,14 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
         'email_id': _emailController.text,
         'mobile_no': _phoneController.text,
         'company_name': _companyController.text,
-        // 'source': _selectedLeadSource,
+        'source': _selectedLeadSource,
         'status': "Open",
         'market_segment': _selectedMarketSegment,
         'custom_lead_segment': _selectedCustomLeadSegment,
         'custom_project_type': _selectedProjectType,
-        'territory': _locationController.text,
-        // 'notes': _notesController.text,
+        'custom_department': _selectedDepartment,
+        'custom_priority': _selectedPriority,
+        'territory': "India",
       };
 
       // Show loading indicator
@@ -360,7 +365,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
     _emailController.dispose();
     _phoneController.dispose();
     _companyController.dispose();
-    // _notesController.dispose();
+    _notesController.dispose();
     _locationController.dispose();
     super.dispose();
   }

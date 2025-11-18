@@ -11,6 +11,7 @@ class CreateNewLeadService {
     required Map<String, dynamic> leadData,
   }) async {
     try {
+      // Read SID
       final sid = await _secureStorage.read(key: 'sid');
       if (sid == null) {
         throw Exception("SID not found in storage");
@@ -29,6 +30,7 @@ class CreateNewLeadService {
         body: jsonEncode(leadData),
       );
 
+      // Check HTTP status
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         return decoded;

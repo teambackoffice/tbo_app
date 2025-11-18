@@ -45,7 +45,7 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
 
   Future<void> _loadEmployeeId() async {
     try {
-      final employeeId = await _storage.read(key: 'employee_id');
+      final employeeId = await _storage.read(key: 'employee_original_id');
       if (employeeId != null) {
         setState(() {
           _employeeIdController.text = employeeId;

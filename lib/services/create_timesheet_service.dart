@@ -25,11 +25,6 @@ class CreateTimesheetService {
     });
 
     try {
-      print("🟢 --- Create Timesheet API Request ---");
-      print("🔹 URL: $url");
-      print("🔹 Headers: $headers");
-      print("🔹 Body: $body");
-
       final request = http.Request('POST', url);
       request.headers.addAll(headers);
       request.body = body;
@@ -38,19 +33,12 @@ class CreateTimesheetService {
 
       final responseBody = await response.stream.bytesToString();
 
-      print("🟣 --- API Response ---");
-      print("🔹 Status Code: ${response.statusCode}");
-      print("🔹 Reason: ${response.reasonPhrase}");
-      print("🔹 Response Body: $responseBody");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
         throw Exception("Failed: ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("🔴 --- API Error ---");
-      print("Error: $e");
       rethrow;
     }
   }

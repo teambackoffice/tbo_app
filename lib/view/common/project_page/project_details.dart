@@ -8,9 +8,9 @@ class ProjectDetailsPage extends StatelessWidget {
   final ProjectDetails project;
   const ProjectDetailsPage({super.key, required this.project});
 
-  int calculateDuration(DateTime startDate, DateTime endDate) {
-    return endDate.difference(startDate).inDays +
-        1; // +1 to include both start and end days
+  int calculateDuration(DateTime? startDate, DateTime? endDate) {
+    if (startDate == null || endDate == null) return 0;
+    return endDate.difference(startDate).inDays + 1;
   }
 
   @override
@@ -35,7 +35,6 @@ class ProjectDetailsPage extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        // ✅ for scrolling
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +67,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    project.projectName!,
+                    project.projectName ?? 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -87,7 +86,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    project.projectType!,
+                    project.projectType ?? 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -106,7 +105,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    project.status!,
+                    project.status ?? 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -125,7 +124,10 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '${calculateDuration(project.expectedStartDate!, project.expectedEndDate!)} Days',
+                    project.expectedStartDate != null &&
+                            project.expectedEndDate != null
+                        ? '${calculateDuration(project.expectedStartDate, project.expectedEndDate)} Days'
+                        : 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -144,9 +146,11 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    DateFormat(
-                      'EEEE, MMM d, y',
-                    ).format(project.expectedStartDate!),
+                    project.expectedStartDate != null
+                        ? DateFormat(
+                            'EEEE, MMM d, y',
+                          ).format(project.expectedStartDate!)
+                        : 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -165,9 +169,11 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    DateFormat(
-                      'EEEE, MMM d, y',
-                    ).format(project.expectedEndDate!),
+                    project.expectedEndDate != null
+                        ? DateFormat(
+                            'EEEE, MMM d, y',
+                          ).format(project.expectedEndDate!)
+                        : 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -283,7 +289,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '${project.estimatedCosting} ',
+                    project.estimatedCosting?.toString() ?? 'N/A',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 32,

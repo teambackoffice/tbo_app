@@ -11,30 +11,34 @@ class ProjectListService {
   Future<ProjectList> fetchProjectList({String? status}) async {
     String url = '${ApiConstants.baseUrl}project_api.get_project_list';
 
-    // Add status as a query parameter if provided
     if (status != null && status.isNotEmpty) {
       url += '?status=$status';
     }
 
     try {
       final String? sid = await _secureStorage.read(key: 'sid');
+
+      // 🔵 PRINT SID
+
       if (sid == null) {
         throw Exception('Authentication required. Please login again.');
       }
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
-      );
+      final headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'sid=$sid',
+      };
+
+      final response = await http.get(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(response.body);
 
-          // Extract the nested 'message' object which contains the actual data
           final actualData = decoded['message'];
 
-          final projectList = ProjectList.fromJson(actualData);
+          final projectList = ProjectList.fromJson(decoded);
+
           return projectList;
         } catch (e) {
           throw Exception('Failed to parse response: $e');

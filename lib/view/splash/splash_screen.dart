@@ -62,11 +62,13 @@ class _SplashScreenState extends State<SplashScreen>
             break;
           case 'crm':
           case 'supervisor':
+          case 'bde':
             nextPage = const CRMBottomNavigation();
             break;
           case 'employee':
           case 'user':
           case 'staff':
+          case 'regular employee':
             nextPage = const EmployeeBottomNavigation();
             break;
           default:

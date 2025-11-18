@@ -96,7 +96,7 @@ class _HomepageState extends State<Homepage> {
                             Text(
                               "Hello ${_fullName ?? ''} !",
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black,
                               ),
@@ -160,7 +160,7 @@ class _HomepageState extends State<Homepage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacement(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) =>

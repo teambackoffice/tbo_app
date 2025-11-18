@@ -10,29 +10,32 @@ class TaskSubmissionService {
 
   Future<String?> submitEmployeeTask({required String docName}) async {
     try {
-      // ✅ Get SID from secure storage
+      // 🟦 Read SID
       final sid = await _secureStorage.read(key: "sid");
 
       final uri = Uri.parse("$baseUrl?docname=$docName");
 
       var request = http.Request('GET', uri);
 
-      // ✅ Add SID as cookie
       if (sid != null && sid.isNotEmpty) {
         request.headers['Cookie'] = 'sid=$sid';
       }
+
+      // 🟦 Debug Headers
 
       http.StreamedResponse response = await request.send();
 
       String responseBody = await response.stream.bytesToString();
 
+      // 🟦 Response Logs
+
       if (response.statusCode == 200) {
         return responseBody;
       } else {
-        return response.reasonPhrase;
+        return "Error ${response.statusCode}: ${response.reasonPhrase}\nBody: $responseBody";
       }
-    } catch (e) {
-      return "Error: $e";
+    } catch (e, stack) {
+      return "Exception: $e";
     }
   }
 }
