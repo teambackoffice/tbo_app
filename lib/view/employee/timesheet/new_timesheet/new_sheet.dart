@@ -91,9 +91,9 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
     try {
       await _projectController!.fetchprojectlist(status: 'Open');
-      if (_projectController!.projectList?.message?.data != null) {
+      if (_projectController!.projectList?.data != null) {
         setState(() {
-          _projects = _projectController!.projectList!.message!.data!;
+          _projects = _projectController!.projectList!.data!;
         });
       }
     } catch (e) {

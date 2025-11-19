@@ -11,17 +11,26 @@ String projectListToJson(ProjectList data) => json.encode(data.toJson());
 
 /// ROOT LEVEL
 class ProjectList {
-  ProjectMessage? message;
+  String? message;
+  List<ProjectDetails>? data;
 
-  ProjectList({this.message});
+  ProjectList({this.message, this.data});
 
   factory ProjectList.fromJson(Map<String, dynamic> json) => ProjectList(
-    message: json["message"] != null
-        ? ProjectMessage.fromJson(json["message"])
-        : null,
+    message: json["message"],
+    data: json["data"] == null
+        ? []
+        : List<ProjectDetails>.from(
+            json["data"].map((x) => ProjectDetails.fromJson(x)),
+          ),
   );
 
-  Map<String, dynamic> toJson() => {"message": message?.toJson()};
+  Map<String, dynamic> toJson() => {
+    "message": message,
+    "data": data == null
+        ? []
+        : List<dynamic>.from(data!.map((x) => x.toJson())),
+  };
 }
 
 /// message → { message: "...", data: [...] }

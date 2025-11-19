@@ -18,8 +18,6 @@ class ProjectListService {
     try {
       final String? sid = await _secureStorage.read(key: 'sid');
 
-      // 🔵 PRINT SID
-
       if (sid == null) {
         throw Exception('Authentication required. Please login again.');
       }

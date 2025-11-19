@@ -374,7 +374,7 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                     );
                   }
 
-                  final projects = controller.projectList?.message?.data;
+                  final projects = controller.projectList?.data;
                   final filteredProjects = getFilteredProjects(projects);
 
                   if (projects == null || projects.isEmpty) {

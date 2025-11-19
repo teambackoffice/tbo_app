@@ -325,7 +325,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     );
                   }
 
-                  final projects = controller.projectList?.message?.data;
+                  final projects = controller.projectList?.data;
                   if (projects == null || projects.isEmpty) {
                     return Container(
                       padding: const EdgeInsets.all(20),
