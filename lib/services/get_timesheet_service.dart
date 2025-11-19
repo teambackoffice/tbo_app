@@ -11,7 +11,6 @@ class GetTimesheetService {
   Future<TimesheetModal> fetchtimesheet({String? employee}) async {
     String url = '${ApiConstants.baseUrl}project_api.get_timesheet';
 
-    // Add employee param only if provided
     if (employee != null && employee.isNotEmpty) {
       url += '?employee=$employee';
     }
@@ -35,6 +34,7 @@ class GetTimesheetService {
           response.statusCode == 204) {
         try {
           final decoded = jsonDecode(response.body);
+
           return TimesheetModal.fromJson(decoded);
         } catch (e) {
           throw Exception('Failed to parse response: $e');

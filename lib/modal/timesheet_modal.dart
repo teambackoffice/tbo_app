@@ -16,11 +16,9 @@ class TimesheetModal {
   TimesheetModal({required this.message, required this.data});
 
   factory TimesheetModal.fromJson(Map<String, dynamic> json) {
-    // The 'message' key itself contains the real data
-    final inner = json['message'];
     return TimesheetModal(
-      message: inner['message'] ?? '',
-      data: (inner['data'] as List<dynamic>)
+      message: json['message'] ?? '',
+      data: (json['data'] as List<dynamic>)
           .map((e) => Datum.fromJson(e as Map<String, dynamic>))
           .toList(),
     );

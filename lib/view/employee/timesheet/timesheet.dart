@@ -116,32 +116,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     });
   }
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'Approved';
-
-      case 'draft':
-      case 'pending':
-        return 'Send to Approval';
-      default:
-        return status;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return Colors.green;
-
-      case 'draft':
-      case 'pending':
-        return Color(0xFFF3F3F3);
-      default:
-        return Colors.grey;
-    }
-  }
-
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
   }
@@ -507,9 +481,6 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
   }
 
   Widget _buildEmployeeCard(Datum employee) {
-    Color statusColor = _getStatusColor(employee.status);
-    String statusText = _getStatusText(employee.status);
-
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -549,6 +520,29 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
+                  ),
+                ),
+                // Status Badge
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: employee.docstatusName.toLowerCase() == 'approved'
+                        ? Colors.green
+                        : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(16),
+                    border: employee.docstatusName.toLowerCase() == 'approved'
+                        ? null
+                        : Border.all(color: Colors.grey[400]!, width: 1),
+                  ),
+                  child: Text(
+                    employee.docstatusName,
+                    style: TextStyle(
+                      color: employee.docstatusName.toLowerCase() == 'approved'
+                          ? Colors.white
+                          : Colors.grey[700],
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

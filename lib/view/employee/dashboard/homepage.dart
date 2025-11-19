@@ -74,45 +74,55 @@ class _HomepageState extends State<Homepage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFE8F4F2),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Color(0xFF5A7B8C),
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Hello ${_fullName ?? ''} !",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
+                    Expanded(
+                      // Add this Expanded wrapper
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFE8F4F2),
                             ),
-                            SizedBox(height: 2),
-                            Text(
-                              designation ?? '',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w400,
-                              ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Color(0xFF5A7B8C),
+                              size: 32,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            // Also add Expanded here to constrain the Column
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Hello ${_fullName ?? ''} !",
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow
+                                      .ellipsis, // Add this to truncate if needed
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  designation ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  overflow: TextOverflow
+                                      .ellipsis, // Add this to truncate if needed
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Container(
                       width: 50,
