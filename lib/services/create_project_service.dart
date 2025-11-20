@@ -25,14 +25,23 @@ class CreateProjectService {
     required List<Map<String, dynamic>> resourceRequirements,
   }) async {
     try {
-      // 🔑 Read SID
+      print("🔍 Starting Create Project API...");
+
+      // Read SID
       final sid = await _secureStorage.read(key: 'sid');
-      if (sid == null) throw Exception("SID not found. Please login again.");
+      print("🔑 SID: $sid");
+
+      if (sid == null) {
+        print("❌ SID not found");
+        throw Exception("SID not found. Please login again.");
+      }
 
       final headers = {
         'Content-Type': 'application/json',
         'Cookie': 'sid=$sid',
       };
+
+      print("📌 Headers: $headers");
 
       final body = json.encode({
         "planning_id": planningId,
@@ -46,24 +55,36 @@ class CreateProjectService {
         "estimated_cost": estimatedCost,
         "planned_start_date": plannedStartDate,
         "planned_end_date": plannedEndDate,
-        "resource_requirements": resourceRequirements, // keep as List<Map>
+        "resource_requirements": resourceRequirements,
       });
+
+      print("📦 Body: $body");
+      print("📨 URL: $url");
 
       final request = http.Request('POST', Uri.parse(url))
         ..headers.addAll(headers)
         ..body = body;
 
+      print("🚀 Sending request...");
+
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
+      print("📥 Response Code: ${response.statusCode}");
+      print("📥 Response Body: $responseBody");
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print("✅ Request Successful!");
         return responseBody;
       } else {
+        print("❌ Error Response: ${response.reasonPhrase}");
         throw Exception(
           "Status: ${response.statusCode}, Reason: ${response.reasonPhrase}, Body: $responseBody",
         );
       }
     } catch (e, stack) {
+      print("🔥 Exception: $e");
+      print("📌 StackTrace: $stack");
       throw Exception("Failed to update project planning: $e");
     }
   }
