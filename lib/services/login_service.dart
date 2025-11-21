@@ -21,6 +21,7 @@ class LoginService {
       var request = http.Request('POST', uri);
       http.StreamedResponse response = await request.send();
 
+      // Read body
       final body = await response.stream.bytesToString();
 
       final data = json.decode(body);
@@ -35,54 +36,38 @@ class LoginService {
             break;
           }
         }
-      } else {}
+      }
 
       // Store session
       if (sid != null) {
         await _storage.write(key: "sid", value: sid);
         await _storage.write(key: "username", value: username);
 
-        final roleProfileName = data["message"]?["role_profile_name"];
-        if (roleProfileName != null) {
-          await _storage.write(
-            key: "role_profile_name",
-            value: roleProfileName,
-          );
+        // ⭐ Store smart role
+        final smartRole = data["message"]?["smart_role"];
+
+        if (smartRole != null) {
+          await _storage.write(key: "smart_role", value: smartRole);
         }
 
+        // Store email + OneSignal login
         final email = data["message"]?["email"];
         if (email != null) {
           await _storage.write(key: "email", value: email);
 
-          // OneSignal linking
           try {
             await OneSignal.login(email);
-
-            final tags = <String, String>{'email': email, 'username': username};
-
-            if (roleProfileName != null) {
-              tags['role'] = roleProfileName.toLowerCase();
-            }
-
-            await OneSignalService().sendTags(tags);
+            await OneSignalService().sendTags({
+              'email': email,
+              'username': username,
+            });
           } catch (e) {}
         }
 
+        // Store full name
         final fullName = data["full_name"];
         if (fullName != null) {
           await _storage.write(key: "full_name", value: fullName);
-        }
-
-        if (roleProfileName == "Employee") {
-          final employeeName = data["message"]?["employee"]?["name"];
-
-          if (employeeName != null) {
-            await _storage.write(key: "employee_id", value: employeeName);
-
-            try {
-              await OneSignalService().sendTags({'employee_id': employeeName});
-            } catch (e) {}
-          }
         }
       }
 
@@ -94,30 +79,11 @@ class LoginService {
 
   // Getters
   Future<String?> getStoredSid() async => await _storage.read(key: "sid");
-  Future<String?> getStoredApiKey() async =>
-      await _storage.read(key: "api_key");
-  Future<String?> getStoredUsername() async =>
-      await _storage.read(key: "username");
-  Future<String?> getStoredRoleProfileName() async =>
-      await _storage.read(key: "role_profile_name");
+  Future<String?> getStoredSmartRole() async =>
+      await _storage.read(key: "smart_role");
   Future<String?> getStoredEmail() async => await _storage.read(key: "email");
-  Future<String?> getStoredEmployeeId() async =>
-      await _storage.read(key: "employee_id");
   Future<String?> getStoredFullName() async =>
       await _storage.read(key: "full_name");
-
-  Future<void> storeSession({
-    required String sid,
-    required String username,
-    String? email,
-    String? fullName,
-  }) async {
-    await _storage.write(key: "sid", value: sid);
-    await _storage.write(key: "username", value: username);
-    if (email != null) await _storage.write(key: "email", value: email);
-    if (fullName != null)
-      await _storage.write(key: "full_name", value: fullName);
-  }
 
   Future<void> logout() async {
     try {

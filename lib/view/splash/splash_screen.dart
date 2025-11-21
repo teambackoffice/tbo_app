@@ -38,54 +38,53 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initializeApp() async {
     try {
-      // ✅ Wait for OneSignal to be fully initialized (if needed)
       await Future.delayed(const Duration(milliseconds: 500));
 
       final loginController = context.read<LoginController>();
 
-      // ✅ Load stored session and wait for completion
+      // Load stored session
       await loginController.loadStoredSession();
 
-      // ✅ Show splash for at least 2 seconds total
       await Future.delayed(const Duration(milliseconds: 1500));
 
       if (!mounted) return;
 
-      // Navigate based on login and role
       Widget nextPage;
+
+      // USER LOGGED IN?
       if (loginController.isLoggedIn) {
-        final role = loginController.currentRole?.toLowerCase();
-        switch (role) {
-          case 'admin':
-          case 'administrator':
+        final smartRole = loginController.currentSmartRole
+            ?.toLowerCase()
+            .trim();
+
+        // ⭐ NAVIGATE BASED ON SMART ROLE
+        switch (smartRole) {
+          case 'tbo smart admin':
             nextPage = const AdminBottomNavigation();
             break;
-          case 'crm':
-          case 'supervisor':
-          case 'bde':
+
+          case 'tbo smart crm':
             nextPage = const CRMBottomNavigation();
             break;
-          case 'employee':
-          case 'user':
-          case 'staff':
-          case 'regular employee':
+
+          case 'tbo smart user':
             nextPage = const EmployeeBottomNavigation();
             break;
+
           default:
+            // No smart role assigned → go to Login
             nextPage = const LoginPage();
         }
       } else {
         nextPage = const LoginPage();
       }
 
-      // ✅ Use pushAndRemoveUntil to prevent back navigation to splash
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => nextPage),
         (route) => false,
       );
     } catch (e) {
-      // If any error occurs, navigate to login
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,

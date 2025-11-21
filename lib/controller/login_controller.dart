@@ -11,11 +11,11 @@ class LoginController with ChangeNotifier {
   bool isLoading = false;
   bool isLoggedIn = false;
   String? errorMessage;
-  String? currentRole;
-  String? userName; // ✅ Added for notification purposes
-  String? userEmail; // ✅ Added for OneSignal
+  String? currentSmartRole;
+  String? userName;
+  String? userEmail;
 
-  /// Login method
+  /// LOGIN USER
   Future<Map<String, dynamic>?> login(String username, String password) async {
     isLoading = true;
     errorMessage = null;
@@ -29,117 +29,78 @@ class LoginController with ChangeNotifier {
     isLoading = false;
 
     if (result != null && result["data"]?["message"]?["success_key"] == 1) {
-      isLoggedIn = true;
-
-      // Get stored session data
-      currentRole = await _loginService.getStoredRoleProfileName();
+      currentSmartRole = await _loginService.getStoredSmartRole();
       userName = await _loginService.getStoredFullName();
       userEmail = await _loginService.getStoredEmail();
 
-      // ✅ Log OneSignal player ID for debugging
-      final playerId = OneSignal.User.pushSubscription.id;
+      // Smart role must exist
+      if (currentSmartRole == null || currentSmartRole!.isEmpty) {
+        errorMessage = "No role assigned";
+        notifyListeners();
+        return {"success": false, "error": "No role assigned"};
+      }
 
+      isLoggedIn = true;
       notifyListeners();
 
-      // Return success with role information
       return {
         "success": true,
-        "role": currentRole,
+        "smart_role": currentSmartRole,
         "email": userEmail,
         "name": userName,
       };
     } else {
       errorMessage = result?["error"] ?? "Login failed";
       notifyListeners();
-
-      // Return failure
       return {"success": false, "error": errorMessage};
     }
   }
 
-  /// Load stored session on app start
+  /// ⭐ THIS WAS MISSING — LOAD SESSION ON APP START
   Future<void> loadStoredSession() async {
     final sid = await _loginService.getStoredSid();
-    if ((sid ?? '').isNotEmpty) {
+
+    if (sid != null && sid.isNotEmpty) {
       isLoggedIn = true;
-      currentRole = await _loginService.getStoredRoleProfileName();
+      currentSmartRole = await _loginService.getStoredSmartRole();
       userName = await _loginService.getStoredFullName();
       userEmail = await _loginService.getStoredEmail();
 
-      // ✅ Re-login to OneSignal if session exists
+      // Auto-login to OneSignal if email exists
       if (userEmail != null && userEmail!.isNotEmpty) {
         try {
           await OneSignal.login(userEmail!);
-        } catch (e) {}
+        } catch (_) {}
       }
-
-      notifyListeners();
+    } else {
+      isLoggedIn = false;
     }
+
+    notifyListeners();
   }
 
-  /// Get initial page based on role
-  Future<Widget?> getInitialPage() async {
-    final sid = await _loginService.getStoredSid();
-    if ((sid ?? '').isEmpty) {
-      return null;
-    }
-
-    final role = await _loginService.getStoredRoleProfileName();
-    if (role == null) {
-      return null;
-    }
-
-    return _getPageForRole(role);
-  }
-
-  /// Get widget for specific role
-  Widget? _getPageForRole(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-      case 'administrator':
-      case 'project coordinator':
+  /// RETURN PAGE BASED ON SMART ROLE
+  Widget? getPageFromSmartRole(String role) {
+    switch (role.toLowerCase().trim()) {
+      case 'tbo smart admin':
         return const AdminBottomNavigation();
-      case 'crm':
-      case 'supervisor':
-      case 'bde':
+      case 'tbo smart crm':
         return const CRMBottomNavigation();
-      case 'employee':
-      case 'regular employee':
-      case 'user':
-      case 'staff':
+      case 'tbo smart user':
         return const EmployeeBottomNavigation();
       default:
         return null;
     }
   }
 
-  /// Logout user
+  /// LOGOUT
   Future<void> logout() async {
     await _loginService.logout();
     isLoggedIn = false;
-    currentRole = null;
+    currentSmartRole = null;
     userName = null;
     userEmail = null;
     errorMessage = null;
-
     notifyListeners();
   }
-
-  /// Clear session (alias for logout)
-  Future<void> clearSession() async => logout();
-
-  /// Check if user has specific role
-  bool hasRole(String role) {
-    return currentRole?.toLowerCase() == role.toLowerCase();
-  }
-
-  /// Check if user is admin
-  bool get isAdmin => hasRole('admin') || hasRole('administrator');
-
-  /// Check if user is CRM
-  bool get isCRM => hasRole('crm') || hasRole('supervisor');
-
-  /// Check if user is employee
-  bool get isEmployee =>
-      hasRole('employee') || hasRole('user') || hasRole('staff');
 }

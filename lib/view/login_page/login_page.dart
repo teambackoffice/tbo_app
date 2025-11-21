@@ -39,11 +39,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 🔹 Logo Section
+              /// LOGO
               Column(
                 children: [
                   CircleAvatar(
-                    radius: 60, // 👈 same as 90x90 container
+                    radius: 60,
                     backgroundColor: Colors.white,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -55,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
                   const Text(
                     "Welcome !",
@@ -63,7 +62,6 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.black87,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -76,13 +74,10 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 40),
 
-              // 🔹 Login Card
+              /// LOGIN CARD
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 30,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -105,9 +100,10 @@ class _LoginPageState extends State<LoginPage> {
                         color: Color(0xFF1C7690),
                       ),
                     ),
+
                     const SizedBox(height: 20),
 
-                    // Username Field
+                    /// USERNAME
                     TextField(
                       controller: _loginIdController,
                       decoration: InputDecoration(
@@ -121,9 +117,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
 
-                    // Password Field
+                    /// PASSWORD
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -154,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 26),
 
-                    // Login Button
+                    /// LOGIN BUTTON
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -165,9 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                                     _passwordController.text.trim().isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text(
-                                        'Please enter username and password',
-                                      ),
+                                      content: Text("Please enter username and password"),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -181,49 +176,44 @@ class _LoginPageState extends State<LoginPage> {
 
                                 if (!mounted) return;
 
-                                if (result != null &&
-                                    result["success"] == true) {
-                                  // 🌟 Preload homepage data AFTER login + BEFORE navigating
+                                if (result != null && result["success"] == true) {
+                                  final smartRole = result["smart_role"]?.toLowerCase().trim();
+
+                                  /// ⭐ SMART ROLE MUST EXIST
+                                  if (smartRole == null || smartRole.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("No role assigned"),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  /// LOAD HOME DATA BEFORE NAVIGATION
                                   await Future.wait([
-                                    context
-                                        .read<TaskCountController>()
-                                        .fetchTaskSummary(),
-                                    context
-                                        .read<TaskByEmployeeController>()
-                                        .fetchTasks(),
-                                    context
-                                        .read<UserDetailsController>()
-                                        .getUserDetails(),
+                                    context.read<TaskCountController>().fetchTaskSummary(),
+                                    context.read<TaskByEmployeeController>().fetchTasks(),
+                                    context.read<UserDetailsController>().getUserDetails(),
                                   ]);
 
-                                  final role = result["role"]?.toLowerCase();
                                   Widget nextPage;
 
-                                  switch (role) {
-                                    case 'admin':
-                                    case 'administrator':
-                                    case 'project coordinator':
+                                  switch (smartRole) {
+                                    case 'tbo smart admin':
                                       nextPage = const AdminBottomNavigation();
                                       break;
-                                    case 'crm':
-                                    case 'supervisor':
-                                    case "bde":
+                                    case 'tbo smart crm':
                                       nextPage = const CRMBottomNavigation();
                                       break;
-                                    case 'employee':
-                                    case 'regular employee':
-                                    case 'user':
-                                    case 'staff':
-                                      nextPage =
-                                          const EmployeeBottomNavigation();
+                                    case 'tbo smart user':
+                                      nextPage = const EmployeeBottomNavigation();
                                       break;
                                     default:
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Unknown user role'),
-                                          backgroundColor: Colors.orange,
+                                          content: Text("No role assigned"),
+                                          backgroundColor: Colors.red,
                                         ),
                                       );
                                       return;
@@ -263,7 +253,6 @@ class _LoginPageState extends State<LoginPage> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                  letterSpacing: 1,
                                 ),
                               ),
                       ),
@@ -318,10 +307,8 @@ class _DotsLoadingState extends State<DotsLoading>
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (index) {
-            double opacity = (1 - ((_animation.value + index / 3) % 1)).clamp(
-              0.2,
-              1,
-            );
+            double opacity =
+                (1 - ((_animation.value + index / 3) % 1)).clamp(0.2, 1);
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 3),
               height: 8,

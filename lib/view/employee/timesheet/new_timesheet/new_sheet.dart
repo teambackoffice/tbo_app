@@ -263,13 +263,6 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
       hasErrors = true;
     }
 
-    if (_taskIdController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please select a task')));
-      hasErrors = true;
-    }
-
     if (_selectedDate == null || _fromTime == null || _toTime == null) {
       ScaffoldMessenger.of(
         context,
