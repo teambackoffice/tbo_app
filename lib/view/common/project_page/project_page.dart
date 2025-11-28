@@ -16,9 +16,18 @@ class CommonProjectPage extends StatefulWidget {
 class _CommonProjectPageState extends State<CommonProjectPage>
     with TickerProviderStateMixin {
   String searchQuery = '';
+  String selectedStatus = 'Open';
   bool _isFabExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
+
+  // Define status categories
+  final List<String> statusCategories = [
+    'All',
+    'Open',
+    'Completed',
+    'Cancelled',
+  ];
 
   @override
   void initState() {
@@ -61,37 +70,71 @@ class _CommonProjectPageState extends State<CommonProjectPage>
     switch (status?.toLowerCase()) {
       case 'open':
         return Color(0xFF129476);
-      case 'progress':
-      case 'in progress':
-        return Color(0xFF007BFF);
+
       case 'completed':
-      case 'closed':
-        return Colors.green;
+        return Color(0xFF28A745);
+      case 'cancelled':
+        return Color(0xFF6C757D);
       default:
         return Color(0xFF28A745);
     }
   }
 
-  // Filter projects based on search query
+  // Get count for each status
+  int getStatusCount(List<ProjectDetails>? projects, String status) {
+    if (projects == null) return 0;
+
+    if (status == 'All') return projects.length;
+
+    return projects.where((project) {
+      final projectStatus = project.status?.toLowerCase() ?? '';
+      final targetStatus = status.toLowerCase();
+
+      if (targetStatus == 'in progress') {
+        return projectStatus == 'progress' || projectStatus == 'in progress';
+      }
+
+      return projectStatus == targetStatus;
+    }).length;
+  }
+
+  // Filter projects based on search query and selected status
   List<ProjectDetails> getFilteredProjects(List<ProjectDetails>? projects) {
     if (projects == null) return [];
 
-    if (searchQuery.isEmpty) {
-      return projects;
+    List<ProjectDetails> filtered = projects;
+
+    // Filter by selected status
+    if (selectedStatus != 'All') {
+      filtered = filtered.where((project) {
+        final projectStatus = project.status?.toLowerCase() ?? '';
+        final targetStatus = selectedStatus.toLowerCase();
+
+        if (targetStatus == 'in progress') {
+          return projectStatus == 'progress' || projectStatus == 'in progress';
+        }
+
+        return projectStatus == targetStatus;
+      }).toList();
     }
 
-    return projects.where((project) {
-      final projectName = project.projectName?.toLowerCase() ?? '';
-      final projectId = project.name?.toLowerCase() ?? '';
-      final projectType = project.projectType?.toLowerCase() ?? '';
-      final status = project.status?.toLowerCase() ?? '';
-      final query = searchQuery.toLowerCase();
+    // Filter by search query
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((project) {
+        final projectName = project.projectName?.toLowerCase() ?? '';
+        final projectId = project.name?.toLowerCase() ?? '';
+        final projectType = project.projectType?.toLowerCase() ?? '';
+        final status = project.status?.toLowerCase() ?? '';
+        final query = searchQuery.toLowerCase();
 
-      return projectName.contains(query) ||
-          projectId.contains(query) ||
-          projectType.contains(query) ||
-          status.contains(query);
-    }).toList();
+        return projectName.contains(query) ||
+            projectId.contains(query) ||
+            projectType.contains(query) ||
+            status.contains(query);
+      }).toList();
+    }
+
+    return filtered;
   }
 
   Widget _buildExpandableFab() {
@@ -126,7 +169,6 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Label
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 12,
@@ -146,13 +188,11 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                             ),
                           ),
                           SizedBox(width: 12),
-                          // FAB
                           FloatingActionButton(
                             heroTag: "handover",
                             mini: true,
                             onPressed: () {
                               _toggleFab();
-                              // Navigate to handover requests
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -189,7 +229,6 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Label
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 12,
@@ -209,13 +248,11 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                             ),
                           ),
                           SizedBox(width: 12),
-                          // FAB
                           FloatingActionButton(
                             heroTag: "date_request",
                             mini: true,
                             onPressed: () {
                               _toggleFab();
-                              // Navigate to date requests
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -269,65 +306,132 @@ class _CommonProjectPageState extends State<CommonProjectPage>
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: Color(0xFFF5F5F5),
-        elevation: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 18.0),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        title: Center(
           child: Text(
             'Projects',
             style: TextStyle(
               color: Colors.black,
-              fontSize: 26,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Search Field
-            TextFormField(
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
+      body: Column(
+        children: [
+          // Search and Filter Section
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Search Field
+                TextFormField(
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(12.0),
+                      ),
+                    ),
+                    hintText: 'Search projects...',
+                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
+                SizedBox(height: 12),
+                // Status Filter Dropdown
+                Consumer<GetProjectListController>(
+                  builder: (context, controller, child) {
+                    final projects = controller.projectList?.data;
+
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            color: Colors.grey.shade600,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Status:',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedStatus,
+                                isExpanded: true,
+                                icon: Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Color(0xFF2D7D8C),
+                                ),
+                                items: statusCategories.map((String status) {
+                                  int count = getStatusCount(projects, status);
+                                  return DropdownMenuItem<String>(
+                                    value: status,
+                                    child: Text(
+                                      '$status ($count)',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedStatus = newValue!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400),
-                  borderRadius: const BorderRadius.all(Radius.circular(25.0)),
-                ),
-                hintText: 'Search projects...',
-                hintStyle: TextStyle(color: Colors.grey.shade500),
-                suffixIcon: Icon(Icons.search, color: Colors.grey.shade500),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-              ),
+              ],
             ),
-            SizedBox(height: 24),
-            // Projects List
-            Expanded(
+          ),
+
+          // Projects List
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Consumer<GetProjectListController>(
                 builder: (context, controller, child) {
                   if (controller.isLoading) {
                     return Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF28A745),
+                        color: Color(0xFF2D7D8C),
                       ),
                     );
                   }
@@ -364,7 +468,7 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                           ElevatedButton(
                             onPressed: () => controller.fetchprojectlist(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF28A745),
+                              backgroundColor: Color(0xFF2D7D8C),
                               foregroundColor: Colors.white,
                             ),
                             child: Text('Retry'),
@@ -430,7 +534,7 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Try adjusting your search query',
+                            'Try adjusting your search or filter',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade500,
@@ -445,6 +549,7 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                     onRefresh: () async {
                       await controller.fetchprojectlist();
                     },
+                    color: Color(0xFF2D7D8C),
                     child: ListView.builder(
                       itemCount: filteredProjects.length,
                       itemBuilder: (context, index) {
@@ -462,15 +567,15 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                             );
                           },
                           child: Container(
-                            margin: EdgeInsets.only(bottom: 16),
-                            padding: EdgeInsets.all(20),
+                            margin: EdgeInsets.only(bottom: 12),
+                            padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
-                                  blurRadius: 8,
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
                                   offset: Offset(0, 2),
                                 ),
                               ],
@@ -488,67 +593,72 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Project ID
                                           Text(
                                             project.name ?? 'Unknown Project',
                                             style: TextStyle(
-                                              fontSize: 14,
+                                              fontSize: 12,
                                               color: Colors.grey.shade500,
-                                              fontWeight: FontWeight.w400,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                           SizedBox(height: 4),
-                                          // Project Name
                                           Text(
                                             project.projectName ??
                                                 'No Project Name',
                                             style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                          SizedBox(height: 16),
-                                          // Project Type Label
-                                          Text(
-                                            'Project Type',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade500,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                          SizedBox(height: 4),
-                                          // Project Type Value
-                                          Text(
-                                            project.projectType ??
-                                                'Not specified',
-                                            style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w600,
-                                              color: Colors.black,
+                                              color: Colors.black87,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    // Status Badge
                                     Container(
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
+                                        horizontal: 12,
+                                        vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
                                         color: getStatusColor(status),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: Text(
                                         status,
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                         ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12),
+                                Divider(height: 1, color: Colors.grey.shade200),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.category_outlined,
+                                      size: 16,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Type: ',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      project.projectType ?? 'Not specified',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
                                       ),
                                     ),
                                   ],
@@ -563,8 +673,8 @@ class _CommonProjectPageState extends State<CommonProjectPage>
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: _buildExpandableFab(),
     );
