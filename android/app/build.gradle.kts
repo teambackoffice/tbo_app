@@ -50,13 +50,15 @@ android {
         }
     }
 
-    defaultConfig {
-        applicationId = "com.tbo_smart"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-    }
+   defaultConfig {
+    applicationId = "com.tbo_smart"
+    minSdk = flutter.minSdkVersion
+    targetSdk = flutter.targetSdkVersion
+    versionCode = flutter.versionCode.toInt()
+    versionName = flutter.versionName
+}
+
+
 
     buildTypes {
         release {
