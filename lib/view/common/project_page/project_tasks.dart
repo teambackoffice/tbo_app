@@ -140,10 +140,10 @@ class _ProjectTasksState extends State<ProjectTasks> {
         throw Exception('Assignment not found for task');
       }
 
-      final taskAssignments = [
+      final taskAssignments = [    
         {"task_id": taskId, "employee_id": employeeId},
-      ];
-
+      ];  
+        
       final taskAssignController = TaskEmployeeAssignController();
 
       await taskAssignController.updateAssignmentEmployees(
