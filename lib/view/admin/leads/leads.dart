@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
@@ -64,6 +65,31 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
   List<Leads> _getFilteredLeads(List<Leads> allLeads) {
     var filtered = allLeads;
 
+    // 🔥 1️⃣ Department-based filtering MUST run first
+    // Department-based filtering
+    if (department != null && department!.isNotEmpty) {
+      final dept = department!.toLowerCase();
+
+      if (dept.contains("erp")) {
+        filtered = filtered
+            .where(
+              (lead) => (lead.customLeadSegment ?? lead.marketSegment ?? '')
+                  .toLowerCase()
+                  .contains("erp"),
+            )
+            .toList();
+      } else if (dept.contains("digital")) {
+        filtered = filtered
+            .where(
+              (lead) => (lead.customLeadSegment ?? lead.marketSegment ?? '')
+                  .toLowerCase()
+                  .contains("digital"),
+            )
+            .toList();
+      }
+    }
+
+    // 🔥 2️⃣ Status filter
     if (selectedStatus != 'All') {
       filtered = filtered
           .where(
@@ -73,6 +99,7 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
           .toList();
     }
 
+    // 🔥 3️⃣ Search filter
     if (searchQuery.isNotEmpty) {
       filtered = filtered.where((lead) {
         final companyName = lead.companyName?.toLowerCase() ?? '';
@@ -115,12 +142,21 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     return calculatedEnd > totalItems ? totalItems : calculatedEnd;
   }
 
+  String? department;
+  final _storage = const FlutterSecureStorage();
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 🔥 Read department directly from secure storage
+      department = await _storage.read(key: "department");
+      print("💾 Department Loaded: $department");
+
+      setState(() {});
+
       Provider.of<AllLeadListController>(
         context,
         listen: false,
