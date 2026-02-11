@@ -234,8 +234,9 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                           ),
                           child: Center(
                             child: Text(
-                              widget.timesheet.employeeName.isNotEmpty
-                                  ? widget.timesheet.employeeName[0]
+                              widget.timesheet.employeeName != null &&
+                                      widget.timesheet.employeeName!.isNotEmpty
+                                  ? widget.timesheet.employeeName![0]
                                         .toUpperCase()
                                   : 'U',
                               style: const TextStyle(
@@ -252,7 +253,8 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.timesheet.employeeName,
+                                widget.timesheet.employeeName ??
+                                    "Unknown Employee",
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -261,7 +263,7 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                widget.timesheet.employee,
+                                widget.timesheet.employee ?? "Unknown Employee",
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Color(0xFF64748B),
@@ -384,7 +386,9 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                                 ? timeLog.task!
                                 : (timeLog.project ?? 'No Project'),
                             fromTime: formatTime(timeLog.fromTime),
-                            toTime: formatTime(timeLog.toTime),
+                            toTime: timeLog.toTime != null
+                                ? formatTime(timeLog.toTime!)
+                                : 'In Progress',
                             totalHours: '${timeLog.hours.toInt()} Hr',
                             description:
                                 timeLog.description ??

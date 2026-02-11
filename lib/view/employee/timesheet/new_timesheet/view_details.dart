@@ -200,8 +200,8 @@ class _ViewDetailsState extends State<ViewDetails> {
                         ),
                         child: Center(
                           child: Text(
-                            timesheet.employeeName.isNotEmpty
-                                ? timesheet.employeeName[0].toUpperCase()
+                            timesheet.employeeName!.isNotEmpty
+                                ? timesheet.employeeName![0].toUpperCase()
                                 : 'U',
                             style: const TextStyle(
                               color: Colors.white,
@@ -217,7 +217,7 @@ class _ViewDetailsState extends State<ViewDetails> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              timesheet.employeeName,
+                              timesheet.employeeName ?? "Unknown Employee",
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -226,7 +226,7 @@ class _ViewDetailsState extends State<ViewDetails> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              timesheet.employee,
+                              timesheet.employee ?? "Unknown Employee",
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF64748B),
@@ -356,7 +356,9 @@ class _ViewDetailsState extends State<ViewDetails> {
                                     : (timeLog.project ?? 'No Project'),
                                 project: timeLog.project ?? 'No Project',
                                 fromTime: _formatTime(timeLog.fromTime),
-                                toTime: _formatTime(timeLog.toTime),
+                                toTime: timeLog.toTime != null
+                                    ? _formatTime(timeLog.toTime!)
+                                    : 'N/A',
                                 totalHours: timeLog.hours.toStringAsFixed(2),
                                 activityType: timeLog.activityType ?? '',
                                 description:

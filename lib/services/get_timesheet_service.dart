@@ -29,14 +29,22 @@ class GetTimesheetService {
 
       final response = await http.get(Uri.parse(url), headers: headers);
 
+      /// ✅ PRINT EVERYTHING
+      print('================ TIMESHEET API RESPONSE ================');
+      print('URL: $url');
+      print('Status Code: ${response.statusCode}');
+      print('Headers: ${response.headers}');
+      print('Body: ${response.body}');
+      print('=========================================================');
+
       if (response.statusCode == 200 ||
           response.statusCode == 201 ||
           response.statusCode == 204) {
         try {
           final decoded = jsonDecode(response.body);
-
           return TimesheetModal.fromJson(decoded);
         } catch (e) {
+          print('JSON Parse Error: $e');
           throw Exception('Failed to parse response: $e');
         }
       } else {
@@ -45,6 +53,7 @@ class GetTimesheetService {
         );
       }
     } catch (e) {
+      print('Network/General Error: $e');
       throw Exception('Network error: $e');
     }
   }

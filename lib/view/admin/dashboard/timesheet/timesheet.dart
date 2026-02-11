@@ -111,12 +111,15 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
 
   List<Datum> getFilteredTimesheets(List<Datum> timesheets) {
     return timesheets.where((timesheet) {
+      // Safe null handling for search
+      final employeeName = timesheet.employeeName?.toLowerCase() ?? '';
+      final employee = timesheet.employee?.toLowerCase() ?? '';
+      final query = searchQuery.toLowerCase();
+
       bool searchMatch =
           searchQuery.isEmpty ||
-          timesheet.employeeName.toLowerCase().contains(
-            searchQuery.toLowerCase(),
-          ) ||
-          timesheet.employee.toLowerCase().contains(searchQuery.toLowerCase());
+          employeeName.contains(query) ||
+          employee.contains(query);
 
       bool dateMatch =
           selectedDate == null ||
@@ -134,6 +137,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   Color getStatusColor(String docst) {
     switch (docst.toLowerCase()) {
       case 'send for approval':
+      case 'sent for approval':
         return const Color(0xFF3B82F6);
       case 'approved':
         return const Color(0xFF10B981);
@@ -149,6 +153,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
   Color getStatusBackgroundColor(String docst) {
     switch (docst.toLowerCase()) {
       case 'send for approval':
+      case 'sent for approval':
         return const Color(0xFFEFF6FF);
       case 'approved':
         return const Color(0xFFECFDF5);
@@ -210,9 +215,9 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                       ),
                       child: Center(
                         child: Text(
-                          timesheet.employeeName.isNotEmpty
-                              ? timesheet.employeeName[0].toUpperCase()
-                              : 'E',
+                          (timesheet.employeeName?.isNotEmpty ?? false)
+                              ? timesheet.employeeName![0].toUpperCase()
+                              : 'N',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -229,7 +234,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            timesheet.employeeName,
+                            timesheet.employeeName ?? 'Unknown Employee',
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -240,7 +245,7 @@ class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            timesheet.employee,
+                            timesheet.employee ?? 'N/A',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Color(0xFF6B7280),

@@ -32,8 +32,8 @@ class TimesheetModal {
 
 class Datum {
   String name;
-  String employee;
-  String employeeName;
+  String? employee; // Made nullable
+  String? employeeName; // Made nullable
   String status;
   int docstatus;
   double totalHours;
@@ -44,8 +44,8 @@ class Datum {
 
   Datum({
     required this.name,
-    required this.employee,
-    required this.employeeName,
+    this.employee, // Removed required
+    this.employeeName, // Removed required
     required this.status,
     required this.docstatus,
     required this.totalHours,
@@ -56,17 +56,22 @@ class Datum {
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-    name: json["name"],
-    employee: json["employee"],
-    employeeName: json["employee_name"],
-    status: json["status"],
-    docstatus: json["docstatus"],
-    docstatusName: json["docstatus_name"],
-    totalHours: json["total_hours"],
-    startDate: DateTime.parse(json["start_date"]),
-    endDate: DateTime.parse(json["end_date"]),
+    name: json["name"]?.toString() ?? '',
+    employee: json["employee"]?.toString(), // Can be null
+    employeeName: json["employee_name"]?.toString(), // Can be null
+    status: json["status"]?.toString() ?? '',
+    docstatus: json["docstatus"] ?? 0,
+    docstatusName: json["docstatus_name"]?.toString() ?? '',
+    totalHours: (json["total_hours"] as num?)?.toDouble() ?? 0.0,
+    startDate:
+        json["start_date"] != null && json["start_date"].toString().isNotEmpty
+        ? DateTime.parse(json["start_date"])
+        : DateTime.now(),
+    endDate: json["end_date"] != null && json["end_date"].toString().isNotEmpty
+        ? DateTime.parse(json["end_date"])
+        : DateTime.now(),
     timeLogs: List<TimeLog>.from(
-      json["time_logs"].map((x) => TimeLog.fromJson(x)),
+      (json["time_logs"] as List<dynamic>).map((x) => TimeLog.fromJson(x)),
     ),
   );
 
@@ -87,18 +92,18 @@ class Datum {
 }
 
 class TimeLog {
-  String activityType;
+  String? activityType; // Made nullable
   DateTime fromTime;
-  DateTime toTime;
+  DateTime? toTime; // Made nullable
   double hours;
-  String? project; // nullable
-  String? task; // nullable
-  String? description; // nullable
+  String? project;
+  String? task;
+  String? description;
 
   TimeLog({
-    required this.activityType,
+    this.activityType, // Removed required
     required this.fromTime,
-    required this.toTime,
+    this.toTime, // Removed required
     required this.hours,
     this.project,
     this.task,
@@ -106,19 +111,24 @@ class TimeLog {
   });
 
   factory TimeLog.fromJson(Map<String, dynamic> json) => TimeLog(
-    activityType: json["activity_type"],
-    fromTime: DateTime.parse(json["from_time"]),
-    toTime: DateTime.parse(json["to_time"]),
-    hours: (json["hours"] as num).toDouble(),
-    project: json["project"], // safe: nullable
-    task: json["task"], // safe: nullable
-    description: json["description"],
+    activityType: json["activity_type"], // Can be null
+    fromTime:
+        json["from_time"] != null && json["from_time"].toString().isNotEmpty
+        ? DateTime.parse(json["from_time"])
+        : DateTime.now(), // Fallback to current time if null/empty
+    toTime: json["to_time"] != null && json["to_time"].toString().isNotEmpty
+        ? DateTime.parse(json["to_time"])
+        : null, // Can be null
+    hours: (json["hours"] as num?)?.toDouble() ?? 0.0,
+    project: json["project"]?.toString(),
+    task: json["task"]?.toString(),
+    description: json["description"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
     "activity_type": activityType,
     "from_time": fromTime.toIso8601String(),
-    "to_time": toTime.toIso8601String(),
+    "to_time": toTime?.toIso8601String(),
     "hours": hours,
     "project": project,
     "task": task,

@@ -62,6 +62,23 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     }
   }
 
+  // 🔹 Department filter ONLY (no status, no search)
+  List<Leads> _getDepartmentFilteredLeads(List<Leads> allLeads) {
+    if (department == null || department!.isEmpty) return allLeads;
+
+    final dept = department!.toLowerCase();
+
+    return allLeads.where((lead) {
+      final segment = (lead.customLeadSegment ?? lead.marketSegment ?? '')
+          .toLowerCase();
+
+      if (dept.contains("erp")) return segment.contains("erp");
+      if (dept.contains("digital")) return segment.contains("digital");
+
+      return true;
+    }).toList();
+  }
+
   List<Leads> _getFilteredLeads(List<Leads> allLeads) {
     var filtered = allLeads;
 
@@ -153,7 +170,6 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 🔥 Read department directly from secure storage
       department = await _storage.read(key: "department");
-      print("💾 Department Loaded: $department");
 
       setState(() {});
 
@@ -261,9 +277,10 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
     );
   }
 
-  int _getStatusCount(List<Leads> allLeads, String status) {
-    if (status == 'All') return allLeads.length;
-    return allLeads.where((lead) => lead.status == status).length;
+  int _getStatusCount(List<Leads> deptFilteredLeads, String status) {
+    if (status == 'All') return deptFilteredLeads.length;
+
+    return deptFilteredLeads.where((lead) => lead.status == status).length;
   }
 
   Widget _buildLeadCard(Leads lead) {
@@ -428,13 +445,19 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
 
           final allLeads = controller.allLeads?.data ?? [];
 
-          // 🔥 Important Fix - move setState out of build phase
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateAvailableStatuses(allLeads);
-          });
+          // ✅ STEP 1: Department filter ONLY
+          final deptFilteredLeads = _getDepartmentFilteredLeads(allLeads);
 
-          final filteredLeads = _getFilteredLeads(allLeads);
+          // ✅ STEP 2: Apply existing filters (status + search)
+          final filteredLeads = _getFilteredLeads(deptFilteredLeads);
+
+          // ✅ Pagination
           final paginatedLeads = _getPaginatedLeads(filteredLeads);
+
+          // 🔥 Update status list using department-filtered data ONLY
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _updateAvailableStatuses(deptFilteredLeads);
+          });
 
           return RefreshIndicator(
             onRefresh: controller.fetchAllLeadList,
@@ -448,7 +471,7 @@ class _AdminLeadsPageState extends State<AdminLeadsPage> {
                     children: [
                       _buildSearchSection(),
                       SizedBox(height: 16),
-                      _buildStatusFilterDropdown(allLeads),
+                      _buildStatusFilterDropdown(deptFilteredLeads),
                       SizedBox(height: 16),
                     ],
                   );

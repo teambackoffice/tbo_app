@@ -70,16 +70,13 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
   final _storage = const FlutterSecureStorage();
   String? _fullName;
   String? designation;
-  String? _imageUrl;
 
   Future<void> _userdetails() async {
     final name = await _storage.read(key: 'employee_full_name');
     final designationValue = await _storage.read(key: 'designation');
-    final imageUrl = await _storage.read(key: 'image');
     setState(() {
       _fullName = name;
       designation = designationValue;
-      _imageUrl = imageUrl;
     });
   }
 
@@ -119,14 +116,11 @@ class _CRMDashboardPageState extends State<CRMDashboardPage> {
                   CircleAvatar(
                     radius: 25,
                     backgroundColor: const Color(0xFF1C7690),
-                    child: _imageUrl?.isEmpty ?? true
-                        ? const Icon(Icons.person, color: Colors.white)
-                        : Image.asset(
-                            _imageUrl!,
-                            width: 30,
-                            height: 30,
-                            color: Colors.white,
-                          ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Column(

@@ -507,7 +507,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        employee.employeeName,
+                        employee.employeeName ?? "Unknown Employee",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -516,7 +516,7 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        employee.employee,
+                        employee.employee ?? "Unknown Employee",
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
