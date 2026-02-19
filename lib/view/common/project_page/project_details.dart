@@ -231,8 +231,10 @@ class ProjectDetailsPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              ProjectTasks(projectId: project.name),
+                          builder: (context) => ProjectTasksListPage(
+                            projectId: project.name,
+                            projectName: project.name,
+                          ),
                         ),
                       );
                     },

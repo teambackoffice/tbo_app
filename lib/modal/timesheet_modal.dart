@@ -99,6 +99,7 @@ class TimeLog {
   String? project;
   String? task;
   String? description;
+  String? projectName;
 
   TimeLog({
     this.activityType, // Removed required
@@ -108,6 +109,7 @@ class TimeLog {
     this.project,
     this.task,
     this.description,
+    this.projectName,
   });
 
   factory TimeLog.fromJson(Map<String, dynamic> json) => TimeLog(
@@ -123,6 +125,7 @@ class TimeLog {
     project: json["project"]?.toString(),
     task: json["task"]?.toString(),
     description: json["description"]?.toString(),
+    projectName: json["project_name"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -133,5 +136,6 @@ class TimeLog {
     "project": project,
     "task": task,
     "description": description,
+    "project_name": projectName,
   };
 }

@@ -384,7 +384,7 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                             title: timeLog.activityType ?? 'No Activity',
                             subtitle: (timeLog.task?.isNotEmpty ?? false)
                                 ? timeLog.task!
-                                : (timeLog.project ?? 'No Project'),
+                                : (timeLog.projectName ?? 'No Project'),
                             fromTime: formatTime(timeLog.fromTime),
                             toTime: timeLog.toTime != null
                                 ? formatTime(timeLog.toTime!)

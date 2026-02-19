@@ -1,931 +1,688 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:tbo_app/controller/all_employees._controller.dart';
-import 'package:tbo_app/controller/employee_assignments_controller.dart';
-import 'package:tbo_app/controller/get_task_assignment_controller.dart';
-import 'package:tbo_app/controller/task_assignment_submit_controller.dart';
-import 'package:tbo_app/controller/task_employee_assign.dart';
-import 'package:tbo_app/modal/employee_assignment_modal.dart';
-import 'package:tbo_app/services/post_notification_service.dart';
-import 'package:tbo_app/view/common/project_page/employee_assign_dialog.dart';
+import 'package:tbo_app/controller/get_admin_Task_list_controller.dart';
+import 'package:tbo_app/modal/get_admin_task_list_modal.dart';
+import 'package:tbo_app/view/common/project_page/project_task_details.dart';
 
-class ProjectTasks extends StatefulWidget {
+class ProjectTasksListPage extends StatefulWidget {
   final String? projectId;
-  const ProjectTasks({super.key, required this.projectId});
+  final String? projectName;
+
+  const ProjectTasksListPage({super.key, this.projectId, this.projectName});
 
   @override
-  _ProjectTasksState createState() => _ProjectTasksState();
+  State<ProjectTasksListPage> createState() => _ProjectTasksListPageState();
 }
 
-class _ProjectTasksState extends State<ProjectTasks> {
+class _ProjectTasksListPageState extends State<ProjectTasksListPage>
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  String _selectedFilter = 'All';
+  final List<String> _filters = [
+    'All',
+    'Open',
+    'Working',
+    'Completed',
+    'Cancelled',
+  ];
+
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    );
+    _fadeController.forward();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<EmployeeAssignmentsController>(
-        context,
-        listen: false,
-      ).feetchemployeeassignments(projectId: widget.projectId!);
+      context.read<GetAdminTaskListController>().fetchProjectDetails(
+        widget.projectId!,
+      );
     });
   }
 
-  void _showAddTaskDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddTaskDialog(
-          onTaskAdded: (String project, String task, String employee) {
-            Provider.of<EmployeeAssignmentsController>(
-              context,
-              listen: false,
-            ).feetchemployeeassignments(projectId: widget.projectId!);
-          },
-        );
-      },
-    );
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
   }
 
-  void _showEmployeeAssignmentDialog(
-    BuildContext context,
-    TaskAssignment taskAssignment,
-  ) {
-    // Pre-load employees if not already loaded
-    final allEmployeesController = Provider.of<AllEmployeesController>(
-      context,
-      listen: false,
-    );
+  // --- Color & Style Helpers ---
 
-    if (allEmployeesController.allEmployees == null) {
-      allEmployeesController.fetchallemployees();
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return MultiProvider(
-          providers: [
-            ChangeNotifierProvider(
-              create: (context) => AllEmployeesController(),
-            ),
-            ChangeNotifierProvider(
-              create: (context) => TaskEmployeeAssignController(),
-            ),
-          ],
-          child: EmployeeAssignmentDialog(
-            taskId: taskAssignment.task,
-            taskSubject: taskAssignment.taskSubject,
-            onEmployeeAssigned: (String employeeId, String employeeName) {
-              _assignEmployeeToTask(
-                taskAssignment.task,
-                employeeId,
-                employeeName,
-              );
-            },
-          ),
+  _StatusStyle _getStatusStyle(String status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return _StatusStyle(
+          color: const Color(0xFF3B82F6),
+          bg: const Color(0xFFEFF6FF),
+          icon: Icons.radio_button_unchecked_rounded,
         );
-      },
-    );
-  }
-
-  // Add this import at the top of your file
-
-  void _assignEmployeeToTask(
-    String taskId,
-    String employeeId,
-    String employeeName,
-  ) async {
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              SizedBox(width: 12),
-              Text('Assigning $employeeName to task...'),
-            ],
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
-
-      final assignmentController = Provider.of<EmployeeAssignmentsController>(
-        context,
-        listen: false,
-      );
-
-      String? assignmentId;
-      TaskAssignment? currentTask;
-
-      for (var assignment in assignmentController.allLeads?.data ?? []) {
-        for (var task in assignment.taskAssignments) {
-          if (task.task == taskId) {
-            assignmentId = assignment.assignmentId;
-            currentTask = task;
-            break;
-          }
-        }
-        if (assignmentId != null) break;
-      }
-
-      if (assignmentId == null || currentTask == null) {
-        throw Exception('Assignment not found for task');
-      }
-
-      final taskAssignments = [    
-        {"task_id": taskId, "employee_id": employeeId},
-      ];  
-        
-      final taskAssignController = TaskEmployeeAssignController();
-
-      await taskAssignController.updateAssignmentEmployees(
-        assignmentId: assignmentId,
-        taskAssignments: taskAssignments,
-        subTaskAssignments: [],
-      );
-
-      if (taskAssignController.error != null) {
-        throw Exception(taskAssignController.error);
-      }
-
-      // ✅ Get the ASSIGNED employee's email (not the logged-in user's email)
-      final allEmployeesController = Provider.of<AllEmployeesController>(
-        context,
-        listen: false,
-      );
-
-      String? assignedEmployeeEmail;
-
-      // Find the assigned employee by their ID
-      if (allEmployeesController.allEmployees != null) {
-        try {
-          final employee = allEmployeesController.allEmployees!.message
-              .firstWhere(
-                (emp) => emp.name == employeeId,
-                orElse: () => throw Exception('Employee not found'),
-              );
-
-          // ✅ Get employee's email (check your Message model for correct field name)
-          // Common field names: email, userEmail, emailAddress, userId
-          assignedEmployeeEmail =
-              employee.userId; // Adjust this based on your model
-        } catch (e) {
-          throw Exception('Could not find assigned employee details');
-        }
-      } else {
-        throw Exception('Employee list not loaded');
-      }
-
-      if (assignedEmployeeEmail.isEmpty) {
-        throw Exception('Employee email not found for $employeeName');
-      }
-
-      // ✅ Get current logged-in user's details for "assigned by" name
-      final storage = FlutterSecureStorage();
-      String? currentUserEmail = await storage.read(key: "email");
-      String? currentUserFullName = await storage.read(key: "full_name");
-
-      // Use full name if available, otherwise use email, otherwise use 'Admin'
-      String assignerName =
-          currentUserFullName ?? currentUserEmail?.split('@')[0] ?? 'Admin';
-
-      // ✅ Send notification to the ASSIGNED employee's email
-      final notificationSent =
-          await PostNotificationService.sendTaskAssignmentNotification(
-            employeeEmail:
-                assignedEmployeeEmail, // ✅ Use assigned employee's email
-            taskSubject: currentTask.taskSubject,
-            taskId: taskId,
-            assignerName: assignerName,
-          );
-
-      if (!notificationSent) {
-        // Don't throw error - task was assigned successfully
-      } else {}
-
-      // Refresh the task list
-      Provider.of<EmployeeAssignmentsController>(
-        context,
-        listen: false,
-      ).feetchemployeeassignments(projectId: widget.projectId!);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Successfully assigned $employeeName to task!'),
-          backgroundColor: Color(0xFF34C759),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to assign employee: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
+      case 'working':
+        return _StatusStyle(
+          color: const Color(0xFFF59E0B),
+          bg: const Color(0xFFFFFBEB),
+          icon: Icons.timelapse_rounded,
+        );
+      case 'completed':
+        return _StatusStyle(
+          color: const Color(0xFF10B981),
+          bg: const Color(0xFFECFDF5),
+          icon: Icons.check_circle_outline_rounded,
+        );
+      case 'cancelled':
+        return _StatusStyle(
+          color: const Color(0xFFEF4444),
+          bg: const Color(0xFFFEF2F2),
+          icon: Icons.cancel_outlined,
+        );
+      default:
+        return _StatusStyle(
+          color: const Color(0xFF6B7280),
+          bg: const Color(0xFFF9FAFB),
+          icon: Icons.help_outline_rounded,
+        );
     }
   }
 
-  void _handleSubmit() async {
-    // Get the first task's assignment to fetch details
-    final employeeAssignmentsController =
-        Provider.of<EmployeeAssignmentsController>(context, listen: false);
-
-    final assignments = employeeAssignmentsController.allLeads?.data ?? [];
-
-    if (assignments.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No assignments found'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    final List<TaskAssignment> allTasks = [];
-    for (var assignment in assignments) {
-      allTasks.addAll(assignment.taskAssignments);
-    }
-
-    if (allTasks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No tasks available to submit'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Get the first task ID to fetch assignment details
-    final firstTaskId = allTasks[0].task;
-
-    // Create a controller to fetch task details
-    final getTaskController = GetTaskAssignmentController();
-
-    // Add listener to show loading state
-    getTaskController.addListener(() {
-      if (getTaskController.isLoading) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text('Fetching task details...'),
-              ],
-            ),
-            duration: Duration(seconds: 30),
-          ),
+  _PriorityStyle _getPriorityStyle(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return _PriorityStyle(color: const Color(0xFFEF4444), label: '↑ High');
+      case 'medium':
+        return _PriorityStyle(
+          color: const Color(0xFFF59E0B),
+          label: '→ Medium',
         );
-      }
-    });
-
-    // Fetch task details to get the employee_task_assignment_id (docname)
-    await getTaskController.fetchTaskDetails(firstTaskId);
-
-    if (getTaskController.errorMessage != null) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${getTaskController.errorMessage}'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
-    final docName = getTaskController.employeeTaskAssignmentId;
-
-    if (docName == null || docName.isEmpty) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not retrieve assignment document name'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Now submit with the docname
-    final taskSubmissionController = Provider.of<TaskSubmissionController>(
-      context,
-      listen: false,
-    );
-
-    // Add listener to submission controller
-    taskSubmissionController.addListener(() {
-      if (taskSubmissionController.isLoading) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text('Submitting tasks...'),
-              ],
-            ),
-            duration: Duration(seconds: 30),
-          ),
-        );
-      }
-    });
-
-    await taskSubmissionController.submitEmployeeTask(docName: docName);
-
-    // Hide loading
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-    // Check response message from controller
-    if (taskSubmissionController.responseMessage != null) {
-      final response = taskSubmissionController.responseMessage!;
-
-      // Check if response indicates success or failure
-      final isSuccess =
-          !response.toLowerCase().contains('error') &&
-          !response.toLowerCase().contains('failed') &&
-          !response.toLowerCase().contains('exception');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isSuccess
-                ? 'Tasks submitted successfully!'
-                : 'Submission failed: $response',
-          ),
-          backgroundColor: isSuccess ? Color(0xFF34C759) : Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
-
-      // Refresh the task list only on success
-      if (isSuccess) {
-        Provider.of<EmployeeAssignmentsController>(
-          context,
-          listen: false,
-        ).feetchemployeeassignments(projectId: widget.projectId!);
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No response from server'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      case 'low':
+        return _PriorityStyle(color: const Color(0xFF10B981), label: '↓ Low');
+      default:
+        return _PriorityStyle(color: const Color(0xFF6B7280), label: priority);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Color(0xFFF5F5F5),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
-          'Tasks',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Consumer<EmployeeAssignmentsController>(
-        builder: (context, employeeAssignmentsController, child) {
-          if (employeeAssignmentsController.isLoading) {
-            return Center(
-              child: CircularProgressIndicator(color: Color(0xFF1C7690)),
-            );
-          }
-
-          if (employeeAssignmentsController.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  SizedBox(height: 16),
-                  Text(
-                    'No Task Added',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color.fromARGB(255, 172, 24, 13),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      employeeAssignmentsController.feetchemployeeassignments(
-                        projectId: widget.projectId!,
-                      );
-                    },
-                    child: Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final assignments =
-              employeeAssignmentsController.allLeads?.data ?? [];
-
-          final List<TaskAssignment> allTasks = [];
-          for (var assignment in assignments) {
-            allTasks.addAll(assignment.taskAssignments);
-          }
-
-          if (allTasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.task_alt, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No tasks available',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: ListView.builder(
-              itemCount: allTasks.length + 1, // +1 for the submit button
-              itemBuilder: (context, index) {
-                // If it's the last item, show the submit button
-                if (index == allTasks.length) {
-                  return Padding(
-                    padding: EdgeInsets.only(top: 8, bottom: 24),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _handleSubmit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF1C7690),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: Text(
-                          'Submit',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                // Otherwise, show the task card
-                return TaskCard(
-                  taskAssignment: allTasks[index],
-                  onDelete: () {
-                    _showDeleteConfirmation(context, allTasks[index]);
-                  },
-                  onAssignEmployee: () {
-                    _showEmployeeAssignmentDialog(context, allTasks[index]);
-                  },
-                );
-              },
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Consumer<GetAdminTaskListController>(
+        builder: (context, controller, child) {
+          return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
+            slivers: [
+              _buildSliverAppBar(controller),
+              if (!controller.isLoading && controller.errorMessage == null)
+                _buildFilterBar(controller),
+              _buildBody(controller),
+            ],
           );
         },
       ),
+      floatingActionButton: _buildFAB(),
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, TaskAssignment task) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Task'),
-          content: Text(
-            'Are you sure you want to delete "${task.taskSubject}"?',
+  // --- Sliver App Bar ---
+
+  Widget _buildSliverAppBar(GetAdminTaskListController controller) {
+    final tasks = controller.projectDetails?.data.tasks ?? [];
+    final completedCount = tasks
+        .where((t) => t.status.toLowerCase() == 'completed')
+        .length;
+    final progress = tasks.isEmpty ? 0.0 : completedCount / tasks.length;
+
+    return SliverAppBar(
+      expandedHeight: 160,
+      pinned: true,
+      stretch: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.white,
+      shadowColor: Colors.black.withOpacity(0.08),
+      leading: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          margin: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Provider.of<EmployeeAssignmentsController>(
-                  context,
-                  listen: false,
-                ).feetchemployeeassignments(projectId: widget.projectId!);
-              },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class TaskCard extends StatelessWidget {
-  final TaskAssignment taskAssignment;
-  final VoidCallback onDelete;
-  final VoidCallback onAssignEmployee;
-
-  const TaskCard({
-    super.key,
-    required this.taskAssignment,
-    required this.onDelete,
-    required this.onAssignEmployee,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+          child: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color(0xFF0F172A),
+            size: 18,
           ),
-        ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.pin,
+        background: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(20, 90, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(taskAssignment.assignmentStatus),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  taskAssignment.assignmentStatus.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Text(
-            taskAssignment.taskSubject,
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.assignment, size: 16, color: Color(0xFF8E8E93)),
-              SizedBox(width: 4),
-              Text(
-                'Task ID: ${taskAssignment.task}',
+              const Text(
+                'Project Tasks',
                 style: TextStyle(
-                  color: Color(0xFF8E8E93),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF129476),
+                  letterSpacing: 1.2,
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.work_outline, size: 16, color: Color(0xFF8E8E93)),
-              SizedBox(width: 4),
+              const SizedBox(height: 4),
               Text(
-                'Workload: ${taskAssignment.workloadPercentage}%',
-                style: TextStyle(
-                  color: Color(0xFF8E8E93),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                widget.projectName ?? '',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.5,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              if (taskAssignment.employee == null ||
-                  taskAssignment.employeeName == null)
-                GestureDetector(
-                  onTap: onAssignEmployee,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF1C7690).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Color(0xFF1C7690), width: 1),
-                    ),
-                    child: Text(
-                      'Assign Employee',
-                      style: TextStyle(
-                        color: Color(0xFF1C7690),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+              const SizedBox(height: 12),
+              if (!controller.isLoading && tasks.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF129476),
+                          ),
+                          minHeight: 6,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              else ...[
-                Text(
-                  'Assigned to: ',
-                  style: TextStyle(
-                    color: Color(0xFF8E8E93),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Color(0xFF1C7690),
-                  child: Text(
-                    taskAssignment.employeeName?.toString()[0].toUpperCase() ??
-                        'U',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Text(
+                      '$completedCount/${tasks.length} done',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    taskAssignment.employeeName?.toString() ?? 'Unknown',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ],
           ),
-        ],
+        ),
+        // title: Padding(
+        //   padding: const EdgeInsets.only(left: 8),
+        //   child: Text(
+        //     widget.projectName ?? '',
+        //     style: const TextStyle(
+        //       fontSize: 16,
+        //       fontWeight: FontWeight.w700,
+        //       color: Color(0xFF0F172A),
+        //       letterSpacing: -0.3,
+        //     ),
+        //   ),
+        // ),
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Color(0xFF34C759);
-      case 'in progress':
-      case 'working':
-        return Color(0xFFFF9500);
-      case 'pending':
-        return Color(0xFF8E8E93);
-      case 'overdue':
-        return Color(0xFFFF3B30);
-      default:
-        return Color(0xFF1C7690);
+  // --- Filter Bar ---
+
+  Widget _buildFilterBar(GetAdminTaskListController controller) {
+    final tasks = controller.projectDetails?.data.tasks ?? [];
+
+    Map<String, int> counts = {'All': tasks.length};
+    for (final t in tasks) {
+      final s = t.status;
+      counts[s] = (counts[s] ?? 0) + 1;
     }
-  }
-}
 
-class AddTaskDialog extends StatefulWidget {
-  final Function(String, String, String) onTaskAdded;
-
-  const AddTaskDialog({super.key, required this.onTaskAdded});
-
-  @override
-  _AddTaskDialogState createState() => _AddTaskDialogState();
-}
-
-class _AddTaskDialogState extends State<AddTaskDialog> {
-  final TextEditingController _projectController = TextEditingController();
-  final TextEditingController _taskController = TextEditingController();
-  final TextEditingController _employeeController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _projectController.text = 'Onshore Website';
-    _taskController.text = 'Task1';
-    _employeeController.text = 'Jasir';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
+    return SliverToBoxAdapter(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
+        color: Colors.white,
+        padding: const EdgeInsets.only(bottom: 12),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: _filters.map((f) {
+              final isActive = _selectedFilter == f;
+              final count = counts[f] ?? 0;
+              if (f != 'All' && count == 0) return const SizedBox.shrink();
+
+              return GestureDetector(
+                onTap: () => setState(() => _selectedFilter = f),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? const Color(0xFF129476)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        f,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isActive
+                              ? Colors.white
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.white.withOpacity(0.25)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isActive
+                                ? Colors.white
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Body ---
+
+  Widget _buildBody(GetAdminTaskListController controller) {
+    if (controller.isLoading) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF129476),
+            strokeWidth: 2.5,
+          ),
+        ),
+      );
+    }
+
+    if (controller.errorMessage != null) {
+      return SliverFillRemaining(child: _buildErrorState(controller));
+    }
+
+    final allTasks = controller.projectDetails?.data.tasks ?? [];
+    final tasks = _selectedFilter == 'All'
+        ? allTasks
+        : allTasks.where((t) => t.status == _selectedFilter).toList();
+
+    if (tasks.isEmpty) {
+      return SliverFillRemaining(child: _buildEmptyState());
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return FadeTransition(
+            opacity: _fadeAnimation,
+            child: _buildTaskCard(tasks[index], index, tasks),
+          );
+        }, childCount: tasks.length),
+      ),
+    );
+  }
+
+  // --- Task Card ---
+
+  Widget _buildTaskCard(Task task, int index, List<Task> tasks) {
+    final statusStyle = _getStatusStyle(task.status);
+    final priorityStyle = _getPriorityStyle(task.priority);
+    final hasDate =
+        task.expectedStartDate != null || task.expectedEndDate != null;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 400 + (index * 60).clamp(0, 400)),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFF2F2F7),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        size: 18,
-                        color: Color(0xFF8E8E93),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProjectTaskDetailPage(
+                    task: tasks[index],
+                    projectName: widget.projectName,
+                  ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Project',
-                    style: TextStyle(
-                      color: Color(0xFF8E8E93),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFF2F2F7),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Color(0xFFE5E5EA), width: 1),
-                    ),
-                    child: TextFormField(
-                      controller: _projectController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    'Task',
-                    style: TextStyle(
-                      color: Color(0xFF8E8E93),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFF2F2F7),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Color(0xFFE5E5EA), width: 1),
-                    ),
-                    child: TextFormField(
-                      controller: _taskController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    'Employee',
-                    style: TextStyle(
-                      color: Color(0xFF8E8E93),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFF2F2F7),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Color(0xFFE5E5EA), width: 1),
-                    ),
-                    child: TextFormField(
-                      controller: _employeeController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        widget.onTaskAdded(
-                          _projectController.text,
-                          _taskController.text,
-                          _employeeController.text,
-                        );
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1C7690),
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  // Top row: status icon + subject + status chip
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: statusStyle.bg,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Add Task',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        child: Icon(
+                          statusStyle.icon,
+                          size: 18,
+                          color: statusStyle.color,
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              task.subject,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
+                                letterSpacing: -0.2,
+                                height: 1.3,
+                              ),
+                            ),
+                            if (task.description.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                task.description,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF94A3B8),
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusStyle.bg,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          task.status,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: statusStyle.color,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+
+                  const SizedBox(height: 14),
+                  const Divider(color: Color(0xFFF1F5F9), height: 1),
+                  const SizedBox(height: 12),
+
+                  // Bottom row: assignee + priority + dates
+                  Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF129476).withOpacity(0.7),
+                              const Color(0xFF129476),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            task.employeeName.isNotEmpty
+                                ? task.employeeName[0].toUpperCase()
+                                : 'N/A',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: task.employeeName.isNotEmpty
+                            ? Text(
+                                task.employeeName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : const Text(
+                                'Not Assigned',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Priority badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: priorityStyle.color.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          priorityStyle.label,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: priorityStyle.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Date row
+                  if (hasDate) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 12,
+                            color: Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 6),
+                          if (task.expectedStartDate != null)
+                            Text(
+                              DateFormat(
+                                'MMM d',
+                              ).format(DateTime.parse(task.expectedStartDate!)),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          if (task.expectedStartDate != null &&
+                              task.expectedEndDate != null)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Text(
+                                '→',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ),
+                          if (task.expectedEndDate != null)
+                            Text(
+                              DateFormat(
+                                'MMM d, y',
+                              ).format(DateTime.parse(task.expectedEndDate!)),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Empty State ---
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.task_alt_rounded,
+                size: 40,
+                color: Color(0xFF129476),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No Tasks Found',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _selectedFilter == 'All'
+                  ? 'Create your first task to get started'
+                  : 'No "$_selectedFilter" tasks in this project',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF94A3B8),
+                height: 1.5,
               ),
             ),
           ],
@@ -934,11 +691,176 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
     );
   }
 
-  @override
-  void dispose() {
-    _projectController.dispose();
-    _taskController.dispose();
-    _employeeController.dispose();
-    super.dispose();
+  // --- Error State ---
+
+  Widget _buildErrorState(GetAdminTaskListController controller) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.cloud_off_rounded,
+                size: 40,
+                color: Color(0xFFEF4444),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Something went wrong',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              controller.errorMessage ?? 'Unable to load tasks.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF94A3B8),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  controller.fetchProjectDetails(widget.projectId!),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF129476),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
+
+  // --- FAB ---
+
+  Widget _buildFAB() {
+    return FloatingActionButton.extended(
+      onPressed: () => _showCreateTaskSheet(context),
+      backgroundColor: const Color(0xFF129476),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+      label: const Text(
+        'New Task',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  void _showCreateTaskSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Create Task',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Task creation will be implemented here.',
+              style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF129476),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Got it',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- Helper Data Classes ---
+
+class _StatusStyle {
+  final Color color;
+  final Color bg;
+  final IconData icon;
+  const _StatusStyle({
+    required this.color,
+    required this.bg,
+    required this.icon,
+  });
+}
+
+class _PriorityStyle {
+  final Color color;
+  final String label;
+  const _PriorityStyle({required this.color, required this.label});
 }
