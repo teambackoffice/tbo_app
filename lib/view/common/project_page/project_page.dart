@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/project_list_controller.dart';
 import 'package:tbo_app/modal/project_list_modal.dart';
-import 'package:tbo_app/view/common/project_page/date_rqst.dart';
 import 'package:tbo_app/view/common/project_page/handover_rqsts.dart';
 import 'package:tbo_app/view/common/project_page/project_details.dart';
 
@@ -216,66 +215,66 @@ class _CommonProjectPageState extends State<CommonProjectPage>
               },
             ),
 
-            // Date Request FAB
-            AnimatedBuilder(
-              animation: _expandAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _expandAnimation.value,
-                  child: Opacity(
-                    opacity: _expandAnimation.value,
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Date Request',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          FloatingActionButton(
-                            heroTag: "date_request",
-                            mini: true,
-                            onPressed: () {
-                              _toggleFab();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      EmployeeDateRequestScreen(),
-                                ),
-                              );
-                            },
-                            backgroundColor: Color(0xFF2D7D8C),
-                            elevation: 4,
-                            child: Icon(
-                              Icons.calendar_month_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+            // // Date Request FAB
+            // AnimatedBuilder(
+            //   animation: _expandAnimation,
+            //   builder: (context, child) {
+            //     return Transform.scale(
+            //       scale: _expandAnimation.value,
+            //       child: Opacity(
+            //         opacity: _expandAnimation.value,
+            //         child: Container(
+            //           margin: EdgeInsets.only(bottom: 16),
+            //           child: Row(
+            //             mainAxisSize: MainAxisSize.min,
+            //             children: [
+            //               Container(
+            //                 padding: EdgeInsets.symmetric(
+            //                   horizontal: 12,
+            //                   vertical: 8,
+            //                 ),
+            //                 decoration: BoxDecoration(
+            //                   color: Colors.black.withOpacity(0.8),
+            //                   borderRadius: BorderRadius.circular(8),
+            //                 ),
+            //                 child: Text(
+            //                   'Date Request',
+            //                   style: TextStyle(
+            //                     color: Colors.white,
+            //                     fontSize: 14,
+            //                     fontWeight: FontWeight.w500,
+            //                   ),
+            //                 ),
+            //               ),
+            //               SizedBox(width: 12),
+            //               FloatingActionButton(
+            //                 heroTag: "date_request",
+            //                 mini: true,
+            //                 onPressed: () {
+            //                   _toggleFab();
+            //                   Navigator.push(
+            //                     context,
+            //                     MaterialPageRoute(
+            //                       builder: (context) =>
+            //                           EmployeeDateRequestScreen(),
+            //                     ),
+            //                   );
+            //                 },
+            //                 backgroundColor: Color(0xFF2D7D8C),
+            //                 elevation: 4,
+            //                 child: Icon(
+            //                   Icons.calendar_month_rounded,
+            //                   color: Colors.white,
+            //                   size: 20,
+            //                 ),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //       ),
+            //     );
+            //   },
+            // ),
 
             // Main FAB
             FloatingActionButton(
