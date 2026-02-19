@@ -17,8 +17,6 @@ class TaskService {
         throw Exception("No session ID found in secure storage");
       }
 
-      // 🔵 PRINT SID
-
       // Build headers
       final headers = {
         'Content-Type': 'application/json',

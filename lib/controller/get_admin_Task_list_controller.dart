@@ -9,7 +9,7 @@ class GetAdminTaskListController extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> fetchProjectDetails(String projectId) async {
+  Future<void> fetchProjectDetails({required String projectId}) async {
     try {
       isLoading = true;
       errorMessage = null;

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/get_admin_Task_list_controller.dart';
 import 'package:tbo_app/modal/get_admin_task_list_modal.dart';
+import 'package:tbo_app/view/common/project_page/create_task.dart';
 import 'package:tbo_app/view/common/project_page/project_task_details.dart';
 
 class ProjectTasksListPage extends StatefulWidget {
@@ -43,7 +44,7 @@ class _ProjectTasksListPageState extends State<ProjectTasksListPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GetAdminTaskListController>().fetchProjectDetails(
-        widget.projectId!,
+        projectId: widget.projectId!,
       );
     });
   }
@@ -109,11 +110,11 @@ class _ProjectTasksListPageState extends State<ProjectTasksListPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: Consumer<GetAdminTaskListController>(
-        builder: (context, controller, child) {
-          return CustomScrollView(
+    return Consumer<GetAdminTaskListController>(
+      builder: (context, controller, child) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          body: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -123,10 +124,10 @@ class _ProjectTasksListPageState extends State<ProjectTasksListPage>
                 _buildFilterBar(controller),
               _buildBody(controller),
             ],
-          );
-        },
-      ),
-      floatingActionButton: _buildFAB(),
+          ),
+          floatingActionButton: _buildFAB(controller),
+        );
+      },
     );
   }
 
@@ -736,7 +737,7 @@ class _ProjectTasksListPageState extends State<ProjectTasksListPage>
             const SizedBox(height: 28),
             ElevatedButton.icon(
               onPressed: () =>
-                  controller.fetchProjectDetails(widget.projectId!),
+                  controller.fetchProjectDetails(projectId: widget.projectId!),
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
@@ -764,9 +765,17 @@ class _ProjectTasksListPageState extends State<ProjectTasksListPage>
 
   // --- FAB ---
 
-  Widget _buildFAB() {
+  Widget _buildFAB(GetAdminTaskListController controller) {
     return FloatingActionButton.extended(
-      onPressed: () => _showCreateTaskSheet(context),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                CreateTaskPage(initialProject: widget.projectName),
+          ),
+        );
+      },
       backgroundColor: const Color(0xFF129476),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
