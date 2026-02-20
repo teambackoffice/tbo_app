@@ -38,10 +38,10 @@ class GetAdminTaskListModalClass {
 class Data {
   String projectId;
   String projectName;
-  String projectType;
+  String? projectType;
   String priority;
-  DateTime expectedStartDate;
-  DateTime expectedEndDate;
+  DateTime? expectedStartDate;
+  DateTime? expectedEndDate;
   String isActive;
   dynamic notes;
   String status;
@@ -50,10 +50,10 @@ class Data {
   Data({
     required this.projectId,
     required this.projectName,
-    required this.projectType,
+    this.projectType,
     required this.priority,
-    required this.expectedStartDate,
-    required this.expectedEndDate,
+    this.expectedStartDate,
+    this.expectedEndDate,
     required this.isActive,
     required this.notes,
     required this.status,
@@ -61,15 +61,19 @@ class Data {
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    projectId: json["project_id"],
-    projectName: json["project_name"],
+    projectId: json["project_id"] ?? '',
+    projectName: json["project_name"] ?? '',
     projectType: json["project_type"],
-    priority: json["priority"],
-    expectedStartDate: DateTime.parse(json["expected_start_date"]),
-    expectedEndDate: DateTime.parse(json["expected_end_date"]),
-    isActive: json["is_active"],
+    priority: json["priority"] ?? '',
+    expectedStartDate: json["expected_start_date"] != null
+        ? DateTime.parse(json["expected_start_date"])
+        : null,
+    expectedEndDate: json["expected_end_date"] != null
+        ? DateTime.parse(json["expected_end_date"])
+        : null,
+    isActive: json["is_active"] ?? '',
     notes: json["notes"],
-    status: json["status"],
+    status: json["status"] ?? '',
     tasks: List<Task>.from(json["tasks"].map((x) => Task.fromJson(x))),
   );
 
@@ -78,10 +82,12 @@ class Data {
     "project_name": projectName,
     "project_type": projectType,
     "priority": priority,
-    "expected_start_date":
-        "${expectedStartDate.year.toString().padLeft(4, '0')}-${expectedStartDate.month.toString().padLeft(2, '0')}-${expectedStartDate.day.toString().padLeft(2, '0')}",
-    "expected_end_date":
-        "${expectedEndDate.year.toString().padLeft(4, '0')}-${expectedEndDate.month.toString().padLeft(2, '0')}-${expectedEndDate.day.toString().padLeft(2, '0')}",
+    "expected_start_date": expectedStartDate == null
+        ? null
+        : "${expectedStartDate!.year.toString().padLeft(4, '0')}-${expectedStartDate!.month.toString().padLeft(2, '0')}-${expectedStartDate!.day.toString().padLeft(2, '0')}",
+    "expected_end_date": expectedEndDate == null
+        ? null
+        : "${expectedEndDate!.year.toString().padLeft(4, '0')}-${expectedEndDate!.month.toString().padLeft(2, '0')}-${expectedEndDate!.day.toString().padLeft(2, '0')}",
     "is_active": isActive,
     "notes": notes,
     "status": status,
@@ -113,13 +119,13 @@ class Task {
   });
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
-    taskId: json["task_id"],
-    subject: json["subject"],
-    status: json["status"],
-    priority: json["priority"],
+    taskId: json["task_id"] ?? '',
+    subject: json["subject"] ?? '',
+    status: json["status"] ?? '',
+    priority: json["priority"] ?? '',
     employeeId: json["employee_id"],
-    employeeName: json["employee_name"],
-    description: json["description"],
+    employeeName: json["employee_name"] ?? '',
+    description: json["description"] ?? '',
     expectedStartDate: json["expected_start_date"],
     expectedEndDate: json["expected_end_date"],
   );

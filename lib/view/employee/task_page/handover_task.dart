@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/employee_handover_controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
+import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class CreateHandoverPage extends StatefulWidget {
   final String taskId;
@@ -638,20 +639,15 @@ class _EmployeeSelectionSheetState extends State<EmployeeSelectionSheet> {
                             horizontal: 16,
                             vertical: 8,
                           ),
-                          leading: CircleAvatar(
+                          leading: AuthenticatedAvatar(
                             radius: 24,
+                            imageUrl: emp.imageUrl,
+                            name: emp.employeeName,
                             backgroundColor: Theme.of(
                               context,
                             ).primaryColor.withOpacity(0.1),
-                            backgroundImage: emp.imageUrl.isNotEmpty
-                                ? NetworkImage(emp.imageUrl)
-                                : null,
-                            child: emp.imageUrl.isEmpty
-                                ? Icon(
-                                    Icons.person,
-                                    color: Theme.of(context).primaryColor,
-                                  )
-                                : null,
+                            initialsColor: Theme.of(context).primaryColor,
+                            initialsFontSize: 14,
                           ),
                           title: Text(
                             emp.employeeName,

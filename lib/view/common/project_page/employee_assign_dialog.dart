@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
+import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class EmployeeAssignmentDialog extends StatefulWidget {
   final String taskId;
@@ -284,25 +285,12 @@ class _EmployeeAssignmentDialogState extends State<EmployeeAssignmentDialog> {
                           ),
                           child: Row(
                             children: [
-                              CircleAvatar(
+                              AuthenticatedAvatar(
                                 radius: 24,
-                                backgroundColor: Color(0xFF1C7690),
-                                backgroundImage: employee.imageUrl.isNotEmpty
-                                    ? NetworkImage(employee.imageUrl)
-                                    : null,
-                                child: employee.imageUrl.isEmpty
-                                    ? Text(
-                                        employee.employeeName.isNotEmpty
-                                            ? employee.employeeName[0]
-                                                  .toUpperCase()
-                                            : 'U',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      )
-                                    : null,
+                                imageUrl: employee.imageUrl,
+                                name: employee.employeeName,
+                                backgroundColor: const Color(0xFF1C7690),
+                                initialsFontSize: 16,
                               ),
                               SizedBox(width: 12),
                               Expanded(

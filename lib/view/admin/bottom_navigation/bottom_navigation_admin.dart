@@ -78,10 +78,7 @@ class _AdminBottomNavigationState extends State<AdminBottomNavigation> {
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 8,
-          horizontal: 6,
-        ), // Reduced horizontal padding for closer items
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

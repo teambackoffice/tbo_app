@@ -4,6 +4,7 @@ import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/handover_task_post_controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
 import 'package:tbo_app/modal/get_employee_handover_modal.dart';
+import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class HandoverDetailPage extends StatefulWidget {
   final Datum handoverItem;
@@ -492,22 +493,13 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
                               horizontal: 16,
                               vertical: 8,
                             ),
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blue[100],
-                              backgroundImage: employee.imageUrl.isNotEmpty
-                                  ? NetworkImage(employee.imageUrl)
-                                  : null,
-                              child: employee.imageUrl.isEmpty
-                                  ? Text(
-                                      employee.employeeName
-                                          .substring(0, 1)
-                                          .toUpperCase(),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.blue[700],
-                                      ),
-                                    )
-                                  : null,
+                            leading: AuthenticatedAvatar(
+                              radius: 20,
+                              imageUrl: employee.imageUrl,
+                              name: employee.employeeName,
+                              backgroundColor: Colors.blue[100]!,
+                              initialsColor: Colors.blue[700]!,
+                              initialsFontSize: 12,
                             ),
                             title: Row(
                               children: [

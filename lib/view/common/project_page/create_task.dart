@@ -4,6 +4,7 @@ import 'package:tbo_app/controller/all_employees._controller.dart';
 import 'package:tbo_app/controller/create_task_controller.dart';
 import 'package:tbo_app/controller/get_admin_Task_list_controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
+import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class CreateTaskPage extends StatefulWidget {
   final String? initialProject;
@@ -104,9 +105,14 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     }
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Select date';
+  String _formatDateForApi(DateTime? date) {
+    if (date == null) return '';
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDateForUi(DateTime? date) {
+    if (date == null) return 'Select date';
+    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
   }
 
   // ─── Employee Picker Bottom Sheet ──────────────────────────────────────────
@@ -156,8 +162,8 @@ class _CreateTaskPageState extends State<CreateTaskPage>
       assignedEmployee: _selectedEmployee!.name,
       priority: _priority,
       description: _descCtrl.text.trim(),
-      expStartDate: _formatDate(_startDate),
-      expEndDate: _formatDate(_endDate),
+      expStartDate: _formatDateForApi(_startDate),
+      expEndDate: _formatDateForApi(_endDate),
       status: "Open",
     );
 
@@ -329,10 +335,12 @@ class _CreateTaskPageState extends State<CreateTaskPage>
           children: [
             // Avatar or icon
             if (hasEmployee && _selectedEmployee!.imageUrl.isNotEmpty)
-              CircleAvatar(
+              AuthenticatedAvatar(
                 radius: 16,
-                backgroundImage: NetworkImage(_selectedEmployee!.imageUrl),
+                imageUrl: _selectedEmployee!.imageUrl,
+                name: _selectedEmployee!.employeeName,
                 backgroundColor: _surfaceAlt,
+                initialsFontSize: 10,
               )
             else
               Container(
@@ -698,7 +706,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
             ),
             const SizedBox(height: 8),
             Text(
-              _formatDate(date),
+              _formatDateForUi(date),
               style: TextStyle(
                 color: hasDate ? _textPrimary : _textSecondary,
                 fontSize: 14,
@@ -1061,10 +1069,13 @@ class _EmployeeTile extends StatelessWidget {
           children: [
             // Avatar
             employee.imageUrl.isNotEmpty
-                ? CircleAvatar(
+                ? AuthenticatedAvatar(
                     radius: 22,
-                    backgroundImage: NetworkImage(employee.imageUrl),
+                    imageUrl: employee.imageUrl,
+                    name: employee.employeeName,
                     backgroundColor: _surfaceAlt,
+                    initialsColor: _accent,
+                    initialsFontSize: 16,
                   )
                 : CircleAvatar(
                     radius: 22,
