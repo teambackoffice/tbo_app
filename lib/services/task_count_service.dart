@@ -46,35 +46,23 @@ class TaskCountService {
 
     final headers = {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'};
 
-    print("🔹 Request URL ($status): $url");
-    print("🔹 Headers: $headers");
-
     final request = http.Request('GET', url);
     request.headers.addAll(headers);
 
     final response = await request.send();
     final body = await response.stream.bytesToString();
 
-    print("🔸 Status Code ($status): ${response.statusCode}");
-    print("🔸 Raw Response Body ($status): $body");
-
     if (response.statusCode == 200) {
       try {
         final jsonResponse = jsonDecode(body);
 
-        print("✅ Decoded JSON ($status): $jsonResponse");
-
         final count = jsonResponse['message']?['total_count'] ?? 0;
-
-        print("📊 Extracted Count ($status): $count");
 
         return count as int;
       } catch (e) {
-        print("❌ JSON Parse Error ($status): $e");
         return 0;
       }
     } else {
-      print("❌ Request Failed ($status): ${response.reasonPhrase}");
       throw Exception(
         "Failed request for status $status: ${response.reasonPhrase}",
       );

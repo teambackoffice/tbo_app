@@ -37,7 +37,6 @@ class EmployeeAssignmentsService {
 
           final employeeAssignments = EmployeeAssignments.fromJson(decoded);
 
-          // 🔥 Print details from your modal (adjust based on your model fields)
           for (var emp in employeeAssignments.data) {}
 
           return employeeAssignments;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tbo_app/controller/get_timesheet_controller.dart';
 import 'package:tbo_app/controller/update_timesheet_controller.dart';
 import 'package:tbo_app/modal/timesheet_modal.dart';
 
@@ -19,6 +20,7 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
       null; // Replace with actual session ID retrieval logic if needed
 
   Set<int> expandedCards = <int>{};
+  String? _activeAction; // 'Approve' or 'Reject' when a call is in-flight
 
   @override
   void initState() {
@@ -112,23 +114,56 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
     // Show confirmation dialog before proceeding
     final bool? confirm = await _showConfirmationDialog(dialogMessage);
 
-    if (confirm == true) {
-      await controller.updateStatus(
-        timesheetId: widget
-            .timesheet
-            .name, // Assuming timesheet ID is in the 'name' field
-        action: 'accept',
-        sid: _sessionId,
-      );
+    if (confirm != true) return;
+    if (!mounted) return;
 
-      // Handle response
-      if (controller.errorMessage != null) {
-        _showErrorMessage(controller.errorMessage!);
-      } else {
-        _showSuccessMessage('Timesheet successfully ${action}ed.');
-        // Optionally pop the screen or refresh the previous list
-        Navigator.pop(context, true); // Pass true to indicate a change
-      }
+    // Determine the API action string
+    final String apiAction = action.toLowerCase() == 'approve'
+        ? 'accept'
+        : 'reject';
+
+    // Mark the active button as loading
+    setState(() => _activeAction = action);
+
+    await controller.updateStatus(
+      timesheetId: widget.timesheet.name,
+      action: apiAction,
+      sid: _sessionId,
+    );
+
+    // Clear the loading state
+    if (mounted) setState(() => _activeAction = null);
+    if (!mounted) return;
+
+    // Handle response
+    if (controller.errorMessage != null) {
+      _showErrorMessage(controller.errorMessage!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text('Timesheet successfully ${action.toLowerCase()}d.'),
+            ],
+          ),
+          backgroundColor: const Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 1500),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      // Brief delay so the snackbar is visible before popping
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) Navigator.pop(context, true);
+      context.read<GetTimesheetController>().fetchtimesheet();
     }
   }
 
@@ -148,7 +183,7 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D8A),
             ),
-            child: const Text('Confirm'),
+            child: const Text('Confirm', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -406,12 +441,9 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
           ),
         ),
         // Action Buttons integrated with the controller
-        bottomNavigationBar: Consumer<TimesheetStatusController>(
-          builder: (context, controller, child) {
-            // REMOVED: final bool isTimesheetSubmitted = widget.timesheet.status.toLowerCase() == 'submitted';
-            final bool isLoading = controller.isLoading;
-
-            // REMOVED: if (!isTimesheetSubmitted) { return const SizedBox.shrink(); }
+        bottomNavigationBar: Builder(
+          builder: (context) {
+            final bool anyLoading = _activeAction != null;
 
             return Container(
               padding: const EdgeInsets.all(20),
@@ -433,13 +465,13 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                         label: 'Reject',
                         icon: Icons.close_rounded,
                         color: const Color(0xFFEF4444),
-                        onPressed: isLoading
+                        onPressed: anyLoading
                             ? null
                             : () => _updateStatus(
                                 'Reject',
-                                'Are you sure you want to **reject** this timesheet?',
+                                'Are you sure you want to reject this timesheet?',
                               ),
-                        isLoading: isLoading,
+                        isLoading: _activeAction == 'Reject',
                         disabledColor: Colors.grey,
                       ),
                     ),
@@ -449,13 +481,13 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                         label: 'Approve',
                         icon: Icons.check_rounded,
                         color: const Color(0xFF10B981),
-                        onPressed: isLoading
+                        onPressed: anyLoading
                             ? null
                             : () => _updateStatus(
                                 'Approve',
-                                'Are you sure you want to **approve** this timesheet?',
+                                'Are you sure you want to approve this timesheet?',
                               ),
-                        isLoading: isLoading,
+                        isLoading: _activeAction == 'Approve',
                         disabledColor: Colors.grey,
                       ),
                     ),
@@ -855,17 +887,6 @@ class _TimesheetApprovalPageState extends State<TimesheetApprovalPage> {
                 ),
               ],
             ),
-    );
-  }
-
-  void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
     );
   }
 }

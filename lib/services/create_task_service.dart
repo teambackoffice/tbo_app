@@ -47,27 +47,16 @@ class CreateTaskService {
         "status": status,
       });
 
-      print("🔹 CREATE TASK API CALL");
-      print("🔹 URL: $url");
-      print("🔹 Headers: $headers");
-      print("🔹 Request Body: $body");
-
       final response = await http.post(
         Uri.parse(url),
         headers: headers,
         body: body,
       );
 
-      print("🔸 Status Code: ${response.statusCode}");
-      print("🔸 Raw Response Body: ${response.body}");
-
       if (response.body.isNotEmpty) {
         try {
           final decoded = jsonDecode(response.body);
-          print("✅ Decoded Response: $decoded");
-        } catch (e) {
-          print("❌ JSON Decode Error: $e");
-        }
+        } catch (e) {}
       }
 
       if (response.statusCode == 200) {
@@ -92,7 +81,6 @@ class CreateTaskService {
         );
       }
     } catch (e) {
-      print("❌ Create Task Exception: $e");
       rethrow;
     }
   }

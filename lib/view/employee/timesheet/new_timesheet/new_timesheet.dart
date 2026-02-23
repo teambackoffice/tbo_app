@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/create_timesheet_controller.dart';
+import 'package:tbo_app/controller/get_timesheet_controller.dart';
 import 'package:tbo_app/view/employee/timesheet/new_timesheet/new_sheet.dart';
 
 class TimesheetEntry {
@@ -175,8 +176,11 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
         _showError('Failed to save timesheet: ${controller.errorMessage}');
       } else {
         _showSuccess('Timesheet saved successfully!');
-        // Optionally navigate back or clear entries
+        // Navigate back and signal the timesheet list to reload
         Navigator.pop(context);
+        context.read<GetTimesheetController>().fetchtimesheet(
+          employee: _employeeId,
+        );
       }
     } catch (e) {
       _showError('An error occurred: $e');
@@ -434,7 +438,7 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
                                                       ),
                                                       Text(
                                                         DateFormat(
-                                                          'dd MMM yyyy, hh:mm a',
+                                                          'dd-MM-yy, hh:mm a',
                                                         ).format(
                                                           DateTime.parse(
                                                             entry.fromTime,
@@ -465,7 +469,7 @@ class _CreateNewTimesheetState extends State<CreateNewTimesheet> {
                                                       ),
                                                       Text(
                                                         DateFormat(
-                                                          'dd MMM yyyy, hh:mm a',
+                                                          'dd-MM-yy, hh:mm a',
                                                         ).format(
                                                           DateTime.parse(
                                                             entry.toTime,

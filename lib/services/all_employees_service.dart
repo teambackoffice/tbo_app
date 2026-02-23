@@ -19,27 +19,41 @@ class AllEmployeesService {
         throw Exception('Authentication required. Please login again.');
       }
 
+      print("========== API REQUEST ==========");
+      print("URL: $url");
+      print("SID: $sid");
+
       final response = await http.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json', 'Cookie': 'sid=$sid'},
       );
 
+      print("========== API RESPONSE ==========");
+      print("Status Code: ${response.statusCode}");
+      print("Headers: ${response.headers}");
+      print("Body: ${response.body}");
+
       if (response.statusCode == 200) {
-        try {
-          final decoded = jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
 
-          final employees = AllEmployeesModal.fromJson(decoded);
+        print("========== DECODED JSON ==========");
+        print(decoded);
 
-          return employees;
-        } catch (e) {
-          throw Exception('Failed to parse response: $e');
-        }
+        final employees = AllEmployeesModal.fromJson(decoded);
+
+        print("========== PARSED MODEL ==========");
+        print(employees);
+
+        return employees;
       } else {
         throw Exception(
           'Failed to load employees. Code: ${response.statusCode}',
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("========== ERROR ==========");
+      print("Error: $e");
+      print("StackTrace: $stackTrace");
       throw Exception('Network error: $e');
     }
   }

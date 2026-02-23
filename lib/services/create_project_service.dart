@@ -25,8 +25,6 @@ class CreateProjectService {
     required List<Map<String, dynamic>> resourceRequirements,
   }) async {
     try {
-      print("🔍 Starting Create Project API...");
-
       // Read SID
       final sid = await _secureStorage.read(key: 'sid');
       print("🔑 SID: $sid");

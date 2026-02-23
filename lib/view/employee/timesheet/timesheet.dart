@@ -120,11 +120,14 @@ class _EmployeeSchedulePageState extends State<EmployeeSchedulePage> {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
   }
 
-  void _navigateToCreateTimesheet() {
-    Navigator.push(
+  Future<void> _navigateToCreateTimesheet() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => CreateNewTimesheet()),
     );
+    if (result == true && mounted) {
+      _loadTimesheets();
+    }
   }
 
   @override

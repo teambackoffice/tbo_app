@@ -19,14 +19,12 @@ class TaskHandoverService {
     String? leaveEndDate,
   }) async {
     try {
-      // Read session ID
       final sid = await _secureStorage.read(key: 'sid');
 
       if (sid == null) {
         throw Exception("Session ID not found");
       }
 
-      // Build the request URL
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}task_assignment_api.create_task_handover_request'
         '?from_employee=$fromEmployee'
@@ -40,20 +38,16 @@ class TaskHandoverService {
         '${leaveEndDate != null ? '&leave_end_date=$leaveEndDate' : ''}',
       );
 
-      // Setup request
       final request = http.Request('POST', uri);
       request.headers['Cookie'] = 'sid=$sid';
       request.headers['Content-Type'] = 'application/json';
 
-      // Send request
       final response = await request.send();
-
-      // Read response body
       final responseBody = await response.stream.bytesToString();
 
-      // Parse response
       if (response.statusCode == 200) {
         final decoded = json.decode(responseBody);
+
         return decoded;
       } else {
         throw Exception("Error: ${response.reasonPhrase}, Body: $responseBody");

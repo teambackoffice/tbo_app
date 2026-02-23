@@ -373,43 +373,51 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       children: [
                         // Handover Task Button
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 4,
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CreateHandoverPage(
-                                      taskId: widget.task.name,
-                                      assignmentID: context
-                                          .read<GetTaskAssignmentController>()
-                                          .employeeTaskAssignmentId!,
+                          child: Consumer<GetTaskAssignmentController>(
+                            builder: (context, assignmentController, _) {
+                              final assignmentId =
+                                  assignmentController.employeeTaskAssignmentId;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 4,
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            CreateHandoverPage(
+                                              taskId: widget.task.name,
+                                              // assignmentID: assignmentId!,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF6366F1),
+                                    foregroundColor: Colors.white,
+                                    disabledBackgroundColor: const Color(
+                                      0xFF6366F1,
+                                    ).withOpacity(0.5),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6366F1),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
+                                  child: const Text(
+                                    'Handover Task',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-                                'Handover Task',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -443,18 +451,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
       );
     } else {
-      final backendMessage =
-          controller.responseData?["message"]?["message"] ??
-          "Task updated successfully";
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(backendMessage),
-          backgroundColor: const Color(0xFF10B981),
-        ),
-      );
-
-      Navigator.pop(context, true);
+      Navigator.pop(context, "Task Status Updated Successfully");
     }
   }
 

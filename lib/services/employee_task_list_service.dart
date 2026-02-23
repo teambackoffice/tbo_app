@@ -35,7 +35,6 @@ class TaskService {
       final body = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        print("=============Response ${body}===============");
         final decoded = json.decode(body);
 
         return decoded;

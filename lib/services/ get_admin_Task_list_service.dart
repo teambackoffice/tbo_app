@@ -11,7 +11,6 @@ class GetAdminTaskListService {
   /// Get SID from secure storage
   Future<String?> _getSid() async {
     final sid = await _secureStorage.read(key: "sid");
-    print("🔐 SID FROM STORAGE: $sid");
     return sid;
   }
 
@@ -23,14 +22,11 @@ class GetAdminTaskListService {
       final sid = await _getSid();
 
       if (sid == null) {
-        print("❌ SID not found");
         throw Exception("SID not found. Please login again.");
       }
 
       final String url =
           "${ApiConstants.baseUrl}project_api.get_project_detail?name=$projectId";
-
-      print("🌍 REQUEST URL: $url");
 
       final headers = {
         "Authorization": "token $sid",
@@ -38,27 +34,18 @@ class GetAdminTaskListService {
         "Content-Type": "application/json",
       };
 
-      print("📌 HEADERS: $headers");
-
       final response = await http.get(Uri.parse(url), headers: headers);
-
-      print("📥 STATUS CODE: ${response.statusCode}");
-      print("📥 RESPONSE BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
 
-        print("✅ DECODED JSON: $jsonData");
-
         return GetAdminTaskListModalClass.fromJson(jsonData);
       } else {
-        print("❌ ERROR RESPONSE: ${response.body}");
         throw Exception(
           "Failed to load project details: ${response.reasonPhrase}",
         );
       }
     } catch (e) {
-      print("🚨 EXCEPTION: $e");
       throw Exception("Error: $e");
     }
   }

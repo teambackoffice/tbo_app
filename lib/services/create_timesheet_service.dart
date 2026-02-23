@@ -36,7 +36,9 @@ class CreateTimesheetService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
-        throw Exception("Failed: ${response.reasonPhrase}");
+        throw Exception(
+          "Failed with status ${response.statusCode}: $responseBody",
+        );
       }
     } catch (e) {
       rethrow;

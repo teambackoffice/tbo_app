@@ -36,8 +36,6 @@ class EmployeeTaskDateRequestService {
       // 🔵 READ STRING BODY
       String responseBody = await response.stream.bytesToString();
 
-      // 🟢 PRINT RAW BODY
-
       if (response.statusCode == 200) {
         try {
           final decoded = jsonDecode(responseBody);

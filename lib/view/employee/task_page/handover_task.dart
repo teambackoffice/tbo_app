@@ -8,11 +8,11 @@ import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class CreateHandoverPage extends StatefulWidget {
   final String taskId;
-  final String assignmentID;
+  // final String assignmentID;
   const CreateHandoverPage({
     super.key,
     required this.taskId,
-    required this.assignmentID,
+    // required this.assignmentID,
   });
 
   @override
@@ -41,7 +41,8 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
   void initState() {
     super.initState();
     _loadEmployeeId();
-    _taskIdController.text = widget.taskId;
+    // No separate task record — use the assignment ID as the task reference
+    // _taskIdController.text = widget.assignmentID;
   }
 
   Future<void> _loadEmployeeId() async {
@@ -109,8 +110,9 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
         await controller.createHandover(
           fromEmployee: _employeeIdController.text,
           toEmployee: _selectedEmployee!.name,
-          task: _taskIdController.text,
-          employeeTask: widget.assignmentID,
+          // No separate task record — use assignment ID as both task & employeeTask
+          task: widget.taskId,
+          employeeTask: widget.taskId,
           handoverReason:
               _selectedReason!, // Use selected reason instead of text field
           handoverNotes: _notesController.text.isNotEmpty
@@ -214,7 +216,7 @@ class _CreateHandoverPageState extends State<CreateHandoverPage> {
 
               // Task ID
               TextFormField(
-                controller: _taskIdController,
+                controller: TextEditingController(text: widget.taskId),
                 readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Task ID',

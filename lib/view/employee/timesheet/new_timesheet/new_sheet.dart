@@ -43,12 +43,16 @@ class _AddTimesheetPageState extends State<AddTimesheetPage> {
 
   final List<String> _activityTypes = [
     "Development",
-    "Production",
+    "Research",
     "Meeting with Lead",
     "Meeting with Client",
     "Planning",
     "Communication",
     "Testing",
+    "Customization",
+    "Poster Design",
+    "Digital Marketing",
+    "Video Script",
   ];
 
   @override

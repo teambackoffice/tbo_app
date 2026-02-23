@@ -419,9 +419,23 @@ class _TasksPageState extends State<TasksPage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TaskDetailPage(task: task)),
-    ).then((_) {
+    ).then((result) {
       // Refresh tasks when returning from detail page
       context.read<TaskByEmployeeController>().fetchTasks();
+
+      // Show success SnackBar if status was updated
+      if (result != null && result is String && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     });
   }
 
