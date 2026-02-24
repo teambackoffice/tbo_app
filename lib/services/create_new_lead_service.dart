@@ -30,9 +30,10 @@ class CreateNewLeadService {
         headers: headers,
         body: jsonEncode(leadData),
       );
-
+      print(response.body);
       // Handle success
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print(response.body);
         final decoded = jsonDecode(response.body);
         return decoded;
       }
@@ -45,6 +46,7 @@ class CreateNewLeadService {
         };
       }
     } catch (e, stack) {
+      print(stack);
       return {"success": false, "error": e.toString()};
     }
   }

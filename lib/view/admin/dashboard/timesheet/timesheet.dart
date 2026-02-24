@@ -12,7 +12,7 @@ class EmployeeTimesheet extends StatefulWidget {
 }
 
 class _EmployeeTimesheetState extends State<EmployeeTimesheet> {
-  DateTime? selectedDate;
+  DateTime? selectedDate = DateTime.now();
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 

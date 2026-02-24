@@ -34,7 +34,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
     'Customer\'s Vendor',
     'Exhibition',
     'Existing Customer',
-    'IRFAD',
+    'Marketing',
     'LEADS COLLECTIONS',
   ];
 
@@ -46,7 +46,12 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
 
   final List<String> _customLeadSegments = ['Erpnext', 'Digital'];
 
-  final List<String> _projectTypes = ['Internal', 'External'];
+  final List<String> _projectTypes = [
+    'Internal',
+    'External',
+    "Other",
+    "ERP Next With App",
+  ];
 
   final List<String> _departments = [
     'Accounts',
@@ -57,6 +62,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
     'Information Technology - TBO',
     'Management',
     'Marketing',
+    "Social Media Marketing - TBO",
   ];
 
   final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
@@ -94,15 +100,30 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
               _buildTextField(
                 controller: _fullNameController,
                 hintText: 'Enter lead name',
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Lead name is required';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
-              _buildLabel('Email'),
+              _buildLabel('Email (Optional)'),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Enter email address',
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Enter a valid email address';
+                    }
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
@@ -247,6 +268,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
     required String hintText,
     TextInputType? keyboardType,
     int maxLines = 1,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -258,6 +280,7 @@ class _CreateLeadFormState extends State<CreateLeadForm> {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        validator: validator,
         style: const TextStyle(fontSize: 16, color: Colors.black),
         decoration: InputDecoration(
           hintText: hintText,
