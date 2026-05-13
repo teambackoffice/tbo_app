@@ -292,12 +292,21 @@ class _EmployeeHandoverPageState extends State<EmployeeHandoverPage> {
     // The rest of the card content logic remains the same.
     return GestureDetector(
       onTap: () {
+        final handoverController = Provider.of<EmployeeHandoverController>(
+          context,
+          listen: false,
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => HandoverDetailPage(handoverItem: item),
           ),
-        );
+        ).then((didAction) {
+          // If the detail page returns true, an action was taken — refresh
+          if (didAction == true) {
+            handoverController.getEmployeeHandover();
+          }
+        });
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),

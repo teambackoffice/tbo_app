@@ -70,6 +70,7 @@ class LoginService {
         final email = data["message"]?["email"];
         final fullName = data["full_name"];
         final department = data["message"]?["employee"]?["department"];
+        final employeeId = data["message"]?["employee"]?["name"];
 
         print("👤 USER DATA");
         print("   Smart Role: $smartRole");
@@ -103,6 +104,10 @@ class LoginService {
         if (department != null) {
           await _storage.write(key: "department", value: department);
         }
+
+        if (employeeId != null) {
+          await _storage.write(key: "name", value: employeeId);
+        }
       }
 
       print("✅ LOGIN FLOW COMPLETED");
@@ -123,6 +128,8 @@ class LoginService {
   Future<String?> getStoredEmail() async => await _storage.read(key: "email");
   Future<String?> getStoredFullName() async =>
       await _storage.read(key: "full_name");
+  Future<String?> getStoredEmployeeName() async =>
+      await _storage.read(key: "employee_name");
 
   Future<void> logout() async {
     try {

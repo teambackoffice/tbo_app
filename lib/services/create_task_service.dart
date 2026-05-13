@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:tbo_app/config/api_constants.dart';
@@ -22,6 +23,7 @@ class CreateTaskService {
     required String expStartDate,
     required String expEndDate,
     required String status,
+    required String expectedTime,
   }) async {
     try {
       String? sid = await _getToken();
@@ -45,7 +47,23 @@ class CreateTaskService {
         "exp_start_date": expStartDate,
         "exp_end_date": expEndDate,
         "status": status,
+        "expected_time": expectedTime,
+        "custom_estimated_hours": expectedTime,
       });
+
+      // =========================
+      // PRINT REQUEST DETAILS
+      // =========================
+      debugPrint("========== CREATE TASK API ==========");
+      debugPrint("URL: $url");
+
+      debugPrint("HEADERS:");
+      headers.forEach((key, value) {
+        debugPrint("$key : $value");
+      });
+
+      debugPrint("BODY:");
+      debugPrint(body);
 
       final response = await http.post(
         Uri.parse(url),
@@ -53,10 +71,23 @@ class CreateTaskService {
         body: body,
       );
 
+      // =========================
+      // PRINT RESPONSE DETAILS
+      // =========================
+      debugPrint("========== RESPONSE ==========");
+      debugPrint("STATUS CODE: ${response.statusCode}");
+      debugPrint("RESPONSE BODY:");
+      debugPrint(response.body);
+
       if (response.body.isNotEmpty) {
         try {
           final decoded = jsonDecode(response.body);
-        } catch (e) {}
+
+          debugPrint("DECODED RESPONSE:");
+          debugPrint(decoded.toString());
+        } catch (e) {
+          debugPrint("JSON DECODE ERROR: $e");
+        }
       }
 
       if (response.statusCode == 200) {
@@ -66,13 +97,20 @@ class CreateTaskService {
             decoded.containsKey('message') &&
             decoded['message'] is Map<String, dynamic>) {
           final message = decoded['message'];
+
           if (message['success'] == false) {
             String errorMsg = message['error'] ?? 'Unknown error';
-            // Remove HTML tags for cleaner error display
+
+            // Remove HTML tags
             errorMsg = errorMsg.replaceAll(RegExp(r'<[^>]*>'), '');
+
+            debugPrint("API ERROR: $errorMsg");
+
             throw errorMsg;
           }
         }
+
+        debugPrint("TASK CREATED SUCCESSFULLY");
 
         return decoded;
       } else {
@@ -81,6 +119,7 @@ class CreateTaskService {
         );
       }
     } catch (e) {
+      debugPrint("CREATE TASK EXCEPTION: $e");
       rethrow;
     }
   }

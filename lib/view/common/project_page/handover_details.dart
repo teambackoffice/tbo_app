@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_employees._controller.dart';
+import 'package:tbo_app/controller/get_handover_controller.dart';
 import 'package:tbo_app/controller/handover_task_post_controller.dart';
 import 'package:tbo_app/modal/all_employees.modal.dart';
 import 'package:tbo_app/modal/get_employee_handover_modal.dart';
@@ -964,13 +965,17 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
                             toEmployee: displayToEmployee.name,
                           );
 
-                          navigator.pop(context);
-
-                          // Show feedback after API call
-                          if (handoverController.response != null &&
+                          // Check result before closing dialogs
+                          final isSuccess =
+                              handoverController.response != null &&
                               !handoverController.response!
                                   .toLowerCase()
-                                  .contains("error")) {
+                                  .contains("error");
+
+                          // Always close the confirmation dialog first
+                          navigator.pop();
+
+                          if (isSuccess) {
                             scaffoldMessenger.showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -981,6 +986,12 @@ class _HandoverDetailPageState extends State<HandoverDetailPage> {
                                 backgroundColor: color,
                               ),
                             );
+                            // Pop the detail page and return true to trigger
+                            // a refresh on the previous (list) page
+                            navigator.pop(true);
+                            context
+                                .read<EmployeeHandoverController>()
+                                .getEmployeeHandover();
                           } else {
                             scaffoldMessenger.showSnackBar(
                               SnackBar(

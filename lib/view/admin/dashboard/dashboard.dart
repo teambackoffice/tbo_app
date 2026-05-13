@@ -455,7 +455,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("assets/alltasks.png"),
+                          Image.asset(
+                            "assets/task.png",
+                            color: Colors.white,
+                            width: 25,
+                            height: 25,
+                          ),
                           const SizedBox(height: 5),
                           const Text(
                             "   All\n Tasks",

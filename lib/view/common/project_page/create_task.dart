@@ -24,6 +24,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
   late TextEditingController _projectCtrl;
   final _subjectCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _estimatedHoursCtrl = TextEditingController();
 
   // Selected employee
   Message? _selectedEmployee;
@@ -72,6 +73,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     _projectCtrl.dispose();
     _subjectCtrl.dispose();
     _descCtrl.dispose();
+    _estimatedHoursCtrl.dispose();
     super.dispose();
   }
 
@@ -159,12 +161,13 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     await controller.createTask(
       project: _projectCtrl.text.trim(),
       subject: _subjectCtrl.text.trim(),
-      assignedEmployee: _selectedEmployee!.name,
       priority: _priority,
       description: _descCtrl.text.trim(),
       expStartDate: _formatDateForApi(_startDate),
       expEndDate: _formatDateForApi(_endDate),
       status: "Open",
+      assignedEmployee: _selectedEmployee!.name,
+      expectedTime: _estimatedHoursCtrl.text.trim(),
     );
 
     if (!mounted) return;
@@ -262,6 +265,14 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                                 ),
                                 _divider(),
                                 _buildEmployeePicker(),
+                                _divider(),
+                                _buildField(
+                                  controller: _estimatedHoursCtrl,
+                                  label: 'Estimated Hours',
+                                  hint: 'e.g. 5.5',
+                                  icon: Icons.timer_outlined,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 24),
@@ -504,6 +515,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     required String label,
     required String hint,
     required IconData icon,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
     int maxLines = 1,
   }) {
@@ -511,6 +523,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
       controller: controller,
       validator: validator,
       maxLines: maxLines,
+      keyboardType: keyboardType,
       style: const TextStyle(color: _textPrimary, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,

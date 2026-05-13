@@ -10,14 +10,15 @@ class CreateTaskController extends ChangeNotifier {
   Map<String, dynamic>? responseData;
 
   Future<void> createTask({
+    required String assignedEmployee,
     required String project,
     required String subject,
-    required String assignedEmployee,
     required String priority,
     required String description,
     required String expStartDate,
     required String expEndDate,
     required String status,
+    required String expectedTime,
   }) async {
     try {
       isLoading = true;
@@ -27,12 +28,13 @@ class CreateTaskController extends ChangeNotifier {
       responseData = await _service.createTask(
         project: project,
         subject: subject,
-        assignedEmployee: assignedEmployee,
         priority: priority,
         description: description,
         expStartDate: expStartDate,
         expEndDate: expEndDate,
         status: status,
+        assignedEmployee: assignedEmployee,
+        expectedTime: expectedTime,
       );
     } catch (e) {
       errorMessage = e.toString();
