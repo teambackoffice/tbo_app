@@ -24,6 +24,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String? _imageUrl;
   String? role;
 
+  String? _sid;
+
   Future<String?> _getSid() async {
     return await _storage.read(key: "sid");
   }
@@ -33,11 +35,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final designationValue = await _storage.read(key: 'designation');
     final imageUrl = await _storage.read(key: 'image');
     final roleValue = await _storage.read(key: 'role_profile_name');
+    final sidValue = await _storage.read(key: 'sid');
     setState(() {
       _fullName = name;
       designation = designationValue;
       _imageUrl = imageUrl;
       role = roleValue;
+      _sid = sidValue;
     });
   }
 
@@ -62,28 +66,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
-  // Function to get daily rotating projects
-  List<ProjectDetails> _getDailyProjects(List<ProjectDetails>? projects) {
+  // Function to get the latest projects
+  List<ProjectDetails> _getLatestProjects(List<ProjectDetails>? projects) {
     if (projects == null || projects.isEmpty) return [];
 
-    // Use current day of year to rotate projects daily
-    final dayOfYear = DateTime.now()
-        .difference(DateTime(DateTime.now().year, 1, 1))
-        .inDays;
-    final startIndex = dayOfYear % projects.length;
+    // Filter out employee onboarding projects aggressively
+    final filteredProjects = projects.where((p) {
+      final pName = p.projectName?.toLowerCase() ?? '';
+      final idName = p.name?.toLowerCase() ?? '';
+      
+      final isHrTask = pName.contains('onborading') || 
+                       pName.contains('onboarding') ||
+                       pName.contains('employee') ||
+                       idName.contains('onborading') || 
+                       idName.contains('onboarding');
+                       
+      return !isHrTask;
+    }).toList();
 
-    List<ProjectDetails> dailyProjects = [];
-
-    // Get first project
-    dailyProjects.add(projects[startIndex]);
-
-    // Get second project (avoid duplicate)
-    if (projects.length > 1) {
-      final secondIndex = (startIndex + 1) % projects.length;
-      dailyProjects.add(projects[secondIndex]);
-    }
-
-    return dailyProjects.take(2).toList();
+    // Since the API returns newest projects first (e.g., PROJ-0076, PROJ-0075),
+    // taking the first few elements shows the latest projects.
+    return filteredProjects.take(2).toList();
   }
 
   // Function to get project color based on priority
@@ -139,7 +142,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         ? const Icon(Icons.person)
                         : ClipOval(
                             child: Image.network(
-                              _imageUrl!,
+                              _imageUrl!.startsWith('http') 
+                                ? _imageUrl! 
+                                : 'https://india.teambackoffice.com$_imageUrl',
+                              headers: _sid != null ? {"Cookie": "sid=$_sid"} : null,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
@@ -360,18 +366,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     );
                   }
 
-                  // Get daily rotating projects
-                  final dailyProjects = _getDailyProjects(projects);
+                  // Get the latest projects
+                  final latestProjects = _getLatestProjects(projects);
 
                   return Column(
                     children: [
-                      ...dailyProjects.asMap().entries.map((entry) {
+                      ...latestProjects.asMap().entries.map((entry) {
                         final index = entry.key;
                         final project = entry.value;
 
                         return Padding(
                           padding: EdgeInsets.only(
-                            bottom: index < dailyProjects.length - 1 ? 15 : 0,
+                            bottom: index < latestProjects.length - 1 ? 15 : 0,
                           ),
                           child: _buildProjectCard(
                             project: project,
@@ -379,7 +385,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ),
                         );
                       }),
-                      if (dailyProjects.isEmpty)
+                      if (latestProjects.isEmpty)
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -387,7 +393,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Text(
-                            'No active projects found for today',
+                            'No active recent projects found',
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
@@ -690,7 +696,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   radius: 10,
                   backgroundColor: const Color(0xFF1C7690),
                   backgroundImage: hasValidImage
-                      ? NetworkImage(imageUrl)
+                      ? NetworkImage(
+                          imageUrl,
+                          headers: _sid != null ? {"Cookie": "sid=$_sid"} : null,
+                        )
                       : null,
                   onBackgroundImageError: hasValidImage
                       ? (exception, stackTrace) {

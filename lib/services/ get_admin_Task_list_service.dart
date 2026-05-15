@@ -11,6 +11,9 @@ class GetAdminTaskListService {
   /// Get SID from secure storage
   Future<String?> _getSid() async {
     final sid = await _secureStorage.read(key: "sid");
+
+    print("SID => $sid");
+
     return sid;
   }
 
@@ -34,10 +37,34 @@ class GetAdminTaskListService {
         "Content-Type": "application/json",
       };
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      print("========== API REQUEST ==========");
+      print("URL => $url");
+      print("Headers => $headers");
+      print("Project ID => $projectId");
+
+      // 1. Properly encode the URL to prevent FormatExceptions if projectId has spaces
+      final encodedUrl = Uri.encodeFull(url);
+      
+      // 2. Add a timeout so it doesn't hang forever
+      final response = await http
+          .get(Uri.parse(encodedUrl), headers: headers)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception("Connection timed out. Please check your internet or server.");
+        },
+      );
+
+      print("========== API RESPONSE ==========");
+      print("Status Code => ${response.statusCode}");
+      print("Reason => ${response.reasonPhrase}");
+      print("Response Body => ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+
+        print("========== DECODED JSON ==========");
+        print(jsonData);
 
         return GetAdminTaskListModalClass.fromJson(jsonData);
       } else {
@@ -45,7 +72,11 @@ class GetAdminTaskListService {
           "Failed to load project details: ${response.reasonPhrase}",
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("========== ERROR ==========");
+      print(e);
+      print(stackTrace);
+
       throw Exception("Error: $e");
     }
   }
