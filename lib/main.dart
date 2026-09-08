@@ -38,6 +38,7 @@ import 'package:tbo_app/controller/task_list_controller.dart';
 import 'package:tbo_app/controller/update_timesheet_controller.dart';
 import 'package:tbo_app/controller/user_details_controller.dart';
 import 'package:tbo_app/firebase_options.dart';
+import 'package:tbo_app/services/remainder_notification/notification_service.dart';
 import 'package:tbo_app/view/splash/splash_screen.dart';
 
 // ✅ Global navigator key for navigation from anywhere
@@ -45,6 +46,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await RemainderNotificationService().init();
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

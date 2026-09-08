@@ -9,6 +9,7 @@ import 'package:tbo_app/view/admin/all_employees/all_employees.dart';
 import 'package:tbo_app/view/admin/bottom_navigation/bottom_navigation_admin.dart';
 import 'package:tbo_app/view/admin/dashboard/timesheet/timesheet.dart';
 import 'package:tbo_app/view/admin/task/task.dart';
+import 'package:tbo_app/widgets/authenticated_avatar.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -135,22 +136,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
               // Header Section
               Row(
                 children: [
-                  CircleAvatar(
+                  AuthenticatedAvatar(
                     radius: 25,
-                    backgroundColor: const Color(0xFF1C7690),
-                    child: (_imageUrl == null || _imageUrl!.isEmpty)
-                        ? const Icon(Icons.person)
-                        : ClipOval(
-                            child: Image.network(
-                              _imageUrl!.startsWith('http') 
-                                ? _imageUrl! 
-                                : 'https://india.teambackoffice.com$_imageUrl',
-                              headers: _sid != null ? {"Cookie": "sid=$_sid"} : null,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                    imageUrl: _imageUrl != null && _imageUrl!.isNotEmpty
+                        ? (_imageUrl!.startsWith('http')
+                            ? _imageUrl!
+                            : 'https://india.teambackoffice.com$_imageUrl')
+                        : '',
+                    name: _fullName ?? 'Admin',
                   ),
 
                   const SizedBox(width: 15),
@@ -671,12 +664,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
           // Display visible avatars
           ...employees.take(maxVisible).map((employee) {
             int index = employees.indexOf(employee);
-            final imageUrl = employee["image"] ?? '';
+            final rawUrl = employee["image"] ?? '';
             final name = employee["name"] ?? '';
-            final hasValidImage =
-                imageUrl.isNotEmpty &&
-                (imageUrl.startsWith('http://') ||
-                    imageUrl.startsWith('https://'));
+            
+            String fullImageUrl = '';
+            if (rawUrl.isNotEmpty) {
+              if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+                fullImageUrl = rawUrl;
+              } else if (rawUrl.startsWith('/')) {
+                fullImageUrl = 'https://india.teambackoffice.com$rawUrl';
+              }
+            }
 
             return Positioned(
               left: index * overlapOffset,
@@ -692,30 +690,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                   ],
                 ),
-                child: CircleAvatar(
+                child: AuthenticatedAvatar(
                   radius: 10,
-                  backgroundColor: const Color(0xFF1C7690),
-                  backgroundImage: hasValidImage
-                      ? NetworkImage(
-                          imageUrl,
-                          headers: _sid != null ? {"Cookie": "sid=$_sid"} : null,
-                        )
-                      : null,
-                  onBackgroundImageError: hasValidImage
-                      ? (exception, stackTrace) {
-                          debugPrint('Failed to load avatar image: $imageUrl');
-                        }
-                      : null,
-                  child: !hasValidImage
-                      ? Text(
-                          _getInitials(name),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 8,
-                          ),
-                        )
-                      : null,
+                  imageUrl: fullImageUrl,
+                  name: name,
+                  initialsFontSize: 8,
                 ),
               ),
             );
@@ -768,7 +747,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final sid = snapshot.data;
 
         // Build full URL if image path exists
-        String? fullImageUrl;
+        String fullImageUrl = '';
         if (imageUrl.isNotEmpty) {
           if (imageUrl.startsWith('http://') ||
               imageUrl.startsWith('https://')) {
@@ -776,11 +755,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
           } else if (imageUrl.startsWith('/')) {
             // Convert relative path to full URL
             fullImageUrl =
-                'https://tbo-smart.tbo365.cloud$imageUrl'; // Replace with your base URL
+                'https://india.teambackoffice.com$imageUrl'; // Replace with your base URL
           }
         }
-
-        final hasValidImage = fullImageUrl != null && fullImageUrl.isNotEmpty;
 
         return Card(
           color: Colors.white,
@@ -792,59 +769,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                CircleAvatar(
+                AuthenticatedAvatar(
                   radius: 25,
-                  backgroundColor: const Color(0xFF1C7690),
-                  child: hasValidImage && sid != null
-                      ? ClipOval(
-                          child: Image.network(
-                            fullImageUrl,
-                            headers: {
-                              "Cookie": "sid=$sid",
-                              "Accept": "image/*",
-                              "User-Agent": "Flutter App",
-                            },
-                            fit: BoxFit.cover,
-                            width: 50,
-                            height: 50,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                      : null,
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              print('❌ Failed to load image: $fullImageUrl');
-                              print('❌ Error: $error');
-                              return Center(
-                                child: Text(
-                                  _getInitials(name),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                      : Text(
-                          _getInitials(name),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
+                  imageUrl: fullImageUrl,
+                  name: name,
                 ),
                 const SizedBox(width: 15),
                 Expanded(
