@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tbo_app/controller/all_lead_list_controller.dart';
 import 'package:tbo_app/controller/edit_lead_controller.dart';
 import 'package:tbo_app/modal/all_lead_list_modal.dart';
+import 'package:tbo_app/view/crm/widgets/reminder_card.dart';
 
 class ProposalSentDetails extends StatelessWidget {
   final Leads lead;
@@ -128,6 +129,19 @@ class ProposalSentDetails extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+
+                      // Reminder Section
+                      const Text(
+                        "Reminder",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ReminderCard(lead: lead),
                       const SizedBox(height: 100),
                     ],
                   ),
